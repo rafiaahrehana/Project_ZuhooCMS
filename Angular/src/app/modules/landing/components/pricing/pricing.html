@@ -1,0 +1,70 @@
+<section id="pricing" class="accent-section-charcoal py-3 pricing-section position-relative overflow-hidden">
+  <div class="container py-5 position-relative z-1">
+    <div class="text-center max-w-2xl mx-auto mb-4 slide-up">
+      <span class="eyebrow-badge on-dark mb-3 d-inline-flex"><span class="eyebrow-dot"></span>Simple, Transparent Pricing</span>
+      <h2 class="display-5 fw-bold section-title mb-4 slide-up" style="animation-delay: 0.1s;">Pricing that scales with you</h2>
+      <p class="section-sub fs-5 mb-4">No hidden fees. Pay only for what your team uses.</p>
+
+      <div class="d-flex flex-wrap justify-content-center gap-4 pt-1">
+        <span class="trust-badge" *ngFor="let badge of trustBadges"><i class="bi bi-check-circle-fill"></i>{{ badge }}</span>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border" style="width: 2.5rem; height: 2.5rem; color: var(--accent);" role="status"></div>
+        <p class="section-sub mt-3 mb-0">Loading current plans…</p>
+      </div>
+    }
+
+    @if (!loading() && error()) {
+      <div class="text-center py-5">
+        <i class="bi bi-exclamation-triangle section-sub fs-1 d-block mb-3"></i>
+        <p class="section-sub mb-0">Couldn't load pricing right now — please refresh, or <a routerLink="/contact" class="fw-semibold" style="color: var(--accent);">contact sales</a> directly.</p>
+      </div>
+    }
+
+    @if (!loading() && !error()) {
+    <div class="row g-4 align-items-stretch justify-content-center pt-4">
+      <!-- Every plan is the same card, yearly ones included: four across on
+           lg, so a fifth (Growth) wraps to a centred card on the next row -
+           and any plan added to the catalog lands there too. -->
+      <div class="col-md-6 col-lg-3 slide-up" *ngFor="let plan of plans(); let i = index"
+        [style.animation-delay]="(i * 0.1) + 's'">
+
+        <div class="glass-card-dark pricing-card h-100 rounded-4 p-4 text-center"
+          [class.pricing-card-highlighted]="plan.highlighted">
+
+          <div *ngIf="plan.highlighted" class="popular-badge badge rounded-pill px-3 py-2 fw-semibold">
+            <i class="bi bi-stars me-1"></i>Most Popular
+          </div>
+
+          <h4 class="fw-bold mb-3 mt-2 text-white">{{ plan.name }}</h4>
+
+          <div class="mb-4">
+            <h2 class="plan-price fw-bold mb-1 text-white">{{ plan.priceLabel }}</h2>
+            <span class="small section-sub">{{ plan.periodLabel }}</span>
+          </div>
+
+          <a [routerLink]="plan.ctaLink"
+            class="w-100 rounded-pill py-2 mb-4 fw-medium justify-content-center"
+            [ngClass]="plan.highlighted ? 'btn-accent-solid' : 'btn btn-outline-dark-glass'">
+            {{ plan.ctaText }}
+          </a>
+
+          <hr class="pricing-divider mb-4" />
+
+          <ul class="list-unstyled m-0 d-flex flex-column gap-3 text-start small">
+            <li *ngFor="let feature of plan.features" class="d-flex align-items-start gap-2">
+              <i class="bi bi-check2 fw-bold mt-1" style="color: var(--accent);"></i>
+              <span class="feature-text">{{ feature }}</span>
+            </li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    }
+  </div>
+</section>

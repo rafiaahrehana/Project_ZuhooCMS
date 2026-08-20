@@ -1,0 +1,83 @@
+<div class="container-fluid py-3 client-chat-page">
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+
+  <div class="row g-3">
+    <!-- Inbox: always shown so landing here directly (no ticketId) still shows something. -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 inbox-card">
+        <div class="card-header bg-transparent border-0 pt-3 pb-2 fw-bold">Client Conversations</div>
+        @if (loadingConversations) { <app-loader /> }
+        @if (!loadingConversations && !conversations.length) {
+          <div class="px-3 pb-3"><app-empty-state icon="bi-inbox" message="No client tickets yet." /></div>
+        }
+        @if (!loadingConversations && conversations.length) {
+        <div class="inbox-list">
+          @for (c of conversations; track c.id) {
+          <button type="button" class="inbox-item" [class.active]="c.id === ticketId" (click)="selectConversation(c)">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <span class="fw-semibold small text-truncate">{{ c.title }}</span>
+              <span class="badge {{ statusClass(c.status) }}">{{ c.status }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              <span class="inbox-item__meta small">{{ c.ticketNumber }}</span>
+              <span class="badge {{ priorityClass(c.priority) }}">{{ c.priority }}</span>
+            </div>
+            <div class="inbox-item__meta small mt-1">{{ (c.updatedAt || c.createdAt) | date:'MMM d, h:mm a' }}</div>
+          </button>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Thread -->
+    <div class="col-lg-8">
+      @if (!ticketId) {
+        <app-empty-state icon="bi-chat-dots" message="Select a conversation on the left to view its messages." />
+      }
+
+      @if (ticketId) {
+      <div class="card border-0 shadow-sm rounded-4 chat-card">
+        <div class="chat-card__header">
+          <div class="chat-card__title-row">
+            <span class="chat-card__ticket-no">{{ ticket?.ticketNumber || ('#' + ticketId) }}</span>
+            @if (ticket) { <span class="badge {{ statusClass(ticket.status) }}">{{ ticket.status }}</span> }
+            @if (ticket) { <span class="badge {{ priorityClass(ticket.priority) }}">{{ ticket.priority }}</span> }
+          </div>
+          <h5 class="chat-card__title">{{ ticket?.title || 'Loading…' }}</h5>
+          @if (ticket?.attachmentUrl) {
+            <a class="chat-card__attachment" [href]="ticket?.attachmentUrl" target="_blank" rel="noopener">
+              <i class="bi bi-paperclip"></i>{{ ticket?.attachmentFileName || 'View attachment' }}
+            </a>
+          }
+          <div class="chat-card__meta">
+            <span><i class="bi bi-person"></i> {{ ticket?.createdByName }}</span>
+            <span><i class="bi bi-person-badge"></i> {{ ticket?.assignedEmployeeName || 'Unassigned' }}</span>
+          </div>
+        </div>
+
+        @if (loading) { <app-loader /> }
+
+        @if (!loading) {
+        <div class="chat-card__body">
+          <app-chat-thread
+            [messages]="chatMessages"
+            [currentUserId]="currentUserId"
+            [connected]="chatConnected"
+            [sending]="posting"
+            [disabled]="uploadingAttachment"
+            [allowAttachments]="true"
+            [pendingAttachmentName]="pendingAttachment?.fileName ?? (uploadingAttachment ? 'Uploading…' : null)"
+            placeholder="Reply to this client..."
+            emptyMessage="No messages yet — this is where the conversation with the client will show up."
+            (send)="send($event)"
+            (attachFile)="onAttachFile($event)"
+            (removeAttachment)="removeAttachment()"
+          />
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+</div>

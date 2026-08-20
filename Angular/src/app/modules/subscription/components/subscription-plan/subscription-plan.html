@@ -1,0 +1,107 @@
+<section id="pricing" class="py-4 pricing-section position-relative overflow-hidden">
+  <div class="container-fluid px-lg-4 py-4 position-relative z-1">
+    <!-- HERO HEADER -->
+    <div class="text-center mx-auto mb-4" style="max-width: 760px;">
+      <span class="badge-eyebrow d-inline-flex align-items-center gap-2 mb-2 px-3 py-1 rounded-pill">
+        <i class="bi bi-stars text-primary"></i> Flexible Pricing For Every Stage
+      </span>
+      <h2 class="display-6 fw-extrabold section-title mb-3">
+        Upgrade to unlock more features<br />and grow your business.
+      </h2>
+
+      <div class="d-flex flex-wrap justify-content-center gap-2 pt-1">
+        <span class="trust-badge d-inline-flex align-items-center gap-2" *ngFor="let badge of trustBadges">
+          <i class="bi {{ badge.icon }}"></i>{{ badge.label }}
+        </span>
+      </div>
+    </div>
+
+    @if (error) { <div class="alert alert-danger py-2 mb-4 rounded-3 text-center">{{ error }}</div> }
+    @if (loading) { <app-loader /> }
+
+    @if (!loading) {
+    <!-- 5 PLANS IN 1 SINGLE ROW ON DESKTOP -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3 align-items-stretch justify-content-center pt-2">
+      <div class="col" *ngFor="let plan of plans">
+        <div class="card h-100 rounded-4 p-3 p-xl-3 transition-all pricing-card shadow-sm border-0 d-flex flex-column justify-content-between position-relative"
+             [class.pricing-card-featured]="isPopular(plan)"
+             [class.pricing-card-current]="isCurrent(plan)">
+          
+          <!-- MOST POPULAR BADGE -->
+          @if (isPopular(plan)) {
+            <div class="popular-tag text-uppercase fw-bold">Most Popular</div>
+          }
+
+          <div>
+            <!-- PLAN HEADER -->
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-1">
+              <h5 class="fw-bold text-dark mb-0">{{ plan.name }}</h5>
+              <span class="plan-icon-badge d-inline-flex align-items-center justify-content-center"
+                    [class.plan-icon-featured]="isPopular(plan)">
+                <i class="bi {{ planIcon(plan) }}"></i>
+              </span>
+            </div>
+
+            <!-- PRICE -->
+            <div class="mb-3">
+              <div class="d-flex align-items-baseline gap-1">
+                <span class="fs-6 fw-bold text-muted" style="font-size: 0.8rem;">BDT</span>
+                <span class="fs-2 fw-extrabold text-dark tracking-tight">{{ plan.price | number:'1.0-0' }}</span>
+              </div>
+              <div class="text-muted small" style="font-size: 0.72rem;">per {{ plan.billingCycle === 'YEARLY' ? 'year' : 'month' }}</div>
+            </div>
+
+            <!-- CTA BUTTON -->
+            @if (isCurrent(plan)) {
+              <button class="btn w-100 rounded-pill py-2 mb-3 fw-semibold btn-current-plan disabled" disabled>
+                <i class="bi bi-check-circle-fill me-1 text-success"></i> Current Plan
+              </button>
+            } @else if (isUpgrade(plan)) {
+              <button class="btn w-100 rounded-pill py-2 mb-3 fw-semibold btn-upgrade-cta shadow-sm"
+                      [class.btn-popular-cta]="isPopular(plan)"
+                      [disabled]="!!upgradingPlanId"
+                      (click)="upgrade(plan)">
+                @if (upgradingPlanId === plan.id) {
+                  <span class="spinner-border spinner-border-sm me-1"></span> Processing
+                } @else {
+                  Upgrade &amp; Pay <i class="bi bi-arrow-right ms-1"></i>
+                }
+              </button>
+            } @else {
+              <button class="btn w-100 rounded-pill py-2 mb-3 fw-semibold btn-outline-secondary disabled" style="font-size: 0.8rem;" disabled>
+                Included
+              </button>
+            }
+
+            <hr class="pricing-divider mb-3 opacity-25" />
+
+            <!-- FEATURES CHECKLIST -->
+            <ul class="list-unstyled text-start mb-0 d-flex flex-column gap-2">
+              <li class="d-flex align-items-start gap-2 small text-dark" *ngFor="let feature of planFeatures(plan)">
+                <i class="bi bi-check-circle-fill text-primary flex-shrink-0 mt-1" style="font-size: 0.85rem;"></i>
+                <span style="font-size: 0.78rem; line-height: 1.3;">{{ feature }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOM SOLUTION FOOTER BANNER -->
+    <div class="custom-solution-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 p-3 px-4 rounded-4 shadow-sm">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+          <i class="bi bi-headset fs-5"></i>
+        </div>
+        <div>
+          <div class="fw-bold text-dark small">Need a custom enterprise solution?</div>
+          <div class="small text-muted" style="font-size: 0.78rem;">Let us know your business requirements and we will customize a bespoke plan for your organization.</div>
+        </div>
+      </div>
+      <a href="mailto:sales@businessos.app" class="btn btn-primary btn-sm rounded-pill px-4 py-2 fw-semibold text-nowrap">
+        Contact Sales <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+    }
+  </div>
+</section>

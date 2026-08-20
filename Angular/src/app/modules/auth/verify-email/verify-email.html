@@ -1,0 +1,93 @@
+<div class="login-container d-flex vh-100 bg-white">
+  <div class="brand-panel d-none d-lg-flex flex-column justify-content-between p-5 text-white col-lg-6">
+    <div class="brand-pattern"></div>
+    <div class="d-flex align-items-center gap-2 position-relative z-1">
+      <img src="/brand/logo-icon.png" alt="ZuhooCMS" class="rounded-3 shadow-sm" style="width: 36px; height: 36px; object-fit: cover;" />
+      <span class="h4 mb-0 fw-bold tracking-tight" style="font-family: 'Outfit', sans-serif;">ZuhooCMS</span>
+    </div>
+
+    <div class="brand-text position-relative z-1 mb-5">
+      <h1 class="display-5 fw-bold mb-3" style="font-family: 'Outfit', sans-serif;">One Last Step</h1>
+      <p class="fs-5 text-white-50 leading-relaxed">Confirming your email keeps your workspace secure and unlocks your free trial.</p>
+    </div>
+
+    <div class="brand-footer position-relative z-1 text-white-50 small">
+      &copy; 2026 ZuhooCMS Inc. All rights reserved.
+    </div>
+  </div>
+
+  <div class="form-panel d-flex align-items-center justify-content-center p-4 col-12 col-lg-6 bg-light bg-gradient">
+    <div class="card border-0 shadow-lg p-3 rounded-4 w-100" style="max-width: 420px; border-radius: 20px !important;">
+      <div class="card-body text-center py-4">
+
+        @switch (state) {
+          @case ('entering') {
+            <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 64px; height: 64px;">
+              <i class="bi bi-envelope-check fs-2"></i>
+            </div>
+            <h3 class="fw-bold text-slate-800" style="font-family: 'Outfit', sans-serif;">Verify your email</h3>
+            <p class="text-secondary">Enter the 6-digit code we sent to<br /><strong>{{ email }}</strong></p>
+
+            @if (error) {
+              <div class="alert alert-danger py-2 px-3 rounded-3 mb-3 small text-start" role="alert">{{ error }}</div>
+            }
+
+            <form [formGroup]="codeForm" (ngSubmit)="submit()" class="text-start">
+              <div class="mb-3">
+                <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                       class="form-control text-center fs-3 fw-bold" style="letter-spacing: 8px;"
+                       formControlName="code" placeholder="000000"
+                       [class.is-invalid]="codeForm.controls.code.touched && codeForm.controls.code.invalid" />
+                <div class="invalid-feedback text-center">Enter the 6-digit code from your email</div>
+              </div>
+              <button type="submit" class="btn btn-primary w-100 rounded-3 fw-bold" [disabled]="loading">
+                @if (loading) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Verifying...
+                } @else {
+                  Verify Email
+                }
+              </button>
+            </form>
+
+            <hr class="my-3" />
+            @if (resendSent) {
+              <p class="small text-success mb-0"><i class="bi bi-check-circle me-1"></i>A new code has been sent.</p>
+            } @else {
+              <button type="button" class="btn btn-link btn-sm text-decoration-none fw-bold" [disabled]="resendLoading" (click)="resend()">
+                @if (resendLoading) {
+                  Sending...
+                } @else {
+                  Didn't get a code? Resend
+                }
+              </button>
+            }
+
+            <p class="text-center small text-secondary mt-3 mb-0">
+              <a routerLink="/auth/login" class="fw-bold text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Back to Sign In</a>
+            </p>
+          }
+
+          @case ('success') {
+            <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle mb-3" style="width: 64px; height: 64px;">
+              <i class="bi bi-check-lg fs-2"></i>
+            </div>
+            <h3 class="fw-bold text-slate-800" style="font-family: 'Outfit', sans-serif;">Email verified</h3>
+            <p class="text-secondary">Your company workspace is now active. You're all set to sign in.</p>
+            <a routerLink="/auth/login" class="btn btn-primary rounded-3 fw-bold px-4 mt-2">Sign In</a>
+          }
+
+          @case ('missing-email') {
+            <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle mb-3" style="width: 64px; height: 64px;">
+              <i class="bi bi-exclamation-triangle fs-2"></i>
+            </div>
+            <h3 class="fw-bold text-slate-800" style="font-family: 'Outfit', sans-serif;">No account to verify</h3>
+            <p class="text-secondary">Please register first, or sign in if you already verified your email.</p>
+            <a routerLink="/auth/register" class="btn btn-primary rounded-3 fw-bold px-4 mt-2">Back to Register</a>
+          }
+        }
+
+      </div>
+    </div>
+  </div>
+</div>

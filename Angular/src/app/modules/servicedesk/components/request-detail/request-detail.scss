@@ -1,0 +1,50 @@
+// Request detail page.
+//
+// The hero strip is light blue rather than the app's navy/purple chrome: it
+// carries the service request's own name, so it should read as the record's
+// identity, not as another band of app furniture.
+
+.request-hero {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-bottom: 1px solid #bfdbfe;
+}
+
+// Card headers get a pastel tint (set inline, per panel) plus a coloured icon
+// tile. The tint itself lives on the element because each panel picks its own.
+.panel-header {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.panel-title {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.panel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+}
+
+// Soften the panels so the tinted headers don't sit on hard-edged boxes.
+.request-detail-page .card {
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 0.875rem;
+  overflow: hidden;
+}
+
+@media (max-width: 575.98px) {
+  .request-hero {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}

@@ -1,0 +1,60 @@
+// Matches the category card: a solid accent bar along the top edge with a wash
+// of the same hue behind it, so the bar reads as part of the card rather than a
+// stripe sitting on the surface. See categories.scss for why the tint is 10%.
+//
+// Every mix resolves against --bos-bg-card rather than a literal white, so the
+// same rules produce a pastel card on light and a dark tinted card on dark.
+.service-card {
+  background: color-mix(in srgb, var(--card-accent, #6366f1) 10%, var(--bos-bg-card));
+  border: 1px solid color-mix(in srgb, var(--card-accent, #6366f1) 22%, var(--bos-bg-card));
+  border-top: 4px solid var(--card-accent, #6366f1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--card-accent, #6366f1) 45%, var(--bos-bg-card));
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-divider {
+    border-top: 1px solid color-mix(in srgb, var(--card-accent, #6366f1) 20%, var(--bos-bg-card));
+  }
+
+  .service-price {
+    color: var(--card-accent, #6366f1);
+  }
+
+  // Pills sit on a tinted body, so they need the plain surface colour under
+  // them or they muddy into the wash.
+  .badge.bg-light {
+    background: var(--bos-bg-card) !important;
+    border-color: color-mix(in srgb, var(--card-accent, #6366f1) 25%, var(--bos-bg-card)) !important;
+  }
+
+  .btn-accent-outline {
+    border: 1px solid color-mix(in srgb, var(--card-accent, #6366f1) 55%, var(--bos-bg-card));
+    color: var(--card-accent, #6366f1);
+    background: var(--bos-bg-card);
+
+    &:hover {
+      background: var(--card-accent, #6366f1);
+      border-color: var(--card-accent, #6366f1);
+      color: #fff;
+    }
+  }
+}
+
+.service-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 38px;
+}
+
+.btn-xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}

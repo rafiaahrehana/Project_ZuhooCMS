@@ -1,0 +1,72 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-person-badge me-2"></i>Employee Salaries</h4>
+      <p class="small mb-0 page-subtitle">Every employee's current package — structures are edited in Salary Structures</p>
+    </div>
+    <div class="d-flex gap-2">
+      <div class="position-relative">
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted small"></i>
+        <input class="form-control form-control-sm ps-4" style="width: 230px" placeholder="Search employee..." [(ngModel)]="search" />
+      </div>
+      <a routerLink="/hrm/salary-structures" class="btn btn-primary btn-sm text-nowrap"><i class="bi bi-pencil me-1"></i>Manage Structures</a>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && sheet) {
+    @if (unconfiguredCount) {
+    <div class="alert alert-warning py-2 small">
+      <i class="bi bi-exclamation-triangle me-1"></i>
+      {{ unconfiguredCount }} employee{{ unconfiguredCount === 1 ? ' has' : 's have' }} no salary structure —
+      they can't be paid until one exists. <a routerLink="/hrm/salary-structures">Set one up</a>.
+    </div>
+    }
+
+    @if (rows.length) {
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Employee</th><th>Designation</th>
+              <th class="text-end">Gross</th><th class="text-end">Basic</th>
+              <th class="text-end">Allowances</th><th class="text-end">PF</th>
+              <th class="text-end">Tax</th><th class="text-end">Net (this month)</th>
+              <th>Structure</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of rows; track r.employeeId) {
+            <tr [class.opacity-75]="r.note">
+              <td>
+                <div class="fw-semibold">{{ r.employeeName }}</div>
+                <div class="text-muted small">{{ r.employeeNumber || '-' }}</div>
+              </td>
+              <td class="small">{{ r.position || '-' }}</td>
+              <td class="text-end fw-semibold">{{ r.grossEarnings | bosCurrency:'BDT':'symbol':'1.0-0' }}</td>
+              <td class="text-end">{{ r.basic | bosCurrency:'BDT':'symbol':'1.0-0' }}</td>
+              <td class="text-end">{{ allowances(r) | bosCurrency:'BDT':'symbol':'1.0-0' }}</td>
+              <td class="text-end">{{ r.providentFund | bosCurrency:'BDT':'symbol':'1.0-0' }}</td>
+              <td class="text-end">{{ r.tax | bosCurrency:'BDT':'symbol':'1.0-0' }}</td>
+              <td class="text-end fw-bold">{{ r.netPayable | bosCurrency:'BDT':'symbol':'1.0-0' }}</td>
+              <td>
+                @if (r.note) {
+                  <span class="badge text-bg-warning" [title]="r.note">MISSING</span>
+                } @else {
+                  <span class="badge text-bg-success">CONFIGURED</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    } @else {
+      <app-empty-state icon="bi-search" [message]="'No employees match \'' + search + '\'.'" />
+    }
+  }
+</div>

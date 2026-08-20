@@ -1,0 +1,29 @@
+<div class="position-relative">
+  <label class="form-label small fw-semibold text-secondary mb-1">{{ label }}</label>
+  <div class="form-control form-control-sm d-flex flex-wrap align-items-center gap-1 border-light-subtle rounded-2" style="min-height: 34px; height: auto;">
+    @for (tag of tags; track tag) {
+      <span class="badge rounded-pill text-bg-light border d-inline-flex align-items-center gap-1">
+        {{ tag }}
+        <i class="bi bi-x-circle-fill" style="cursor: pointer; font-size: 0.75rem;" (click)="removeTag(tag)"></i>
+      </span>
+    }
+    <input
+      type="text"
+      class="border-0 flex-grow-1"
+      style="outline: none; min-width: 120px;"
+      [placeholder]="tags.length ? '' : placeholder"
+      [(ngModel)]="draft"
+      (input)="onInput()"
+      (keydown)="onKeydown($event)"
+      (focus)="showSuggestions = true"
+      (blur)="onBlur()"
+    />
+  </div>
+  @if (showSuggestions && suggestions.length) {
+    <div class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; max-height: 180px; overflow-y: auto;">
+      @for (s of suggestions; track s) {
+        <button type="button" class="list-group-item list-group-item-action py-1 small" (mousedown)="selectSuggestion(s)">{{ s }}</button>
+      }
+    </div>
+  }
+</div>

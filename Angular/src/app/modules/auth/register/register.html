@@ -1,0 +1,252 @@
+<div class="auth-page">
+
+  <!-- ═══════════════════════════════ LEFT PANEL ═══════════════════════════════ -->
+  <div class="left-panel">
+
+    <!-- Top Logo -->
+    <div class="logo-bar">
+      <img src="/brand/logo-icon.png" alt="ZuhooCMS" class="logo-icon" />
+      <span class="logo-text">ZuhooCMS</span>
+    </div>
+
+    <!-- Hero Text -->
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Enterprise SAAS<br>
+        <span class="hero-highlight">Gateway</span>
+      </h1>
+      <p class="hero-sub">
+        Experience a state-of-the-art administrative portal with integrated HRM, CRM,
+        Service Desk, and Asset Management workflow suites.
+      </p>
+
+      <!-- Feature Bullets -->
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon"><i class="bi bi-layers-fill"></i></div>
+          <div>
+            <div class="feature-title">All-in-One Platform</div>
+            <div class="feature-desc">Manage your entire business from one place</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="bi bi-shield-fill-check"></i></div>
+          <div>
+            <div class="feature-title">Enterprise Ready</div>
+            <div class="feature-desc">Built for security, performance and scale</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+          <div>
+            <div class="feature-title">Smart &amp; Intuitive</div>
+            <div class="feature-desc">Beautiful interface with powerful features</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ RIGHT PANEL ═══════════════════════════════ -->
+  <div class="right-panel">
+    <div class="auth-card">
+
+      <!-- Mobile Logo Bar (shown on screens <992px) -->
+      <div class="mobile-logo-bar d-flex d-lg-none align-items-center gap-2 mb-3">
+        <img src="/brand/logo-icon.png" alt="ZuhooCMS" class="logo-icon" />
+        <span class="logo-text">ZuhooCMS</span>
+      </div>
+
+      <h2 class="auth-title">Create Your Workspace</h2>
+      <p class="auth-sub">Set up your company account in a couple of minutes</p>
+
+      @if (error) {
+        <div class="auth-alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          {{ error }}
+        </div>
+      }
+
+        <form [formGroup]="form" (ngSubmit)="submit()">
+
+          <!-- STEP 1: USER DETAILS -->
+          @if (currentStep === 1) {
+            <!-- Name row -->
+            <div class="field-row-2">
+              <div class="field-group">
+                <label class="field-label">First Name</label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-person field-icon"></i>
+                  <input type="text" class="field-input" formControlName="firstName" placeholder="Enter Your Firstname"
+                         [class.invalid]="form.controls.firstName.touched && form.controls.firstName.invalid"/>
+                </div>
+                @if (form.controls.firstName.touched && form.controls.firstName.invalid) {
+                  <span class="field-error">First name is required</span>
+                }
+              </div>
+              <div class="field-group">
+                <label class="field-label">Last Name</label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-person field-icon"></i>
+                  <input type="text" class="field-input" formControlName="lastName" placeholder="Enter Your Last name"
+                         [class.invalid]="form.controls.lastName.touched && form.controls.lastName.invalid"/>
+                </div>
+                @if (form.controls.lastName.touched && form.controls.lastName.invalid) {
+                  <span class="field-error">Last name is required</span>
+                }
+              </div>
+            </div>
+
+            <!-- Owner Email -->
+            <div class="field-group">
+              <label class="field-label">Owner Email</label>
+              <div class="field-input-wrap">
+                <i class="bi bi-envelope field-icon"></i>
+                <input type="email" class="field-input" formControlName="email" placeholder="owner@gmail.com"
+                       [class.invalid]="form.controls.email.touched && form.controls.email.invalid"/>
+              </div>
+              @if (form.controls.email.touched && form.controls.email.invalid) {
+                <span class="field-error">A valid email address is required</span>
+              }
+            </div>
+
+            <!-- Password row -->
+            <div class="field-row-2">
+              <div class="field-group">
+                <label class="field-label">Password</label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-lock field-icon"></i>
+                  <input [type]="showPwd ? 'text' : 'password'" class="field-input" formControlName="password"
+                         placeholder="••••••••"
+                         [class.invalid]="form.controls.password.touched && form.controls.password.invalid"/>
+                  <button type="button" class="eye-btn" (click)="showPwd = !showPwd">
+                    <i class="bi" [class.bi-eye]="!showPwd" [class.bi-eye-slash]="showPwd"></i>
+                  </button>
+                </div>
+                @if (form.controls.password.touched && form.controls.password.invalid) {
+                  <span class="field-error">Min 8 chars, upper, number &amp; symbol</span>
+                }
+              </div>
+              <div class="field-group">
+                <label class="field-label">Confirm Password</label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-lock field-icon"></i>
+                  <input [type]="showConfirmPwd ? 'text' : 'password'" class="field-input" formControlName="confirmPassword"
+                         placeholder="••••••••"
+                         [class.invalid]="form.controls.confirmPassword.touched && (form.controls.confirmPassword.invalid || form.errors?.['passwordMismatch'])"/>
+                  <button type="button" class="eye-btn" (click)="showConfirmPwd = !showConfirmPwd">
+                    <i class="bi" [class.bi-eye]="!showConfirmPwd" [class.bi-eye-slash]="showConfirmPwd"></i>
+                  </button>
+                </div>
+                @if (form.controls.confirmPassword.touched && (form.controls.confirmPassword.invalid || form.errors?.['passwordMismatch'])) {
+                  <span class="field-error">Passwords must match</span>
+                }
+              </div>
+            </div>
+
+            <button type="button" class="btn-signin mt-3" (click)="nextStep()">
+              Next: Company Details
+            </button>
+          }
+
+          <!-- STEP 2: COMPANY DETAILS -->
+          @if (currentStep === 2) {
+            <div class="section-divider">Company Details</div>
+
+            <!-- Company Name -->
+            <div class="field-group">
+              <label class="field-label">Company Name</label>
+              <div class="field-input-wrap">
+                <i class="bi bi-building field-icon"></i>
+                <input type="text" class="field-input" formControlName="companyName" placeholder="Acme Inc."
+                       (input)="onCompanyNameInput()"
+                       [class.invalid]="form.controls.companyName.touched && form.controls.companyName.invalid"/>
+              </div>
+              @if (form.controls.companyName.touched && form.controls.companyName.invalid) {
+                <span class="field-error">Company name is required</span>
+              }
+            </div>
+
+            <!-- Subdomain -->
+            <div class="field-group">
+              <label class="field-label">Subdomain</label>
+              <div class="field-input-wrap subdomain-wrap">
+                <i class="bi bi-globe2 field-icon"></i>
+                <input type="text" class="field-input" formControlName="subdomain" placeholder="acme"
+                       style="border-radius: 12px 0 0 12px; border-right: 0;"
+                       [class.invalid]="form.controls.subdomain.touched && form.controls.subdomain.invalid"/>
+                <span class="subdomain-suffix">.businessos.com</span>
+              </div>
+              @if (form.controls.subdomain.touched && form.controls.subdomain.invalid) {
+                <span class="field-error">Lowercase letters, numbers, hyphens only</span>
+              }
+            </div>
+
+            <!-- Company Email & Phone row -->
+            <div class="field-row-2">
+              <div class="field-group">
+                <label class="field-label">Company Email <span class="field-opt">(optional)</span></label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-envelope field-icon"></i>
+                  <input type="email" class="field-input" formControlName="companyEmail" placeholder="info@acme.com"/>
+                </div>
+                @if (form.controls.companyEmail.touched && form.controls.companyEmail.invalid) {
+                  <span class="field-error">Must be a valid email</span>
+                }
+              </div>
+              <div class="field-group">
+                <label class="field-label">Phone <span class="field-opt">(optional)</span></label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-telephone field-icon"></i>
+                  <input type="text" class="field-input" formControlName="companyPhone" placeholder="+1 555 0000"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-3">
+              <button type="button" class="btn btn-light w-50" style="height:50px;border-radius:12px;font-weight:600;" (click)="prevStep()">Back</button>
+              <button type="button" class="btn-signin w-50 mb-0" (click)="nextStep()">Next: Location</button>
+            </div>
+          }
+
+          <!-- STEP 3: LOCATION -->
+          @if (currentStep === 3) {
+            <div class="section-divider">Company Location <span class="text-muted fw-normal text-lowercase">(optional)</span></div>
+
+            <div class="field-group">
+              <div class="border rounded p-3 bg-light">
+                <app-location (formSubmit)="onLocationChange($event)"></app-location>
+                @if (form.controls.location.value) {
+                  <div class="alert alert-success mt-2 mb-0 py-1 px-2 small">
+                    <i class="bi bi-check-circle me-1"></i> Location captured
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4 flex-column flex-sm-row">
+              <button type="button" class="btn btn-light" style="height:50px;border-radius:12px;font-weight:600;min-width:100px;" (click)="prevStep()">Back</button>
+              
+              <div class="d-flex gap-2 flex-grow-1">
+                <button type="button" class="btn btn-outline-secondary flex-grow-1" style="height:50px;border-radius:12px;font-weight:600;" (click)="skipLocationAndSubmit()" [disabled]="loading">
+                  Skip &amp; Submit
+                </button>
+                <button type="submit" class="btn-signin flex-grow-1 mb-0" [disabled]="loading || (!form.controls.location.value && false)">
+                  @if (loading) {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                  }
+                  Create Account
+                </button>
+              </div>
+            </div>
+          }
+
+        </form>
+
+      <p class="signup-link">
+        Already have an account? <a routerLink="/auth/login">Sign In</a>
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The brand sheet shows the app icon as a navy Z on white, so the ground is white rather than
+     the mark's own navy — on navy the Z would vanish and only the speed lines would read. Kept as
+     a very shallow gradient so the icon still has some depth next to flat-white competitors. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#FFFFFF"
+        android:endColor="#EEF2F9"
+        android:type="linear" />
+</shape>

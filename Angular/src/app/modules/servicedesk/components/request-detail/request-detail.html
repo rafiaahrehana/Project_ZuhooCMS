@@ -1,0 +1,711 @@
+<div class="container-fluid p-0 request-detail-page">
+  @if (request) {
+  <!-- Title banner. Light blue rather than the brand gradient: this strip
+       carries the service request's own name, so it reads as the record's
+       identity rather than as app chrome. -->
+  <div class="request-hero px-4 py-4 mb-4">
+    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+      <h4 class="mb-0 fw-bold text-dark">{{ request.title }}</h4>
+      <span class="badge {{ statusBadgeClass(request.status) }}">{{ request.status }}</span>
+      @if (request.slaBreach) { <span class="badge text-bg-danger">SLA BREACHED</span> }
+    </div>
+    <div class="small text-secondary">
+      Company Services <i class="bi bi-chevron-right mx-1" style="font-size:0.65rem;"></i>
+      <a [routerLink]="listPath" class="text-decoration-none">Requests</a>
+      <i class="bi bi-chevron-right mx-1" style="font-size:0.65rem;"></i>
+      Request #{{ request.id }}
+    </div>
+  </div>
+  }
+
+  <div class="px-4 pb-4">
+  <!-- Outside the @if so it's still there when the request fails to load. -->
+  <a [routerLink]="listPath" class="btn btn-sm btn-outline-secondary mb-3">
+    <i class="bi bi-arrow-left me-1"></i>Back to Requests
+  </a>
+
+  @if (request) {
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (info) { <div class="alert alert-success py-2">{{ info }}</div> }
+
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header" style="background:#eff6ff !important;"><span class="panel-icon" style="background:#dbeafe; color:#2563eb;"><i class="bi bi-file-earmark-text"></i></span><span class="panel-title">Details</span></div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <tbody>
+                <tr><td class="text-muted">Service</td><td>{{ request.hubServiceName || '-' }}</td></tr>
+                <tr><td class="text-muted">Client</td><td>{{ request.clientName || '-' }}</td></tr>
+                <tr><td class="text-muted">Priority</td><td>{{ request.priority }}</td></tr>
+                <tr><td class="text-muted">Assigned To</td><td>{{ request.assignedEmployeeName || 'Unassigned' }}</td></tr>
+                <tr><td class="text-muted">SLA Deadline</td><td>{{ request.slaDeadline ? (request.slaDeadline | date:'medium') : '-' }}</td></tr>
+                <tr><td class="text-muted">Tasks</td><td>{{ request.completedTaskCount }}/{{ request.taskCount }} done</td></tr>
+                <tr><td class="text-muted">Package</td><td>{{ request.packageName || 'Pay per request' }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        @if (request.description) { <div class="card-footer small">{{ request.description }}</div> }
+        @if (formAnswers.length) {
+        <div class="card-footer">
+          <div class="small fw-semibold text-secondary mb-1"><i class="bi bi-ui-checks me-1"></i>Service Details</div>
+          <div class="row g-2 mt-2">
+            @for (a of formAnswers; track a.label) {
+            <div class="col-md-12 small mb-2">
+              <span class="text-muted d-block mb-1">{{ a.label }}</span>
+              @if (isUrl(a.value)) {
+              <div class="d-flex align-items-center gap-3 p-2 border rounded bg-light">
+                @if (isImageUrl(a.value)) {
+                <img [src]="a.value" alt="Preview" class="rounded border bg-white" style="height: 48px; width: 48px; object-fit: cover;" />
+                } @else {
+                <div class="bg-white border rounded d-flex align-items-center justify-content-center" style="height: 48px; width: 48px;">
+                  <i class="bi bi-file-earmark fs-4 text-secondary"></i>
+                </div>
+                }
+                <div>
+                  <a [href]="a.value" target="_blank" class="btn btn-sm btn-outline-primary me-2"><i class="bi bi-eye me-1"></i>Preview</a>
+                  <a [href]="a.value" target="_blank" download class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>Download</a>
+                </div>
+              </div>
+              } @else {
+              <span class="fw-medium">{{ a.value }}</span>
+              }
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+
+      @if (proposal || isStaff) {
+      <div class="card mt-3">
+        <div class="card-header panel-header justify-content-between" style="background:#fdf4ff !important;">
+          <span class="d-flex align-items-center">
+            <span class="panel-icon" style="background:#fae8ff; color:#a21caf;"><i class="bi bi-file-earmark-richtext"></i></span>
+            <span class="panel-title">Proposal</span>
+          </span>
+          @if (proposal) {
+          <span class="badge"
+                [class.text-bg-secondary]="proposal.status === 'DRAFT'"
+                [class.text-bg-primary]="proposal.status === 'SENT'"
+                [class.text-bg-success]="proposal.status === 'ACCEPTED'"
+                [class.text-bg-warning]="proposal.status === 'CHANGES_REQUESTED'">{{ proposal.status.replaceAll('_', ' ') }}</span>
+          }
+        </div>
+        <div class="card-body">
+          @if (proposalError) { <div class="text-danger small mb-2">{{ proposalError }}</div> }
+
+          @if (!proposal) {
+            @if (isStaff) {
+              <p class="text-muted small mb-2">No proposal yet - draft one to show the client your intended approach before quoting a price.</p>
+              <button class="btn btn-outline-primary btn-sm" (click)="openProposalEditor()">Create Proposal</button>
+            }
+          } @else {
+            @if (!editingProposal) {
+              <h6 class="fw-semibold mb-1">{{ proposal.title }}</h6>
+              <table class="table table-sm mb-2">
+                <tbody>
+                  @if (proposal.techStack) { <tr><td class="text-muted" style="width:140px;">Tech Stack</td><td>{{ proposal.techStack }}</td></tr> }
+                  @if (proposal.timeline) { <tr><td class="text-muted">Timeline</td><td>{{ proposal.timeline }}</td></tr> }
+                  @if (proposal.estimatedBudget) { <tr><td class="text-muted">Est. Budget</td><td>{{ proposal.estimatedBudget }}</td></tr> }
+                </tbody>
+              </table>
+              @if (proposal.summary) { <p class="small mb-2">{{ proposal.summary }}</p> }
+
+              @if (proposal.attachments?.length) {
+              <div class="mb-2">
+                @for (a of proposal.attachments; track a.id) {
+                <div class="d-flex justify-content-between align-items-center small border-bottom py-1">
+                  <a [href]="a.fileUrl" target="_blank" rel="noopener" class="text-decoration-none"><i class="bi bi-paperclip me-1"></i>{{ a.label || a.fileName }}</a>
+                  @if (isStaff) { <button class="btn btn-outline-danger btn-sm py-0 px-1" (click)="deleteProposalAttachment(a.id)"><i class="bi bi-trash"></i></button> }
+                </div>
+                }
+              </div>
+              }
+
+              @if (proposal.status === 'CHANGES_REQUESTED' && proposal.clientFeedback) {
+              <div class="alert alert-warning py-2 small mb-2"><strong>Client feedback:</strong> {{ proposal.clientFeedback }}</div>
+              }
+
+              @if (isStaff) {
+                @if (proposal.status === 'DRAFT' || proposal.status === 'CHANGES_REQUESTED') {
+                <div class="d-flex gap-2 mb-2">
+                  <button class="btn btn-outline-secondary btn-sm" (click)="openProposalEditor()">Edit</button>
+                  <button class="btn btn-primary btn-sm" [disabled]="proposalSaving" (click)="sendProposal()">
+                    @if (proposalSaving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Send to Client
+                  </button>
+                </div>
+                <label class="btn btn-outline-secondary btn-sm mb-0" [class.disabled]="uploadingProposalFile">
+                  @if (uploadingProposalFile) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                  <i class="bi bi-paperclip me-1"></i>Attach mockup / architecture doc
+                  <input type="file" class="d-none" (change)="onProposalFileSelected($event)" [disabled]="uploadingProposalFile" />
+                </label>
+                }
+                @if (proposal.status === 'ACCEPTED') {
+                <p class="text-success small mb-0"><i class="bi bi-check-circle me-1"></i>Accepted - submit a formal quotation below to move forward.</p>
+                }
+              }
+
+              @if (isClient && proposal.status === 'SENT') {
+                @if (!showChangesForm) {
+                <div class="d-flex gap-2">
+                  <button class="btn btn-success btn-sm" [disabled]="proposalSaving" (click)="acceptProposal()">Accept Proposal</button>
+                  <button class="btn btn-outline-secondary btn-sm" (click)="showChangesForm = true">Request Changes</button>
+                </div>
+                } @else {
+                <textarea class="form-control form-control-sm mb-2" rows="2" placeholder="What would you like changed?" [(ngModel)]="changesFeedback"></textarea>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-secondary btn-sm" [disabled]="proposalSaving" (click)="submitRequestChanges()">Send Feedback</button>
+                  <button class="btn btn-link btn-sm text-muted" (click)="showChangesForm = false">Cancel</button>
+                </div>
+                }
+              }
+            } @else {
+              <div class="row g-2">
+                <div class="col-12"><input class="form-control form-control-sm" placeholder="Title *" [(ngModel)]="proposalForm.title" /></div>
+                <div class="col-md-6"><input class="form-control form-control-sm" placeholder="Tech stack (e.g. Laravel, Vue.js, PostgreSQL)" [(ngModel)]="proposalForm.techStack" /></div>
+                <div class="col-md-6"><input class="form-control form-control-sm" placeholder="Timeline (e.g. 12 weeks)" [(ngModel)]="proposalForm.timeline" /></div>
+                <div class="col-12"><input class="form-control form-control-sm" placeholder="Estimated budget (e.g. BDT 400,000 - 500,000)" [(ngModel)]="proposalForm.estimatedBudget" /></div>
+                <div class="col-12"><textarea class="form-control form-control-sm" rows="3" placeholder="Summary of the proposed approach" [(ngModel)]="proposalForm.summary"></textarea></div>
+                <div class="col-12 d-flex gap-2">
+                  <button class="btn btn-primary btn-sm" [disabled]="!proposalForm.title?.trim() || proposalSaving" (click)="saveProposal()">Save Draft</button>
+                  <button class="btn btn-link btn-sm text-muted" (click)="editingProposal = false">Cancel</button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+      }
+
+      @if (isStaff) {
+      <div class="card mt-3">
+        <div class="card-header panel-header justify-content-between" style="background:#fffbeb !important;">
+          <span class="d-flex align-items-center">
+            <span class="panel-icon" style="background:#fef3c7; color:#b45309;"><i class="bi bi-stars"></i></span>
+            <span class="panel-title">AI Summary</span>
+          </span>
+          <button class="btn btn-outline-primary btn-sm" [disabled]="summarising" (click)="summarise()">
+            @if (summarising) { <span class="spinner-border spinner-border-sm"></span> } @else { Generate }
+          </button>
+        </div>
+        <div class="card-body">
+          @if (summaryError) { <div class="text-danger small">{{ summaryError }}</div> }
+          @if (request.aiSummary) { <div class="small whitespace-pre-wrap">{{ request.aiSummary }}</div> }
+          @if (!request.aiSummary && !summaryError) { <div class="text-muted small mb-0">No summary yet - click Generate.</div> }
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header" style="background:#f0fdf4 !important;"><span class="panel-icon" style="background:#dcfce7; color:#16a34a;"><i class="bi bi-shield-check"></i></span><span class="panel-title">Approvals</span></div>
+        <div class="card-body">
+          @if (hasPendingApproval()) {
+          <div class="alert alert-warning py-1 small">A stage approval is pending.</div>
+          }
+          @for (approval of approvals; track approval.id) {
+          <div class="d-flex gap-2 align-items-center small py-1">
+            <span class="badge"
+                  [class.text-bg-success]="approval.status === 'APPROVED'"
+                  [class.text-bg-danger]="approval.status === 'REJECTED'"
+                  [class.text-bg-warning]="approval.status === 'PENDING'">{{ approval.status }}</span>
+            <span>{{ approval.workflowStageName }}</span>
+            @if (approval.decidedByName) { <span class="text-muted">by {{ approval.decidedByName }}</span> }
+          </div>
+          }
+          @if (!approvals.length) { <p class="text-muted small mb-0">No approvals required so far.</p> }
+        </div>
+      </div>
+    </div>
+
+    @if (stageProgress && stageProgress.totalStages > 0) {
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header justify-content-between" style="background:#fdf4ff !important;">
+          <span class="d-flex align-items-center">
+            <span class="panel-icon" style="background:#fae8ff; color:#a21caf;"><i class="bi bi-signpost-split"></i></span>
+            <span class="panel-title">Workflow Stage</span>
+          </span>
+          @if (isStaff && stageProgress.currentStage < stageProgress.totalStages) {
+          <button class="btn btn-outline-primary btn-sm" [disabled]="advancingStage" (click)="advanceStage()">
+            @if (advancingStage) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Advance to Next Stage
+          </button>
+          }
+        </div>
+        <div class="card-body">
+          <ol class="list-unstyled mb-0">
+            @for (stage of stageProgress.stages; track stage.stageId) {
+            <li class="d-flex gap-2 pb-3">
+              <div class="flex-shrink-0" style="width: 1.25rem;">
+                @if (stage.completed) {
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                } @else if (stage.current) {
+                  <i class="bi bi-arrow-repeat text-primary"></i>
+                } @else {
+                  <i class="bi bi-circle text-muted"></i>
+                }
+              </div>
+              <div class="flex-grow-1 small">
+                <div class="fw-semibold" [class.text-primary]="stage.current">{{ stage.name }}</div>
+                <div class="text-muted">
+                  @if (stage.requiresApproval) { <span class="badge text-bg-light border">Needs approval</span> }
+                  @if (stage.approvalStatus) { <span class="ms-2">{{ stage.approvalStatus }}</span> }
+                  @if (stage.requiresPayment) { <span class="badge text-bg-warning ms-2">{{ stage.paymentPercent }}% due on completion</span> }
+                  @if (stage.slaHours) { <span class="ms-2">· {{ stage.slaHours }}h SLA</span> }
+                </div>
+              </div>
+            </li>
+            }
+          </ol>
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (isStaff) {
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header" style="background:#f8fafc !important;"><span class="panel-icon" style="background:#e2e8f0; color:#334155;"><i class="bi bi-bank"></i></span><span class="panel-title">Government Filing</span></div>
+        <div class="card-body">
+          @if (!editingGovRef) {
+            @if (request.govRefNumber || request.govRefType) {
+              <table class="table table-sm mb-0">
+                <tbody>
+                  <tr><td class="text-muted">Filing Type</td><td>{{ request.govRefType || '-' }}</td></tr>
+                  <tr><td class="text-muted">Reference Number</td><td>{{ request.govRefNumber || '-' }}</td></tr>
+                </tbody>
+              </table>
+            } @else {
+              <p class="text-muted small mb-0">Not yet filed with an authority.</p>
+            }
+            <button class="btn btn-outline-secondary btn-sm mt-2" (click)="editingGovRef = true"><i class="bi bi-pencil me-1"></i>Edit</button>
+          } @else {
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label class="form-label small text-secondary mb-1">Filing Type</label>
+                <input class="form-control form-control-sm" placeholder="e.g. Trade License Application" [(ngModel)]="govRefForm.govRefType" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-secondary mb-1">Reference Number</label>
+                <input class="form-control form-control-sm" placeholder="e.g. TL-2026-4471" [(ngModel)]="govRefForm.govRefNumber" />
+              </div>
+              <div class="col-12 d-flex gap-2">
+                <button class="btn btn-primary btn-sm" [disabled]="savingGovRef" (click)="saveGovRef()">Save</button>
+                <button class="btn btn-link btn-sm text-muted" (click)="editingGovRef = false">Cancel</button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (isStaff || (isClient && request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && request.status !== 'REJECTED')) {
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header" style="background:#eff6ff !important;"><span class="panel-icon" style="background:#dbeafe; color:#2563eb;"><i class="bi bi-gear"></i></span><span class="panel-title">Manage</span></div>
+        <div class="card-body">
+          @if (isStaff) {
+          <div class="row g-2 align-items-end mb-3">
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Status</label>
+              <select class="form-select form-select-sm" [(ngModel)]="newStatus">
+                @for (s of requestStatuses; track s) { <option [value]="s">{{ s.replaceAll('_', ' ') }}</option> }
+              </select>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small text-secondary mb-1">Reason (optional)</label>
+              <input class="form-control form-control-sm" [(ngModel)]="statusReason" />
+            </div>
+            <div class="col-md-3">
+              <button *appHasPermission="['SERVICE_REQUEST_APPROVE', 'SERVICE_REQUEST_CLOSE']" class="btn btn-primary btn-sm w-100" [disabled]="newStatus === request.status" (click)="changeStatus()">Update</button>
+            </div>
+          </div>
+          }
+
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            @if (isStaff) {
+            <div class="d-flex align-items-center gap-2 flex-grow-1" *appHasPermission="'SERVICE_REQUEST_ASSIGN'">
+              @if (request.assignedEmployeeId && !editingAssignment) {
+                <label class="form-label small text-secondary mb-0 text-nowrap">Assigned To</label>
+                <span class="fw-medium">{{ request.assignedEmployeeName }}</span>
+                <button class="btn btn-outline-secondary btn-sm px-2" (click)="editingAssignment = true" title="Reassign">
+                  <i class="bi bi-pencil me-1"></i>Edit
+                </button>
+              } @else {
+                <label class="form-label small text-secondary mb-0 text-nowrap">Assign To</label>
+                <select class="form-select form-select-sm" style="max-width: 250px;" [(ngModel)]="assignEmployeeId">
+                  <option [ngValue]="null">— Select employee —</option>
+                  @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName || '' }}</option> }
+                </select>
+                <button class="btn btn-outline-primary btn-sm px-3" [disabled]="!assignEmployeeId || assignEmployeeId === request.assignedEmployeeId" (click)="assign()">Assign</button>
+                @if (request.assignedEmployeeId) {
+                  <button class="btn btn-link btn-sm text-muted" (click)="editingAssignment = false; assignEmployeeId = request.assignedEmployeeId">Cancel</button>
+                }
+              }
+            </div>
+            }
+
+            @if (request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && request.status !== 'REJECTED' && (isStaff || !request.assignedEmployeeId)) {
+            <div class="ms-auto">
+              <button class="btn btn-outline-danger btn-sm px-4 text-nowrap" (click)="cancel()">
+                <i class="bi bi-x-circle me-1"></i> Cancel Request
+              </button>
+            </div>
+            }
+          </div>
+          
+          @if (isClient && request.assignedEmployeeId && request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && request.status !== 'REJECTED') {
+          <div class="mt-2">
+            <p class="text-muted small mb-0">A team member has already been assigned. Please contact support to cancel.</p>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (isStaff) {
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header justify-content-between" style="background:#ecfdf5 !important;">
+          <span class="d-flex align-items-center">
+            <span class="panel-icon" style="background:#d1fae5; color:#059669;"><i class="bi bi-check2-square"></i></span>
+            <span class="panel-title">Tasks ({{ tasks.length }})</span>
+          </span>
+          <button class="btn btn-outline-primary btn-sm" (click)="showTaskForm = !showTaskForm">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
+        <div class="card-body">
+          <!-- New task modal -->
+          @if (showTaskForm) {
+          <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+              <div class="modal-content">
+                <div class="modal-header py-2">
+                  <h5 class="modal-title fs-6 fw-semibold">New Task</h5>
+                  <button class="btn-close" (click)="showTaskForm = false"></button>
+                </div>
+                <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Task Name *</label>
+              <input class="form-control form-control-sm" placeholder="Task Name *" [(ngModel)]="newTask.title" />
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Assign To *</label>
+              <select class="form-select form-select-sm" [(ngModel)]="newTask.assignedEmployeeId">
+                <option [ngValue]="null">— Select employee —</option>
+                @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName || '' }}</option> }
+              </select>
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Due Date *</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="newTask.dueDate" />
+            </div>
+            
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Priority</label>
+              <select class="form-select form-select-sm" [(ngModel)]="newTask.priority">
+                <option value="LOW">Low</option>
+                <option value="NORMAL">Normal</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Estimated Hours</label>
+              <input type="number" class="form-control form-control-sm" placeholder="e.g. 5.5" [(ngModel)]="newTask.estimatedHours" />
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Description</label>
+              <textarea class="form-control form-control-sm" rows="2" placeholder="Task description..." [(ngModel)]="newTask.description"></textarea>
+            </div>
+            
+          </div>
+                </div>
+                <div class="modal-footer py-2">
+                  <button class="btn btn-secondary btn-sm" (click)="showTaskForm = false">Cancel</button>
+                  <button class="btn btn-primary btn-sm" [disabled]="!newTask.title?.trim() || !newTask.assignedEmployeeId || !newTask.dueDate" (click)="addTask()"><i class="bi bi-plus-lg me-1"></i>Add Task</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+          @for (task of tasks; track task.id) {
+          <div class="d-flex flex-column border-bottom py-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div class="fw-semibold d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+                @if (task.status === 'COMPLETED') {
+                  <i class="bi bi-check-square-fill text-success fs-6"></i>
+                } @else if (task.status === 'IN_PROGRESS') {
+                  <i class="bi bi-circle-fill text-warning" style="font-size: 0.6rem; margin-left: 0.2rem; margin-right: 0.2rem;"></i>
+                } @else {
+                  <i class="bi bi-square text-muted fs-6"></i>
+                }
+                <span [class.text-decoration-line-through]="task.status === 'COMPLETED'">{{ task.title }}</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" style="width: auto; min-width: 120px; padding: 0.1rem 1.5rem 0.1rem 0.5rem; font-size: 0.75rem;" [ngModel]="task.status" (ngModelChange)="setTaskStatus(task, $event)">
+                  @for (s of taskStatuses; track s) { <option [value]="s">{{ s.replaceAll('_', ' ') }}</option> }
+                </select>
+                <button class="btn btn-outline-danger btn-sm p-1 d-flex align-items-center justify-content-center border-0" style="width: 24px; height: 24px;" (click)="deleteTask(task)" title="Delete"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>
+            
+            <div class="d-flex flex-column gap-1 text-muted small ms-4">
+              @if (task.assignedEmployeeName) {
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-person-fill"></i> <span class="text-dark fw-medium">{{ task.assignedEmployeeName }}</span>
+                </div>
+              }
+              <div class="d-flex align-items-center gap-2">
+                @if (task.status === 'COMPLETED') {
+                  <span class="text-success fw-medium">Completed</span>
+                } @else if (task.dueDate) {
+                  <span>Due {{ task.dueDate | date:'mediumDate' }}</span>
+                } @else {
+                  <span class="text-muted">Waiting</span>
+                }
+                @if (task.estimatedHours) { 
+                  <span class="ms-2">· {{ task.estimatedHours }} hrs</span>
+                }
+                @if (task.priority) {
+                  <span class="ms-2">· {{ task.priority }} Priority</span>
+                }
+              </div>
+              @if (task.description) {
+                <div class="mt-1 text-secondary fst-italic">{{ task.description }}</div>
+              }
+            </div>
+          </div>
+          }
+          @if (!tasks.length) { <p class="text-muted small mb-0">No tasks yet.</p> }
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (isClient) {
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header" style="background:#F0F7EC !important;"><span class="panel-icon" style="background:#E4F2DA; color:#367C2B;"><i class="bi bi-bar-chart-steps"></i></span><span class="panel-title">Progress</span></div>
+        <div class="card-body">
+          @if (tasks.length) {
+          <div class="d-flex justify-content-between align-items-end mb-1">
+            <span class="small text-muted">
+              @if (currentStageName) { Currently: <span class="fw-semibold text-dark">{{ currentStageName }}</span> }
+              @else { All stages complete }
+            </span>
+            <span class="small fw-semibold">{{ completedTaskCount }}/{{ tasks.length }} done</span>
+          </div>
+          <div class="progress mb-3" style="height: 8px;">
+            <div class="progress-bar bg-success" role="progressbar" [style.width.%]="progressPercent"></div>
+          </div>
+
+          <ol class="list-unstyled mb-0">
+            @for (task of tasks; track task.id) {
+            <li class="d-flex gap-2 pb-3 position-relative">
+              <div class="flex-shrink-0" style="width: 1.25rem;">
+                @if (task.status === 'COMPLETED') {
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                } @else if (task.status === 'IN_PROGRESS') {
+                  <i class="bi bi-arrow-repeat text-primary"></i>
+                } @else if (task.status === 'CANCELLED') {
+                  <i class="bi bi-x-circle text-muted"></i>
+                } @else {
+                  <i class="bi bi-circle text-muted"></i>
+                }
+              </div>
+              <div class="flex-grow-1 small">
+                <div class="fw-semibold" [class.text-muted]="task.status === 'CANCELLED'">
+                  {{ task.workflowStageName || task.title }}
+                </div>
+                <div class="text-muted">
+                  <span class="badge {{ taskStatusClass(task.status) }}">{{ task.status.replaceAll('_', ' ') }}</span>
+                  @if (task.assignedEmployeeName) { <span class="ms-2">· {{ task.assignedEmployeeName }}</span> }
+                  @if (task.completedAt) { <span class="ms-2">· {{ task.completedAt | date:'MMM d' }}</span> }
+                  @else if (task.dueDate) { <span class="ms-2">· due {{ task.dueDate | date:'MMM d' }}</span> }
+                </div>
+              </div>
+            </li>
+            }
+          </ol>
+          } @else {
+          <p class="text-muted small mb-0">
+            Work hasn't been broken into stages yet. You'll see progress here once your request is picked up.
+          </p>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header" style="background:#F0F7EC !important;"><span class="panel-icon" style="background:#E4F2DA; color:#367C2B;"><i class="bi bi-file-earmark-ruled"></i></span><span class="panel-title">Quotation</span></div>
+        <div class="card-body">
+          @if (request?.quotationAmount) {
+          <div class="table-responsive">
+            <table class="table table-sm mb-3">
+              <tbody>
+                <tr><td class="text-muted">Amount</td><td>{{ request?.quotationCurrency }} {{ request?.quotationAmount }}</td></tr>
+                <tr><td class="text-muted">Status</td><td><span class="badge text-bg-secondary">{{ request?.quotationStatus }}</span></td></tr>
+                @if (request?.quotationValidUntil) { <tr><td class="text-muted">Valid Until</td><td>{{ request?.quotationValidUntil | date:'medium' }}</td></tr> }
+                @if (request?.quotationNotes) { <tr><td class="text-muted">Notes</td><td>{{ request?.quotationNotes }}</td></tr> }
+              </tbody>
+            </table>
+          </div>
+          }
+          @if (request?.quotationStatus === 'PENDING' && canDecideQuotation) {
+          <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-success btn-sm" (click)="acceptQuotation()">Accept</button>
+            <input class="form-control form-control-sm" placeholder="Rejection reason" [(ngModel)]="rejectReason" style="max-width:200px" />
+            <button class="btn btn-outline-danger btn-sm" (click)="rejectQuotation()">Reject</button>
+          </div>
+          }
+          @if (isStaff && (!request?.quotationAmount || request?.quotationStatus === 'REJECTED')) {
+          <h6 class="small fw-semibold">Submit a Quotation</h6>
+          <div class="row g-2">
+            <div class="col-6">
+              <input type="number" class="form-control form-control-sm" placeholder="Amount" [(ngModel)]="quotationForm.amount" />
+            </div>
+            <div class="col-6">
+              <input class="form-control form-control-sm" placeholder="Currency" [(ngModel)]="quotationForm.currency" />
+            </div>
+            <div class="col-12">
+              <textarea class="form-control form-control-sm" rows="2" placeholder="Notes" [(ngModel)]="quotationForm.notes"></textarea>
+            </div>
+            <div class="col-12">
+              <button class="btn btn-primary btn-sm" (click)="submitQuotation()">Submit Quotation</button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header" style="background:#ecfeff !important;"><span class="panel-icon" style="background:#cffafe; color:#0891b2;"><i class="bi bi-chat-dots"></i></span><span class="panel-title">Comments</span></div>
+        <div class="px-3 pt-2">
+          @if (!draftedReply) {
+          <div class="d-flex gap-2">
+            <input class="form-control form-control-sm" [(ngModel)]="draftNotes"
+                   placeholder="✨ Jot rough notes, AI will draft a reply..."
+                   (keydown.enter)="$event.preventDefault(); composeDraftReply()" />
+            <button type="button" class="btn btn-outline-primary btn-sm text-nowrap" [disabled]="!draftNotes.trim() || drafting" (click)="composeDraftReply()">
+              @if (drafting) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-stars"></i> Draft reply }
+            </button>
+          </div>
+          @if (draftError) { <div class="text-danger small mt-1">{{ draftError }}</div> }
+          } @else {
+          <div class="border rounded-3 p-2 bg-light-subtle">
+            <div class="small text-muted mb-1"><i class="bi bi-stars me-1 text-primary"></i>AI draft - review before sending</div>
+            <textarea class="form-control form-control-sm mb-2" rows="3" [(ngModel)]="draftedReply"></textarea>
+            <div class="d-flex gap-2 justify-content-end">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="discardDraftedReply()">Discard</button>
+              <button type="button" class="btn btn-primary btn-sm" (click)="sendDraftedReply()"><i class="bi bi-send me-1"></i>Send</button>
+            </div>
+          </div>
+          }
+        </div>
+        <div class="card-body p-0" style="height: 420px;">
+          <app-chat-thread
+            [messages]="chatMessages"
+            [currentUserId]="currentUserId"
+            [connected]="chatConnected"
+            [sending]="posting"
+            placeholder="Write a comment..."
+            emptyMessage="No comments yet."
+            (send)="postChatMessage($event)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header" style="background:#F0F7EC !important;"><span class="panel-icon" style="background:#E4F2DA; color:#367C2B;"><i class="bi bi-paperclip"></i></span><span class="panel-title">Documents</span></div>
+        <div class="card-body">
+          <div class="input-group input-group-sm mb-3">
+            <input class="form-control" placeholder="Label (optional)" [(ngModel)]="documentLabel" />
+            <label class="btn btn-outline-primary mb-0" [class.disabled]="uploading">
+              @if (uploading) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Upload File
+              <input type="file" class="d-none" (change)="onFileSelected($event)" [disabled]="uploading" />
+            </label>
+          </div>
+          @for (doc of documents; track doc.id) {
+          <div class="d-flex justify-content-between align-items-center border-bottom py-2 small">
+            <div>
+              <a [href]="doc.fileUrl" target="_blank" rel="noopener" class="fw-semibold text-decoration-none">
+                <i class="bi bi-paperclip me-1"></i>{{ doc.fileName }}
+              </a>
+              @if (doc.label) { <span class="badge text-bg-light border ms-1">{{ doc.label }}</span> }
+              <div class="text-muted">
+                {{ doc.createdAt | date:'medium' }}
+                @if (doc.uploadedByName) { · {{ doc.uploadedByName }} }
+              </div>
+            </div>
+            <button class="btn btn-outline-danger btn-sm" (click)="deleteDocument(doc)" title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+          }
+          @if (!documents.length) { <p class="text-muted small mb-0">No documents attached yet.</p> }
+        </div>
+      </div>
+    </div>
+
+    @if (isStaff) {
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header panel-header" style="background:#eff6ff !important;"><span class="panel-icon" style="background:#dbeafe; color:#2563eb;"><i class="bi bi-clock-history"></i></span><span class="panel-title">Status History</span></div>
+        <div class="card-body">
+          @for (group of groupedHistory; track group.actorName + $index) {
+          <div class="mb-3 pb-2 border-bottom">
+            <div class="fw-semibold small text-primary mb-1">
+              <i class="bi bi-person me-1"></i> {{ group.actorName || 'System' }}
+            </div>
+            @for (event of group.items; track $index) {
+            <div class="d-flex justify-content-between py-1 small">
+              <span class="text-muted"><i class="bi bi-arrow-right-short"></i> {{ event.fromStatus || event.oldStatus || 'NONE' }} → {{ event.toStatus || event.newStatus || 'NONE' }}</span>
+              <span class="text-secondary" style="font-size: 0.75rem;">{{ event.createdAt | date:'short' }}</span>
+            </div>
+            }
+          </div>
+          }
+          @if (!groupedHistory.length) { <p class="text-muted small mb-0">No history.</p> }
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Help footer -->
+  <div class="card border-0 shadow-sm rounded-4 mt-3" style="background-color:#f5f3ff;">
+    <div class="card-body d-flex align-items-center gap-3 p-4">
+      <div class="panel-icon" style="background:#E4F2DA; color:#367C2B;"><i class="bi bi-question-circle"></i></div>
+      <div>
+        <div class="fw-bold text-dark">Need Help?</div>
+        <div class="text-secondary small">
+          If you need assistance with this request, add a comment above or contact support.
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  </div>
+</div>

@@ -1,0 +1,82 @@
+// ── Floating AI Assistant Button (FAB) ─────────────────────────────────────
+.ai-fab-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 1050;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 12px 20px;
+  border: none;
+  border-radius: 50px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+
+  &.is-dragging {
+    cursor: grabbing;
+    transition: none !important;
+    opacity: 0.92;
+  }
+
+  // Brand gradient, so the fab follows each theme's accent (leaf green in
+  // light, emerald in dark) instead of an off-palette purple.
+  background: var(--bos-gradient-accent);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+
+  // Glowing shadow keyed to the brand
+  box-shadow:
+    0 4px 18px rgba(var(--bos-brand-rgb), 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  i {
+    font-size: 1.1rem;
+    animation: star-pulse 2.5s ease-in-out infinite;
+  }
+
+  .ai-fab-label {
+    white-space: nowrap;
+  }
+
+  // Hover stays in the brand family: same gradient, deeper lift and glow.
+  &:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow:
+      0 8px 28px rgba(var(--bos-brand-rgb), 0.55),
+      0 4px 10px rgba(0, 0, 0, 0.18);
+    background: var(--bos-gradient-brand);
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow:
+      0 4px 12px rgba(var(--bos-brand-rgb), 0.4),
+      0 2px 4px rgba(0, 0, 0, 0.12);
+  }
+}
+
+// Subtle star pulse animation for the icon
+@keyframes star-pulse {
+  0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  50% { opacity: 0.85; transform: scale(1.15) rotate(8deg); }
+}
+
+// ── Demo banner ─────────────────────────────────────────────
+// A strip, not a toast: it must stay visible for the whole demo session so
+// nobody mistakes seeded data for a real company.
+.demo-banner {
+  background: var(--bos-gradient-accent);
+  color: #fff;
+  font-size: 0.85rem;
+  z-index: 1040;
+
+  i { font-size: 1rem; }
+}

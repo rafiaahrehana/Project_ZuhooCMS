@@ -1,0 +1,23 @@
+// Light pastel tint per stage on opportunity cards, so a card reads as
+// belonging to its stage at a glance, not just via the column header.
+// Specificity (class + attribute) intentionally beats the global
+// `.card { background: var(--bos-bg-card) !important; }` rule.
+.stage-bg-qualification { background: #eef2ff !important; }
+.stage-bg-presentation { background: #eff6ff !important; }
+.stage-bg-proposal { background: #f0f9ff !important; }
+.stage-bg-negotiation { background: #f5f3ff !important; }
+.stage-bg-won { background: #ecfdf5 !important; }
+.stage-bg-lost { background: #fef2f2 !important; }
+
+// CDK drag-and-drop polish
+.cdk-drag { cursor: grab; }
+.cdk-drag:active { cursor: grabbing; }
+.cdk-drag-preview {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+}
+.cdk-drag-placeholder {
+  opacity: 0.35;
+  border: 1px dashed #94a3b8 !important;
+}
+.cdk-drop-list-dragging .cdk-drag { transition: transform 200ms cubic-bezier(0, 0, 0.2, 1); }

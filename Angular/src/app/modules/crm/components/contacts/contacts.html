@@ -1,0 +1,58 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h4 class="mb-0">Contacts</h4>
+    <input type="text" class="form-control form-control-sm" style="width: 240px" placeholder="Search contacts..."
+           [(ngModel)]="keyword" (keyup.enter)="search()" />
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && contacts.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th><th>Title</th><th>Company</th><th>Email</th><th>Phone</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (contact of contacts; track contact.id) {
+          <tr>
+            <td>
+              {{ contact.fullName }}
+              @if (contact.primaryContact) { <i class="bi bi-star-fill text-warning ms-1 small" title="Primary contact"></i> }
+            </td>
+            <td>{{ contact.jobTitle || '-' }}</td>
+            <td>
+              @if (contact.clientId) {
+              <a [routerLink]="['/crm/clients', contact.clientId]">{{ contact.clientCompanyName || '—' }}</a>
+              } @else { - }
+            </td>
+            <td>{{ contact.email || '-' }}</td>
+            <td>{{ contact.phone || '-' }}</td>
+            <td class="text-end">
+              @if (contact.clientId) {
+              <!-- Labelled rather than icon-only: a bare building glyph gave no
+                   clue that it opens the client record. -->
+              <a class="btn btn-outline-primary btn-sm text-nowrap"
+                 [routerLink]="['/crm/clients', contact.clientId]"
+                 title="Open this contact's client record">
+                Details
+              </a>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+
+  @if (!loading && !contacts.length) { <app-empty-state icon="bi-person-lines-fill" message="No contacts found." /> }
+</div>

@@ -1,0 +1,206 @@
+<div class="container-fluid py-3">
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">Fixed Assets</h4>
+      <div class="page-subtitle mt-1">Register assets and depreciate them month by month</div>
+    </div>
+    <div class="d-flex gap-2">
+      <button *appHasPermission="'FIXED_ASSET_MANAGE'" class="btn btn-light bg-white border shadow-sm btn-sm fw-semibold" (click)="openRunModal()">
+        <i class="bi bi-calendar-check me-1"></i>Run Depreciation
+      </button>
+      <button *appHasPermission="'FIXED_ASSET_MANAGE'" class="btn btn-primary-bos btn-sm px-3 fw-semibold" (click)="openCreate()">
+        <i class="bi bi-plus-lg me-1"></i>Register Asset
+      </button>
+    </div>
+  </div>
+
+  @if (error && !showForm && !showRunModal) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && assets.length) {
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0 table-dark-header">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Acquired</th>
+            <th class="text-end">Cost</th>
+            <th class="text-end">Salvage</th>
+            <th class="text-end">Life (months)</th>
+            <th class="text-end">Accum. Depreciation</th>
+            <th class="text-end">Book Value</th>
+            <th class="text-end">Monthly Depr.</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (asset of assets; track asset.id) {
+          <tr>
+            <td class="fw-semibold">
+              {{ asset.name }}
+              @if (asset.assetTag) { <div class="small text-muted fw-normal">{{ asset.assetTag }}</div> }
+            </td>
+            <td class="small">{{ asset.category }}</td>
+            <td class="small text-nowrap">{{ asset.acquisitionDate | date:'mediumDate' }}</td>
+            <td class="text-end">{{ asset.cost | bosCurrency }}</td>
+            <td class="text-end">{{ asset.salvageValue | bosCurrency }}</td>
+            <td class="text-end" [title]="asset.notes || ''">{{ asset.usefulLifeMonths }}</td>
+            <td class="text-end">{{ asset.accumulatedDepreciation | bosCurrency }}</td>
+            <td class="text-end fw-bold">{{ asset.bookValue | bosCurrency }}</td>
+            <td class="text-end">{{ asset.monthlyDepreciation | bosCurrency }}</td>
+            <td><span class="badge {{ statusClass(asset.status) }}">{{ asset.status }}</span></td>
+            <td class="text-end text-nowrap">
+              @if (canDispose(asset)) {
+                <button *appHasPermission="'FIXED_ASSET_MANAGE'" class="btn btn-outline-danger btn-sm py-1 px-2" (click)="disposeTarget = asset" title="Dispose">
+                  <i class="bi bi-box-arrow-right me-1"></i>Dispose
+                </button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !assets.length) { <app-empty-state icon="bi-pc-display" message="No fixed assets registered yet." /> }
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-white py-2">
+      <span class="fw-semibold">Depreciation Runs</span>
+    </div>
+    @if (runs.length) {
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0 table-dark-header">
+        <thead>
+          <tr><th>Month</th><th class="text-end">Assets</th><th class="text-end">Total</th><th>Run by</th><th>Run at</th></tr>
+        </thead>
+        <tbody>
+          @for (run of runs; track run.id) {
+          <tr>
+            <td class="fw-semibold">{{ monthLabel(run) }}</td>
+            <td class="text-end">{{ run.assetsDepreciated }}</td>
+            <td class="text-end">{{ run.totalAmount | bosCurrency }}</td>
+            <td class="small">{{ run.runBy }}</td>
+            <td class="small text-muted">{{ run.runAt | date:'medium' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <div class="card-body text-muted small">No depreciation runs yet.</div>
+    }
+  </div>
+</div>
+
+@if (showForm) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Register Asset</h5>
+        <button type="button" class="btn-close" (click)="showForm = false"></button>
+      </div>
+      <form #f="ngForm" (ngSubmit)="save()">
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Name</label>
+              <input class="form-control form-control-sm" name="name" [(ngModel)]="form.name" required maxlength="150" placeholder="e.g. Dell Latitude 5440">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Asset Tag</label>
+              <input class="form-control form-control-sm" name="assetTag" [(ngModel)]="form.assetTag" maxlength="50" placeholder="e.g. IT-0042">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Category</label>
+              <input class="form-control form-control-sm" name="category" [(ngModel)]="form.category" maxlength="100" placeholder="e.g. Computers">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Cost</label>
+              <input type="number" min="0.01" step="0.01" class="form-control form-control-sm" name="cost" [(ngModel)]="form.cost" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Salvage Value</label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" name="salvageValue" [(ngModel)]="form.salvageValue">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Useful Life (months)</label>
+              <input type="number" min="1" step="1" class="form-control form-control-sm" name="usefulLifeMonths" [(ngModel)]="form.usefulLifeMonths" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Acquisition Date</label>
+              <input type="date" class="form-control form-control-sm" name="acquisitionDate" [(ngModel)]="form.acquisitionDate" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notes</label>
+              <input class="form-control form-control-sm" name="notes" [(ngModel)]="form.notes" maxlength="500">
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="postPurchaseToLedger" name="postPurchaseToLedger" [(ngModel)]="form.postPurchaseToLedger">
+                <label class="form-check-label" for="postPurchaseToLedger">Post purchase to ledger (Dr Fixed Assets / Cr Cash)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Register Asset
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+}
+
+@if (showRunModal) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Run Depreciation</h5>
+        <button type="button" class="btn-close" (click)="showRunModal = false"></button>
+      </div>
+      <div class="modal-body">
+        @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+        <p class="small text-muted mb-2">Posts one month of straight-line depreciation for every active asset. Each month can only be run once.</p>
+        <label class="form-label small">Year</label>
+        <input type="number" class="form-control form-control-sm mb-2" min="2000" max="2100" [(ngModel)]="runYear">
+        <label class="form-label small">Month</label>
+        <select class="form-select form-select-sm" [(ngModel)]="runMonth">
+          @for (m of months; track m) { <option [ngValue]="m">{{ m }}</option> }
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showRunModal = false">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="running || !runYear || !runMonth" (click)="confirmRun()">
+          @if (running) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Run
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<app-confirm-dialog
+  [visible]="!!disposeTarget"
+  title="Dispose Asset"
+  [message]="'Dispose ' + (disposeTarget?.name || '') + '? Its remaining book value of ' + (disposeTarget?.bookValue || 0) + ' will be written off as a disposal loss. This cannot be undone.'"
+  confirmLabel="Dispose"
+  (confirmed)="confirmDispose()"
+  (cancelled)="disposeTarget = null"
+/>

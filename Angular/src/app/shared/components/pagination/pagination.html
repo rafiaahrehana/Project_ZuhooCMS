@@ -1,0 +1,13 @@
+@if (totalPages > 1) {
+<nav>
+  <ul class="pagination pagination-sm mb-0">
+    <li class="page-item" [class.disabled]="page === 0">
+      <a class="page-link" role="button" (click)="go(page - 1)">Previous</a>
+    </li>
+    <li class="page-item disabled"><span class="page-link">{{ page + 1 }} / {{ totalPages }}</span></li>
+    <li class="page-item" [class.disabled]="page >= totalPages - 1">
+      <a class="page-link" role="button" (click)="go(page + 1)">Next</a>
+    </li>
+  </ul>
+</nav>
+}

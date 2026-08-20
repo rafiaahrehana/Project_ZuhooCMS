@@ -1,0 +1,483 @@
+<div class="container-fluid py-3">
+  <!-- Header Bar -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-award text-primary me-2"></i>Performance Reviews</h4>
+      <p class="text-muted small mb-0">Record and review employee performance, scores, and career goals</p>
+    </div>
+    <button *appHasPermission="'PERFORMANCE_CREATE'" class="btn btn-primary btn-sm px-3 rounded-2 fw-medium" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i> Add Performance Review</button>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2 rounded-2 shadow-sm mb-3">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2 rounded-2 shadow-sm mb-3">{{ success }}</div> }
+
+  @if (loading) { <app-loader /> }
+
+  <!-- Create / Edit modal. modal-xl + scrollable because this form keeps its
+       two-column layout (form on the left, timeline and history on the right);
+       a narrower dialog would stack them into a very long scroll. -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">
+            <i class="bi bi-plus-circle me-2"></i>{{ isEdit ? 'Edit' : 'Create' }} Performance Review
+          </h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+  <div class="row g-3">
+    <!-- ══════════ MAIN COLUMN ══════════ -->
+    <div class="col-lg-8">
+
+      <!-- Period & employee -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-header py-3 bg-light border-0 fw-semibold text-dark">
+          <i class="bi bi-plus-circle me-2"></i>{{ isEdit ? 'Edit' : 'Create' }} Performance Review
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary mb-1">Employee <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm rounded-2" [(ngModel)]="form.employeeId" [disabled]="isEdit" (change)="onContextChange()">
+                <option [ngValue]="undefined" disabled>Select Employee</option>
+                @for (emp of employees; track emp.id) {
+                  <option [ngValue]="emp.id">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.jobTitle || 'No Title' }})</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary mb-1">Review Period Start <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm rounded-2" type="date" [(ngModel)]="form.reviewPeriodStart" (change)="onContextChange()" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary mb-1">Review Period End <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm rounded-2" type="date" [(ngModel)]="form.reviewPeriodEnd" (change)="onContextChange()" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Employee summary ── -->
+      @if (selectedEmployee) {
+      <div class="card border-0 shadow-sm rounded-3 mb-3" style="background-color: #f0fdfa;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            @if (selectedEmployee.profileImageUrl || selectedEmployee.image) {
+              <img [src]="selectedEmployee.profileImageUrl || selectedEmployee.image" class="rounded-circle" style="width:72px;height:72px;object-fit:cover;" alt="Employee photo" />
+            } @else {
+              <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold fs-4" style="width:72px;height:72px;">
+                {{ selectedEmployee.firstName?.charAt(0) }}{{ selectedEmployee.lastName?.charAt(0) }}
+              </div>
+            }
+            <div class="flex-grow-1">
+              <div class="fw-bold fs-5 text-dark mb-1">{{ selectedEmployee.firstName }} {{ selectedEmployee.lastName }}</div>
+              <div class="d-flex flex-wrap gap-3 small text-secondary">
+                <span><i class="bi bi-person-badge me-1"></i>{{ selectedEmployee.employeeNumber || '-' }}</span>
+                <span><i class="bi bi-diagram-3 me-1"></i>{{ selectedEmployee.departmentName || '-' }}</span>
+                <span><i class="bi bi-briefcase me-1"></i>{{ selectedEmployee.jobTitle || '-' }}</span>
+                <span><i class="bi bi-calendar-check me-1"></i>Joined {{ selectedEmployee.hireDate ? (selectedEmployee.hireDate | date:'mediumDate') : '-' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- ── Summary cards ── -->
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #f3e8ff; border-top: 3px solid #8b5cf6 !important;">
+            <div class="card-body p-3">
+              <div class="small fw-bold text-uppercase" style="color:#6b21a8;">Overall Score</div>
+              <div class="fs-4 fw-bold" style="color:#3b0764;">{{ liveOverall != null ? (liveOverall | number:'1.1-1') + ' / 10' : '-' }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #dbeafe; border-top: 3px solid #2563eb !important;">
+            <div class="card-body p-3">
+              <div class="small fw-bold text-uppercase" style="color:#0369a1;">Previous Score</div>
+              <div class="fs-4 fw-bold" style="color:#0c4a6e;">{{ previousScore != null ? (previousScore | number:'1.1-1') + ' / 10' : '-' }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #ccfbf1; border-top: 3px solid #0d9488 !important;">
+            <div class="card-body p-3">
+              <div class="small fw-bold text-uppercase" style="color:#0f766e;">Goal Completion</div>
+              <div class="fs-4 fw-bold" style="color:#115e59;">{{ goalList.length ? goalCompletion + '%' : '-' }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #fef3c7; border-top: 3px solid #f59e0b !important;">
+            <div class="card-body p-3">
+              <div class="small fw-bold text-uppercase" style="color:#b45309;">Promotion Readiness</div>
+              <div class="fs-4 fw-bold" style="color:#78350f;">{{ form.promotionReadiness || '-' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Competency scores ── -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-header py-3 bg-light border-0 fw-semibold text-dark"><i class="bi bi-sliders me-2"></i>Competency Scores</div>
+        <div class="card-body p-4">
+          @for (c of competencies; track c.key) {
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="small fw-semibold text-secondary" style="width: 150px;">{{ c.label }}</div>
+            <input type="range" class="form-range flex-grow-1" min="1" max="10" step="1"
+                   [ngModel]="$any(form)[c.key]" (ngModelChange)="$any(form)[c.key] = $event"
+                   [name]="c.key" />
+            <span class="badge bg-primary-subtle text-primary fw-bold" style="width: 52px;">{{ $any(form)[c.key] || 0 }}/10</span>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- ── KPIs ── -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-header py-3 bg-light border-0 fw-semibold text-dark d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-graph-up me-2"></i>Key Performance Indicators</span>
+          <span class="small text-muted fw-normal">Live from attendance, tasks &amp; client reviews</span>
+        </div>
+        <div class="card-body p-4">
+          @if (kpisLoading) { <app-loader /> }
+          @if (kpisError) { <div class="text-danger small">{{ kpisError }}</div> }
+          @if (!kpisLoading && !kpis && !kpisError) {
+            <div class="text-muted small">Pick an employee and a review period to load KPIs.</div>
+          }
+          @if (kpis) {
+          <div class="row g-3 text-center">
+            <div class="col-6 col-md-4 col-lg-2">
+              <div class="fw-bold fs-5 text-dark">{{ kpis.projectsCompleted }}</div>
+              <div class="small text-muted">Projects Completed</div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <div class="fw-bold fs-5 text-dark">{{ kpis.tasksCompleted }}</div>
+              <div class="small text-muted">Tasks Completed</div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <!-- A dash, not a zero: null means nothing was recorded. -->
+              <div class="fw-bold fs-5 text-dark">{{ kpis.attendancePercent != null ? (kpis.attendancePercent | number:'1.0-1') + '%' : '-' }}</div>
+              <div class="small text-muted">Attendance</div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <div class="fw-bold fs-5 text-dark">{{ kpis.lateArrivals }}</div>
+              <div class="small text-muted">Late Arrivals</div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <div class="fw-bold fs-5 text-dark">{{ kpis.leaveDaysTaken }}</div>
+              <div class="small text-muted">Leaves Taken</div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <div class="fw-bold fs-5 text-dark">{{ kpis.customerSatisfaction != null ? (kpis.customerSatisfaction | number:'1.1-1') + '/5' : '-' }}</div>
+              <div class="small text-muted">Client Satisfaction</div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- ── Goal tracking ── -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-header py-3 bg-light border-0 fw-semibold text-dark d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-bullseye me-2"></i>Goal Tracking</span>
+          <button class="btn btn-outline-primary btn-sm rounded-2" (click)="addGoal()"><i class="bi bi-plus-lg"></i></button>
+        </div>
+        <div class="card-body p-4">
+          @if (!goalList.length) { <div class="text-muted small">No goals recorded. Use + to add one.</div> }
+          @for (g of goalList; track $index) {
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <input class="form-control form-control-sm rounded-2" style="max-width: 260px;" placeholder="Goal title" [(ngModel)]="g.title" [name]="'goal-title-' + $index" />
+            <input type="range" class="form-range flex-grow-1" min="0" max="100" step="5" [(ngModel)]="g.progress" [name]="'goal-progress-' + $index" />
+            <span class="badge bg-success-subtle text-success fw-bold" style="width: 48px;">{{ g.progress || 0 }}%</span>
+            <button class="btn btn-outline-danger btn-sm px-2 py-1 rounded-2" (click)="removeGoal($index)"><i class="bi bi-x"></i></button>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- ── Tags ── -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-body p-4">
+          <div class="small fw-semibold text-secondary mb-2">Strengths</div>
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            @for (t of strengthTags; track t) {
+              <button type="button" class="btn btn-sm rounded-pill px-3"
+                      [class.btn-success]="isSelected(selectedStrengths, t)"
+                      [class.btn-outline-secondary]="!isSelected(selectedStrengths, t)"
+                      (click)="toggleTag(selectedStrengths, t)">
+                @if (isSelected(selectedStrengths, t)) { <i class="bi bi-check2 me-1"></i> }{{ t }}
+              </button>
+            }
+          </div>
+
+          <div class="small fw-semibold text-secondary mb-2">Areas for Improvement</div>
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            @for (t of improvementTags; track t) {
+              <button type="button" class="btn btn-sm rounded-pill px-3"
+                      [class.btn-warning]="isSelected(selectedImprovements, t)"
+                      [class.btn-outline-secondary]="!isSelected(selectedImprovements, t)"
+                      (click)="toggleTag(selectedImprovements, t)">{{ t }}</button>
+            }
+          </div>
+
+          <div class="small fw-semibold text-secondary mb-2">Recognition</div>
+          <div class="d-flex flex-wrap gap-2">
+            @for (t of recognitionTags; track t) {
+              <button type="button" class="btn btn-sm rounded-pill px-3"
+                      [class.btn-primary]="isSelected(selectedRecognition, t)"
+                      [class.btn-outline-secondary]="!isSelected(selectedRecognition, t)"
+                      (click)="toggleTag(selectedRecognition, t)">{{ t }}</button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Recommendations ── -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-header py-3 bg-light border-0 fw-semibold text-dark"><i class="bi bi-clipboard-check me-2"></i>Recommendations</div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary mb-1">Performance Level</label>
+              <select class="form-select form-select-sm rounded-2" [(ngModel)]="form.performanceLevel" name="performanceLevel">
+                <option [ngValue]="undefined">— Select —</option>
+                @for (o of performanceLevels; track o) { <option [ngValue]="o">{{ o }}</option> }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary mb-1">Promotion Recommendation</label>
+              <select class="form-select form-select-sm rounded-2" [(ngModel)]="form.promotionRecommendation" name="promotionRecommendation">
+                <option [ngValue]="undefined">— Select —</option>
+                @for (o of promotionOptions; track o) { <option [ngValue]="o">{{ o }}</option> }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary mb-1">Promotion Readiness</label>
+              <select class="form-select form-select-sm rounded-2" [(ngModel)]="form.promotionReadiness" name="promotionReadiness">
+                <option [ngValue]="undefined">— Select —</option>
+                @for (o of readinessOptions; track o) { <option [ngValue]="o">{{ o }}</option> }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary mb-1">Salary Increment</label>
+              <select class="form-select form-select-sm rounded-2" [(ngModel)]="form.salaryIncrement" name="salaryIncrement">
+                <option [ngValue]="undefined">— Select —</option>
+                @for (o of salaryOptions; track o) { <option [ngValue]="o">{{ o }}</option> }
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label small fw-semibold text-secondary mb-1">Employment Status</label>
+              <div class="d-flex flex-wrap gap-2">
+                @for (o of employmentOptions; track o) {
+                  <button type="button" class="btn btn-sm rounded-pill px-3"
+                          [class.btn-dark]="form.employmentStatusRecommendation === o"
+                          [class.btn-outline-secondary]="form.employmentStatusRecommendation !== o"
+                          (click)="form.employmentStatusRecommendation = o">{{ o }}</button>
+                }
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-secondary mb-1">Training Recommendation</label>
+              <div class="d-flex flex-wrap gap-2">
+                @for (t of trainingTags; track t) {
+                  <button type="button" class="btn btn-sm rounded-pill px-3"
+                          [class.btn-info]="isSelected(selectedTraining, t)"
+                          [class.btn-outline-secondary]="!isSelected(selectedTraining, t)"
+                          (click)="toggleTag(selectedTraining, t)">{{ t }}</button>
+                }
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary mb-1">Goals for Next Period</label>
+              <textarea class="form-control form-control-sm rounded-2" rows="3" [(ngModel)]="form.goalsForNextPeriod" name="goalsForNextPeriod"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary mb-1">Comments</label>
+              <textarea class="form-control form-control-sm rounded-2" rows="3" [(ngModel)]="form.comments" name="comments"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════ SIDEBAR ══════════ -->
+    <div class="col-lg-4">
+
+      <!-- Review timeline -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-header py-3 bg-light border-0 fw-semibold text-dark"><i class="bi bi-list-check me-2"></i>Review Timeline</div>
+        <div class="card-body p-4">
+          @if (!isEdit) {
+            <div class="text-muted small">Save the review to start the approval chain.</div>
+          } @else {
+            @for (s of stageOrder; track s.key) {
+              @let state = stageState(editingReview, s.key);
+              <div class="d-flex align-items-center gap-2 mb-3">
+                @if (state === 'done') {
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                } @else if (state === 'current') {
+                  <i class="bi bi-arrow-repeat text-primary"></i>
+                } @else {
+                  <i class="bi bi-circle text-muted"></i>
+                }
+                <span class="small flex-grow-1" [class.text-muted]="state === 'pending'">{{ s.label }}</span>
+                @if (state === 'done') {
+                  <span class="badge bg-success-subtle text-success rounded-pill">Completed</span>
+                } @else if (state === 'current') {
+                  <span class="badge bg-primary-subtle text-primary rounded-pill">In Progress</span>
+                } @else {
+                  <span class="badge bg-secondary-subtle text-secondary rounded-pill">Pending</span>
+                }
+              </div>
+            }
+            <div class="text-muted small">Use <strong>Advance</strong> in the list below to sign off each stage.</div>
+          }
+        </div>
+      </div>
+
+      <!-- Attachments -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-header py-3 bg-light border-0 fw-semibold text-dark"><i class="bi bi-paperclip me-2"></i>Attachments</div>
+        <div class="card-body p-4">
+          @if (!isEdit) {
+            <div class="text-muted small">Save the review first, then attach supporting documents.</div>
+          } @else {
+            <label class="btn btn-outline-primary btn-sm rounded-2 w-100 mb-3" [class.disabled]="uploading">
+              @if (uploading) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              <i class="bi bi-upload me-1"></i>Upload Document
+              <input type="file" class="d-none" (change)="onFileSelected($event)" [disabled]="uploading" />
+            </label>
+            @if (!attachments.length) { <div class="text-muted small">No documents attached.</div> }
+            @for (a of attachments; track a.id) {
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="bi bi-file-earmark-text text-secondary"></i>
+              <a [href]="a.fileUrl" target="_blank" rel="noopener" class="small flex-grow-1 text-truncate">{{ a.fileName }}</a>
+              <button class="btn btn-outline-danger btn-sm px-2 py-0 rounded-2" (click)="removeAttachment(a)"><i class="bi bi-x"></i></button>
+            </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Review history -->
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header py-3 bg-light border-0 fw-semibold text-dark"><i class="bi bi-clock-history me-2"></i>Review History</div>
+        <div class="card-body p-0">
+          @if (!employeeHistory.length) {
+            <div class="p-4 text-muted small">No earlier reviews for this employee.</div>
+          } @else {
+          <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+              <thead class="table-light small text-uppercase text-secondary">
+                <tr><th class="ps-3">Period</th><th class="text-end">Overall</th><th>Reviewer</th><th class="pe-3">Status</th></tr>
+              </thead>
+              <tbody>
+                @for (h of employeeHistory; track h.id) {
+                <tr>
+                  <td class="ps-3 small">{{ h.reviewPeriodStart | date:'MMM y' }} – {{ h.reviewPeriodEnd | date:'MMM y' }}</td>
+                  <td class="text-end fw-semibold small">{{ h.overallScore != null ? (h.overallScore | number:'1.1-1') : '-' }}</td>
+                  <td class="small text-muted">{{ h.reviewedByName || '-' }}</td>
+                  <td class="pe-3">
+                    @if (h.finalised) {
+                      <span class="badge bg-success-subtle text-success rounded-pill">Approved</span>
+                    } @else {
+                      <span class="badge bg-warning-subtle text-warning rounded-pill">Draft</span>
+                    }
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="saving" (click)="save()">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> } Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Reviews List Table -->
+  @if (!loading && reviews.length) {
+  <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" style="border-collapse: separate; border-spacing: 0 4px;">
+        <thead class="table-light text-secondary text-uppercase small" style="border-bottom: 2px solid #eef2f5;">
+          <tr>
+            <th class="ps-4">Employee</th>
+            <th>Review Period</th>
+            <th class="text-end">Overall Score</th>
+            <th>Stage</th>
+            <th class="text-center">Status</th>
+            <th>Reviewed By</th>
+            <th class="text-end pe-4"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of reviews; track r.id) {
+          <tr style="background-color: #ffffff;">
+            <td class="ps-4 fw-bold text-dark">{{ r.employeeName }}</td>
+            <td class="text-secondary small">{{ r.reviewPeriodStart | date:'mediumDate' }} - {{ r.reviewPeriodEnd | date:'mediumDate' }}</td>
+            <td class="text-end fw-bold text-success" style="font-size: 15px;">{{ r.overallScore ? (r.overallScore | number:'1.1-2') + '/10' : '-' }}</td>
+            <td>
+              <span class="badge bg-info-subtle text-info rounded-pill px-3 py-1 fw-semibold">{{ stageLabel(r.stage) }}</span>
+            </td>
+            <td class="text-center">
+              @if (r.finalised) {
+                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5 fw-semibold">Finalised</span>
+              } @else {
+                <span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-1.5 fw-semibold">Draft</span>
+              }
+            </td>
+            <td class="text-muted small">{{ r.reviewedByName || '-' }}</td>
+            <td class="text-end pe-4 text-nowrap">
+              <button class="btn btn-outline-primary btn-sm px-2 py-1 rounded-2 me-1" [disabled]="summarisingId === r.id" (click)="summarise(r)" title="AI Summary">
+                @if (summarisingId === r.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-stars small"></i> }
+              </button>
+              @if (!r.finalised) {
+                <button *appHasPermission="'PERFORMANCE_UPDATE'" class="btn btn-outline-info btn-sm border-info-subtle px-3 rounded-2 fw-medium me-1" (click)="advance(r)" title="Sign off the current stage">Advance</button>
+                <button *appHasPermission="'PERFORMANCE_UPDATE'" class="btn btn-outline-success btn-sm border-success-subtle px-3 rounded-2 fw-medium me-1" (click)="finalise(r)">Finalise</button>
+                <button *appHasPermission="'PERFORMANCE_UPDATE'" class="btn btn-outline-secondary btn-sm border-light-subtle px-2 py-1 rounded-2 me-1" (click)="openEdit(r)"><i class="bi bi-pencil small"></i></button>
+              }
+              <button *appHasPermission="'PERFORMANCE_DELETE'" class="btn btn-outline-danger btn-sm border-danger-subtle px-2 py-1 rounded-2" style="background-color: #fff5f5;" (click)="deleteTarget = r"><i class="bi bi-trash small"></i></button>
+            </td>
+          </tr>
+          @if (r.aiSummary) {
+          <tr>
+            <td colspan="7" class="bg-light small text-secondary whitespace-pre-wrap px-4 py-2">{{ r.aiSummary }}</td>
+          </tr>
+          }
+          }
+          @if (summaryError) {
+          <tr><td colspan="7" class="text-danger small px-4 py-2">{{ summaryError }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end bg-white border-0 py-3">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+
+  @if (!loading && !reviews.length && !showForm) {
+    <app-empty-state icon="bi-award" message="No performance reviews found." />
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Review" message="Are you sure you want to delete this performance review?" (confirmed)="confirmDelete()" (cancelled)="deleteTarget = null" />
+</div>

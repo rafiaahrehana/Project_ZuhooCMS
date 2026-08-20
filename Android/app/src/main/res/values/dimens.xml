@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base spacing scale. Every margin/padding in the app should reference one of these
+         instead of a hand-picked value — see docs on the "Charcoal & Green" redesign for why:
+         arbitrary values (13dp, 17dp, 23dp...) crept in screen by screen with no system behind
+         them. Stick to this scale; if a design truly needs something outside it, that's a sign
+         to reconsider the layout rather than add a one-off dimension. -->
+    <dimen name="space_4">4dp</dimen>
+    <dimen name="space_8">8dp</dimen>
+    <dimen name="space_12">12dp</dimen>
+    <dimen name="space_16">16dp</dimen>
+    <dimen name="space_20">20dp</dimen>
+    <dimen name="space_24">24dp</dimen>
+    <dimen name="space_32">32dp</dimen>
+
+    <!-- Semantic aliases for the spots the scale gets used most, so layouts read as intent
+         ("screen_padding_h") rather than a bare number that could mean anything. -->
+    <dimen name="screen_padding_h">16dp</dimen>
+    <dimen name="screen_padding_v">16dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+    <dimen name="card_padding_compact">12dp</dimen>
+    <dimen name="section_spacing">24dp</dimen>
+    <dimen name="item_spacing">8dp</dimen>
+    <dimen name="field_spacing">16dp</dimen>
+    <dimen name="icon_text_spacing">8dp</dimen>
+
+    <!-- Touch targets. 48dp is the Android accessibility minimum; buttons default a hair
+         taller (52dp) so primary CTAs read as more substantial without being oversized. -->
+    <dimen name="min_touch_target">48dp</dimen>
+    <dimen name="button_height">48dp</dimen>
+    <dimen name="button_height_large">52dp</dimen>
+
+    <!-- Corner radii. Exactly two values app-wide: cards/fields get a modest, modern radius;
+         pills (badges, chips) are fully rounded. Nothing in between — inconsistent radii across
+         screens is one of the clearest "this wasn't designed as one system" tells. -->
+    <dimen name="radius_card">12dp</dimen>
+    <dimen name="radius_field">10dp</dimen>
+    <dimen name="radius_button">10dp</dimen>
+    <dimen name="radius_pill">100dp</dimen>
+
+    <!-- Icon sizes. -->
+    <dimen name="icon_size_small">16dp</dimen>
+    <dimen name="icon_size_medium">24dp</dimen>
+    <dimen name="icon_size_large">32dp</dimen>
+    <dimen name="icon_size_empty_state">64dp</dimen>
+
+    <!-- Stroke width used everywhere a border replaces a shadow (cards, fields, outlined
+         buttons) — one value so "how thick is a border" is never a per-screen decision. -->
+    <dimen name="stroke_width">1dp</dimen>
+</resources>

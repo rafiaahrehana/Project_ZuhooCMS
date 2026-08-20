@@ -1,0 +1,51 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+    <div>
+      <h4 class="mb-1">Feature Flags</h4>
+      <div class="text-muted small">
+        Toggle features on or off across the entire platform.
+        @if (!loading && flags.length) { <span class="ms-1">· {{ enabledCount }} of {{ flags.length }} enabled</span> }
+      </div>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm" [disabled]="seeding" (click)="seed()">
+      @if (seeding) { <span class="spinner-border spinner-border-sm me-1"></span> }
+      <i class="bi bi-arrow-clockwise"></i> Seed defaults
+    </button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && flags.length) {
+  <div class="card border-0 shadow-sm">
+    <div class="list-group list-group-flush">
+      @for (flag of flags; track flag.id) {
+      <div class="list-group-item d-flex justify-content-between align-items-center gap-3 py-3">
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center gap-2">
+            <code class="fw-medium text-body">{{ flag.flagKey }}</code>
+            @if (flag.enabled) { <span class="badge rounded-pill text-bg-success">On</span> }
+            @else { <span class="badge rounded-pill text-bg-secondary">Off</span> }
+          </div>
+          <div class="text-muted small mt-1">{{ flag.description || 'No description' }}</div>
+          @if (flag.updatedAt) { <div class="text-muted" style="font-size:.7rem">Last updated {{ flag.updatedAt | date:'short' }}</div> }
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" [id]="'ff-' + flag.id" [checked]="flag.enabled" (change)="toggle(flag)" />
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+  @if (!loading && !flags.length) {
+  <div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-flag text-muted fs-1"></i>
+      <div class="fw-medium mt-2">No feature flags defined</div>
+      <div class="text-muted small mb-3">Click "Seed defaults" to initialize the standard flag set.</div>
+      <button class="btn btn-primary btn-sm" (click)="seed()"><i class="bi bi-arrow-clockwise"></i> Seed defaults</button>
+    </div>
+  </div>
+  }
+</div>

@@ -1,0 +1,103 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Packages</h4>
+    <div class="btn-group btn-group-sm">
+      <button class="btn" [class.btn-primary]="tab==='subscriptions'" [class.btn-outline-primary]="tab!=='subscriptions'" (click)="setTab('subscriptions')">My Subscriptions</button>
+      <button class="btn" [class.btn-primary]="tab==='browse'" [class.btn-outline-primary]="tab!=='browse'" (click)="setTab('browse')">Browse Packages</button>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+
+  @if (tab === 'subscriptions') {
+    @if (loading) { <app-loader /> }
+
+    @if (!loading && subscriptions.length) {
+    <div class="row g-3">
+      @for (sub of subscriptions; track sub.id) {
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">{{ sub.packageName || 'Package #' + sub.packageId }}</span>
+            <span class="badge {{ statusClass(sub.status) }}">{{ sub.status }}</span>
+          </div>
+          <div class="card-body">
+            <dl class="row small mb-2">
+              <dt class="col-6 text-muted">Billing Cycle</dt><dd class="col-6">{{ sub.billingCycle || '-' }}</dd>
+              <dt class="col-6 text-muted">Price Paid</dt><dd class="col-6">{{ sub.pricePaid != null ? (sub.pricePaid | bosCurrency) : '-' }}</dd>
+              <dt class="col-6 text-muted">Start</dt><dd class="col-6">{{ sub.startDate ? (sub.startDate | date) : '-' }}</dd>
+              <dt class="col-6 text-muted">Next Billing</dt><dd class="col-6">{{ sub.nextBillingDate ? (sub.nextBillingDate | date) : '-' }}</dd>
+            </dl>
+            @if (sub.requestQuota) {
+            <div class="small text-muted mb-1 d-flex justify-content-between">
+              <span>Requests used</span>
+              <span>{{ sub.requestsUsed }} / {{ sub.requestQuota }}</span>
+            </div>
+            <div class="progress" style="height: 6px">
+              <div class="progress-bar" [style.width.%]="usagePercent(sub)"></div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    <div class="d-flex justify-content-end mt-3">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+    }
+
+    @if (!loading && !subscriptions.length) {
+      <app-empty-state icon="bi-box-seam" message="You don't have any packages yet." />
+    }
+  }
+
+  @if (tab === 'browse') {
+    @if (catalogLoading) { <app-loader /> }
+
+    @if (!catalogLoading && catalog.length) {
+    <div class="row g-3">
+      @for (pkg of catalog; track pkg.id) {
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100" [class.border-primary]="pkg.featured">
+          <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">{{ pkg.name }}</span>
+            @if (pkg.popular) { <span class="badge text-bg-warning">Popular</span> }
+          </div>
+          <div class="card-body d-flex flex-column">
+            @if (pkg.description) { <p class="small text-muted">{{ pkg.description }}</p> }
+            <div class="mb-2">
+              @if (pkg.discountPercent && pkg.effectivePrice !== pkg.packagePrice) {
+                <span class="text-muted text-decoration-line-through small me-2">{{ pkg.packagePrice | bosCurrency }}</span>
+              }
+              <span class="fs-5 fw-bold">{{ (pkg.effectivePrice ?? pkg.packagePrice) | bosCurrency }}</span>
+              <span class="text-muted small">/ {{ pkg.billingCycle || 'one-time' }}</span>
+            </div>
+            @if (pkg.requestQuota) {
+              <div class="small text-muted mb-2">{{ pkg.requestQuota }} requests included</div>
+            }
+            <div class="mt-auto pt-2">
+              @if (alreadySubscribed(pkg)) {
+                <button class="btn btn-outline-secondary btn-sm w-100" disabled>Already Subscribed</button>
+              } @else {
+                <button class="btn btn-primary btn-sm w-100" [disabled]="subscribingId === pkg.id" (click)="subscribeAndPay(pkg)">
+                  @if (subscribingId === pkg.id) {
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Starting checkout...
+                  } @else {
+                    Subscribe
+                  }
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+    @if (!catalogLoading && !catalog.length) {
+      <app-empty-state icon="bi-box-seam" message="No packages are available right now." />
+    }
+  }
+</div>

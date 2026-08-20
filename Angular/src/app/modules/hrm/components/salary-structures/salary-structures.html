@@ -1,0 +1,393 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0">Salary Structures</h4>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm" style="width: 240px" [(ngModel)]="selectedEmployeeId" (change)="load()">
+        <!-- Selectable, not disabled: this is how you get back to the full list. -->
+        <option [ngValue]="null">All employees</option>
+        @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option> }
+      </select>
+      <button *appHasPermission="'SALARY_STRUCTURE_CREATE'" class="btn btn-outline-light btn-sm text-nowrap" (click)="openTemplateEditor()">
+        <i class="bi bi-collection me-1"></i>Templates
+      </button>
+      <button *appHasPermission="'SALARY_STRUCTURE_CREATE'" class="btn btn-outline-light btn-sm text-nowrap" (click)="showCatalog = true">
+        <i class="bi bi-list-check me-1"></i>Components
+      </button>
+      <button *appHasPermission="'SALARY_STRUCTURE_CREATE'" class="btn btn-primary btn-sm text-nowrap" [disabled]="!selectedEmployeeId" (click)="openCreate()">
+        <i class="bi bi-plus-lg me-1"></i>New Structure
+      </button>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && structures.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            @if (showingAll) { <th>Employee</th> }
+            <th>Effective From</th><th>Effective To</th>
+            <th class="text-end">Gross</th><th class="text-end">Basic</th>
+            <th class="text-end">House Rent</th><th class="text-end">Medical</th>
+            <th class="text-end">Transport</th><th class="text-end">Food</th>
+            <th class="text-end">Special</th><th class="text-end">PF</th>
+            <th class="text-end">Tax</th><th class="text-end">Net</th>
+            <th>Approved By</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of structures; track s.id) {
+          <tr>
+            @if (showingAll) { <td class="fw-semibold">{{ s.employeeName || '-' }}</td> }
+            <td>
+              {{ s.effectiveFrom | date:'mediumDate' }}
+              @if (isCurrent(s)) { <span class="badge text-bg-success ms-1">CURRENT</span> }
+            </td>
+            <td>{{ s.effectiveTo ? (s.effectiveTo | date:'mediumDate') : '-' }}</td>
+            <td class="text-end">{{ s.grossSalary | number:'1.2-2' }}</td>
+            <td class="text-end">{{ s.basicSalary | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (s.houseRent ?? 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (s.medicalAllowance ?? 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (s.transportAllowance ?? 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (s.foodAllowance ?? 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (s.specialAllowance ?? 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (s.providentFund ?? 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (s.taxDeduction ?? 0) | number:'1.2-2' }}</td>
+            <td class="text-end fw-semibold">{{ s.netSalary | number:'1.2-2' }}</td>
+            <td>{{ s.approvedByName || '-' }}</td>
+            <td class="text-end text-nowrap">
+              @if (isCurrent(s)) {
+                <button *appHasPermission="'SALARY_STRUCTURE_CREATE'" class="btn btn-outline-secondary btn-sm py-0 me-1" title="Edit current structure" (click)="openEdit(s)"><i class="bi bi-pencil"></i></button>
+              }
+              <button *appHasPermission="'SALARY_STRUCTURE_DELETE'" class="btn btn-outline-danger btn-sm py-0" title="Delete" (click)="deleteTarget = s"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (!loading && !structures.length) {
+    @if (selectedEmployeeId) {
+      <app-empty-state icon="bi-cash" message="No salary structures for this employee." />
+    } @else {
+      <app-empty-state icon="bi-cash" message="No salary structures yet." />
+    }
+  }
+</div>
+
+@if (showForm) {
+<div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form #f="ngForm" (ngSubmit)="f.valid && save()">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editingId ? 'Edit Salary Structure' : 'New Salary Structure' }}</h5>
+          <button type="button" class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            @if (templates.length) {
+            <div class="col-12">
+              <label class="form-label">Company template <span class="text-muted fw-normal">(optional)</span></label>
+              <div class="d-flex gap-2 align-items-center flex-wrap">
+                <select class="form-select form-select-sm" style="max-width: 260px" name="structTemplate" [(ngModel)]="selectedTemplateId" (ngModelChange)="onTemplateSelected()">
+                  <option [ngValue]="null">No template</option>
+                  @for (t of templates; track t.id) { <option [ngValue]="t.id">{{ t.structureName }}</option> }
+                </select>
+                @if (applyingTemplate) { <span class="spinner-border spinner-border-sm"></span> }
+                <span class="form-text mb-0">Enter Gross, pick a template — every field fills itself (and refills when Gross changes).</span>
+              </div>
+            </div>
+            }
+            <div class="col-12">
+              <label class="form-label">Auto-breakup <span class="text-muted fw-normal">(optional)</span></label>
+              <div class="d-flex gap-2 align-items-center flex-wrap">
+                <select class="form-select form-select-sm" style="max-width: 260px" name="breakupPreset" [(ngModel)]="selectedPreset" (ngModelChange)="applyBreakup()">
+                  <option value="">Manual entry</option>
+                  @for (p of breakupPresets; track p.key) { <option [value]="p.key">{{ p.label }}</option> }
+                </select>
+                <span class="form-text mb-0">Pick a preset to split Gross into components, or just type the components — Gross updates to their sum automatically.</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Effective From *</label>
+              <input type="date" class="form-control form-control-sm" name="effectiveFrom" [(ngModel)]="form.effectiveFrom" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Gross Salary *</label>
+              <input type="number" class="form-control form-control-sm" name="grossSalary" [(ngModel)]="form.grossSalary" (ngModelChange)="onGrossChanged()" required min="0.01" step="0.01">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Basic Salary *</label>
+              <input type="number" class="form-control form-control-sm" name="basicSalary" [(ngModel)]="form.basicSalary" (ngModelChange)="syncGross()" [placeholder]="pctHint('basic')" required min="0.01" step="0.01">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">House Rent</label>
+              <input type="number" class="form-control form-control-sm" name="houseRent" [(ngModel)]="form.houseRent" (ngModelChange)="syncGross()" [placeholder]="pctHint('houseRent')" min="0">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Medical</label>
+              <input type="number" class="form-control form-control-sm" name="medicalAllowance" [(ngModel)]="form.medicalAllowance" (ngModelChange)="syncGross()" [placeholder]="pctHint('medical')" min="0">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Transport</label>
+              <input type="number" class="form-control form-control-sm" name="transportAllowance" [(ngModel)]="form.transportAllowance" (ngModelChange)="syncGross()" [placeholder]="pctHint('transport')" min="0">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Food</label>
+              <input type="number" class="form-control form-control-sm" name="foodAllowance" [(ngModel)]="form.foodAllowance" (ngModelChange)="syncGross()" [placeholder]="pctHint('food')" min="0">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">
+                Special Allowance
+                <i class="bi bi-info-circle text-muted" title="The balancing component, standard in IT salary structures: it automatically absorbs whatever of Gross the fixed components don't cover, so the structure always adds up. Type a value to take manual control."></i>
+              </label>
+              <input type="number" class="form-control form-control-sm" name="specialAllowance" [(ngModel)]="form.specialAllowance" (ngModelChange)="onSpecialEdited()" placeholder="auto-balances to Gross" min="0">
+              @if (autoBalanceSpecial) { <div class="form-text">Auto-balancing so components always equal Gross.</div> }
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Provident Fund</label>
+              <input type="number" class="form-control form-control-sm" name="providentFund" [(ngModel)]="form.providentFund" [placeholder]="(pfRate * 100) + '% of basic'" min="0">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Tax</label>
+              <div class="input-group input-group-sm">
+                <input type="number" class="form-control" name="taxRatePct" [(ngModel)]="taxRatePct" (ngModelChange)="applyTax()" min="0" max="100" step="0.1" placeholder="%" title="Tax as % of Gross">
+                <span class="input-group-text">%</span>
+                <input type="number" class="form-control" name="taxDeduction" [(ngModel)]="form.taxDeduction" min="0" placeholder="Amount" title="Tax amount">
+              </div>
+              <div class="form-text">Enter a % of Gross, or type the amount directly.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control form-control-sm" name="notes" [(ngModel)]="form.notes" rows="2"></textarea>
+            </div>
+
+            <!-- Extra catalog components: loan EMI, internet, insurance... -->
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center">
+                <label class="form-label mb-0">Recurring monthly components <span class="text-muted fw-normal">(paid on top of Gross: internet, loan EMI, insurance…)</span></label>
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0" (click)="addExtraRow()"><i class="bi bi-plus-lg"></i> Add</button>
+              </div>
+              @if (hasOneOffExtras) {
+                <div class="alert alert-warning py-1 px-2 small mt-2 mb-0">
+                  <i class="bi bi-exclamation-triangle me-1"></i>
+                  Festival / performance bonuses here repeat <strong>every month</strong>. One-off bonuses are
+                  normally entered on the payroll month itself (the Bonus field on the Payroll page).
+                </div>
+              }
+              @for (row of extras; track $index) {
+                <div class="d-flex gap-2 mt-2 align-items-center">
+                  <select class="form-select form-select-sm" style="max-width: 280px" [name]="'extraComp' + $index" [(ngModel)]="row.componentId">
+                    <option [ngValue]="null">Select component…</option>
+                    @for (c of catalog; track c.id) {
+                      @if (c.active) { <option [ngValue]="c.id">{{ componentLabel(c) }}</option> }
+                    }
+                  </select>
+                  <input type="number" class="form-control form-control-sm" style="max-width: 160px"
+                         [name]="'extraAmt' + $index" [(ngModel)]="row.amount" placeholder="Amount" min="0" step="0.01">
+                  <button type="button" class="btn btn-outline-danger btn-sm py-0" (click)="removeExtraRow($index)"><i class="bi bi-x-lg"></i></button>
+                </div>
+              }
+              @if (extras.length) {
+                <div class="form-text">
+                  Components: +{{ extrasTotal('EARNING') | number:'1.2-2' }} earnings,
+                  −{{ extrasTotal('DEDUCTION') | number:'1.2-2' }} deductions — applied on every payroll run.
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Live earnings / net summary -->
+          <div class="mt-3 p-3 rounded-3" style="background: var(--bos-bg-hover); border: 1px solid var(--bos-border);">
+            <div class="d-flex justify-content-between align-items-center small">
+              <span class="text-muted">Total earnings vs Gross</span>
+              <span class="fw-semibold" [class.text-success]="earningsReconcile" [class.text-danger]="!earningsReconcile && (form.grossSalary || 0) > 0">
+                {{ totalEarnings | number:'1.2-2' }} / {{ (form.grossSalary || 0) | number:'1.2-2' }}
+                @if (earningsReconcile) { <i class="bi bi-check-circle-fill ms-1"></i> }
+                @else if ((form.grossSalary || 0) > 0) { <i class="bi bi-exclamation-triangle-fill ms-1"></i> }
+              </span>
+            </div>
+            @if (!earningsReconcile && (form.grossSalary || 0) > 0) {
+              <div class="small text-danger mt-1">Components don't add up to Gross — adjust so earnings equal Gross.</div>
+            }
+            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+              <span class="small">Net salary <span class="text-muted">(Gross − PF − Tax ± components)</span></span>
+              <span class="fw-bold">{{ netSalary | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving || !earningsReconcile" [title]="!earningsReconcile ? 'Component earnings must equal Gross' : ''">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            {{ editingId ? 'Update' : 'Create' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+}
+
+@if (showTemplates) {
+<div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Salary Structure Templates</h5>
+        <button type="button" class="btn-close" (click)="showTemplates = false; editingTemplateId = null"></button>
+      </div>
+      <div class="modal-body">
+        @if (templates.length) {
+        <div class="table-responsive mb-3">
+          <table class="table table-sm align-middle">
+            <thead><tr><th>Name</th><th class="text-end">Gross</th><th class="text-end">Basic %</th><th class="text-end">HRA % of basic</th>
+              <th class="text-end">Medical</th><th class="text-end">Transport</th><th class="text-end">Internet</th>
+              <th class="text-end">Mobile</th><th class="text-end">Meal</th><th></th></tr></thead>
+            <tbody>
+              @for (t of templates; track t.id) {
+              <tr>
+                <td class="fw-semibold">{{ t.structureName }}</td>
+                <td class="text-end">{{ t.defaultGross ? (t.defaultGross | number:'1.0-0') : '—' }}</td>
+                <td class="text-end">{{ t.basicPercentage }}</td>
+                <td class="text-end">{{ t.hraPercentage }}</td>
+                <td class="text-end">{{ t.medicalAmount | number:'1.0-0' }}</td>
+                <td class="text-end">{{ t.transportAmount | number:'1.0-0' }}</td>
+                <td class="text-end">{{ t.internetAmount | number:'1.0-0' }}</td>
+                <td class="text-end">{{ t.mobileAmount | number:'1.0-0' }}</td>
+                <td class="text-end">{{ t.mealAmount | number:'1.0-0' }}</td>
+                <td class="text-end text-nowrap">
+                  <button class="btn btn-outline-secondary btn-sm py-0 me-1" (click)="openTemplateEditor(t)"><i class="bi bi-pencil"></i></button>
+                  <button class="btn btn-outline-danger btn-sm py-0" (click)="deleteTemplate(t)"><i class="bi bi-trash"></i></button>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        } @else {
+          <p class="text-muted small">No templates yet — create "Engineer Grade A"-style recipes once and reuse them for every hire.</p>
+        }
+
+        <form #tf="ngForm" (ngSubmit)="tf.valid && saveTemplate()" class="border-top pt-3">
+          <div class="fw-semibold mb-2">{{ editingTemplateId ? 'Edit template' : 'New template' }}</div>
+          <div class="row g-2">
+            <div class="col-md-4">
+              <label class="form-label small">Name *</label>
+              <input class="form-control form-control-sm" name="tName" [(ngModel)]="templateForm.structureName" required placeholder="Engineer Grade A">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Default gross</label>
+              <input type="number" class="form-control form-control-sm" name="tGross" [(ngModel)]="templateForm.defaultGross" min="0" placeholder="100000">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Basic % of gross</label>
+              <input type="number" class="form-control form-control-sm" name="tBasic" [(ngModel)]="templateForm.basicPercentage" min="0" max="100">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">HRA % of basic</label>
+              <input type="number" class="form-control form-control-sm" name="tHra" [(ngModel)]="templateForm.hraPercentage" min="0" max="100">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Medical</label>
+              <input type="number" class="form-control form-control-sm" name="tMed" [(ngModel)]="templateForm.medicalAmount" min="0">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Transport</label>
+              <input type="number" class="form-control form-control-sm" name="tTrans" [(ngModel)]="templateForm.transportAmount" min="0">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Internet</label>
+              <input type="number" class="form-control form-control-sm" name="tNet" [(ngModel)]="templateForm.internetAmount" min="0">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Mobile</label>
+              <input type="number" class="form-control form-control-sm" name="tMob" [(ngModel)]="templateForm.mobileAmount" min="0">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Meal</label>
+              <input type="number" class="form-control form-control-sm" name="tMeal" [(ngModel)]="templateForm.mealAmount" min="0">
+            </div>
+            <div class="col-md-6 d-flex align-items-end gap-2">
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="tf.invalid || savingTemplate">
+                @if (savingTemplate) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                {{ editingTemplateId ? 'Update Template' : 'Add Template' }}
+              </button>
+              @if (editingTemplateId) {
+                <button type="button" class="btn btn-secondary btn-sm" (click)="editingTemplateId = null; templateForm = { structureName: '', basicPercentage: 50, hraPercentage: 40, medicalAmount: 0, transportAmount: 0, internetAmount: 0, mobileAmount: 0, mealAmount: 0 }">Cancel edit</button>
+              }
+            </div>
+          </div>
+          <div class="form-text mt-2">Whatever gross remains after basic, HRA and the fixed amounts becomes Special Allowance.</div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+@if (showCatalog) {
+<div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Salary Components</h5>
+        <button type="button" class="btn-close" (click)="showCatalog = false"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive mb-3" style="max-height: 320px;">
+          <table class="table table-sm align-middle">
+            <thead><tr><th>Name</th><th>Type</th><th>Calc</th><th>Taxable</th><th class="text-end">Active</th></tr></thead>
+            <tbody>
+              @for (c of catalog; track c.id) {
+              <tr [class.opacity-50]="!c.active">
+                <td>{{ c.name }}</td>
+                <td><span class="badge" [ngClass]="c.type === 'EARNING' ? 'text-bg-success' : c.type === 'DEDUCTION' ? 'text-bg-danger' : 'text-bg-secondary'">{{ c.type.replaceAll('_', ' ') }}</span></td>
+                <td class="small">{{ c.calculationType }}</td>
+                <td class="small">{{ c.taxable ? 'Yes' : 'No' }}</td>
+                <td class="text-end">
+                  <div class="form-check form-switch d-inline-block">
+                    <input class="form-check-input" type="checkbox" [checked]="c.active" (change)="toggleComponent(c)">
+                  </div>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="border-top pt-3">
+          <div class="fw-semibold mb-2">Add component</div>
+          <div class="d-flex gap-2 flex-wrap">
+            <input class="form-control form-control-sm" style="max-width: 220px" placeholder="Name" [(ngModel)]="newComponent.name">
+            <select class="form-select form-select-sm" style="max-width: 200px" [(ngModel)]="newComponent.type">
+              <option value="EARNING">Earning</option>
+              <option value="DEDUCTION">Deduction</option>
+              <option value="EMPLOYER_CONTRIBUTION">Employer Contribution</option>
+            </select>
+            <button class="btn btn-primary btn-sm" [disabled]="!newComponent.name || savingComponent" (click)="addComponent()">
+              @if (savingComponent) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<app-confirm-dialog
+  [visible]="!!deleteTarget"
+  title="Delete Salary Structure"
+  [message]="'Delete structure effective ' + (deleteTarget?.effectiveFrom || '') + '?'"
+  confirmLabel="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="deleteTarget = null" />

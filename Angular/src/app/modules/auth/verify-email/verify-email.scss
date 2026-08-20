@@ -1,0 +1,56 @@
+.login-container {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  
+  .brand-panel {
+    background: var(--bos-gradient-brand);
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    
+    .brand-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.12;
+      background-image: radial-gradient(#ffffff 1.5px, transparent 1.5px), radial-gradient(#ffffff 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+      pointer-events: none;
+      z-index: 0;
+    }
+  }
+  
+  .form-panel {
+    min-height: 100vh;
+    background: #f8fafc;
+  }
+  
+  .text-slate-800 {
+    color: #0f172a;
+  }
+  
+  .form-control {
+    height: 42px;
+    border-radius: 10px;
+    
+    &:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+  }
+  
+  .btn-primary {
+    background: var(--bos-gradient-accent);
+    border: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 6px -1px rgba(13, 110, 253, 0.2), 0 2px 4px -2px rgba(13, 110, 253, 0.2);
+    
+    &:hover, &:focus {
+      background: linear-gradient(135deg, var(--bos-brand-hover) 0%, var(--bos-brand) 100%);
+      box-shadow: 0 10px 15px -3px rgba(13, 110, 253, 0.25), 0 4px 6px -4px rgba(13, 110, 253, 0.25);
+    }
+  }
+}

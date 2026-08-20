@@ -1,0 +1,159 @@
+<div class="container-fluid py-3">
+  <div class="mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0">Biometric Data</h4>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link" [class.active]="tab === 'devices'" (click)="tab = 'devices'" role="button">Devices</a></li>
+    <li class="nav-item"><a class="nav-link" [class.active]="tab === 'enrollments'" (click)="tab = 'enrollments'" role="button">Enrollments</a></li>
+  </ul>
+
+  @if (tab === 'devices') {
+  <div class="d-flex justify-content-end mb-3">
+    <button *appHasPermission="'BIOMETRIC_MANAGE'" class="btn btn-primary btn-sm" (click)="openCreateDevice()"><i class="bi bi-plus"></i> Register Device</button>
+  </div>
+
+  <!-- Device modal -->
+  @if (showDeviceForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Biometric Device</h5>
+          <button class="btn-close" (click)="showDeviceForm = false"></button>
+        </div>
+        <div class="modal-body">
+    <div class="row g-2">
+      <div class="col-md-6"><input class="form-control form-control-sm" placeholder="Device Name *" [(ngModel)]="deviceForm.deviceName" /></div>
+      <div class="col-md-3">
+        <select class="form-select form-select-sm" [(ngModel)]="deviceForm.deviceType">
+          @for (t of deviceTypes; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </div>
+      <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Device Serial/ID *" [(ngModel)]="deviceForm.deviceId" /></div>
+      <div class="col-md-3"><input class="form-control form-control-sm" placeholder="IP Address" [(ngModel)]="deviceForm.ipAddress" /></div>
+      <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Location" [(ngModel)]="deviceForm.location" /></div>
+      <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Department" [(ngModel)]="deviceForm.department" /></div>
+      <div class="col-md-3"><input type="number" class="form-control form-control-sm" placeholder="Match Threshold %" [(ngModel)]="deviceForm.matchThreshold" /></div>
+      <div class="col-md-3 d-flex align-items-center gap-3">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="ci" [(ngModel)]="deviceForm.enabledForCheckIn" />
+          <label class="form-check-label small" for="ci">Check-In</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="co" [(ngModel)]="deviceForm.enabledForCheckOut" />
+          <label class="form-check-label small" for="co">Check-Out</label>
+        </div>
+      </div>
+    </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showDeviceForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!deviceForm.deviceName || !deviceForm.deviceId" (click)="saveDevice()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (deviceLoading) { <app-loader /> }
+  @if (!deviceLoading && devices.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light"><tr><th>Name</th><th>Type</th><th>Device ID</th><th>Location</th><th>Status</th><th>Online</th><th>Enrollments</th><th></th></tr></thead>
+      <tbody>
+        @for (d of devices; track d.id) {
+        <tr>
+          <td>{{ d.deviceName }}</td>
+          <td class="small">{{ d.deviceType }}</td>
+          <td class="small text-muted">{{ d.deviceId }}</td>
+          <td class="small">{{ d.location || '-' }}</td>
+          <td><span class="badge {{ statusClass(d.status) }}">{{ d.status }}</span></td>
+          <td>
+            @if (d.isOnline) { <span class="badge text-bg-success">Online</span> }
+            @if (!d.isOnline) { <span class="badge text-bg-secondary">Offline</span> }
+          </td>
+          <td class="small">{{ d.totalEnrollments }} / {{ d.maxEnrollments }}</td>
+          <td class="text-end text-nowrap">
+            <button *appHasPermission="'BIOMETRIC_MANAGE'" class="btn btn-outline-secondary btn-sm me-1" (click)="openEditDevice(d)"><i class="bi bi-pencil"></i></button>
+            <button *appHasPermission="'BIOMETRIC_MANAGE'" class="btn btn-outline-danger btn-sm" (click)="deleteDeviceTarget = d"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-end"><app-pagination [page]="devicePage" [totalPages]="deviceTotalPages" (pageChange)="goToDevicePage($event)" /></div>
+  </div>
+  }
+  @if (!deviceLoading && !devices.length && !showDeviceForm) { <app-empty-state icon="bi-fingerprint" message="No biometric devices registered yet." /> }
+  }
+
+  @if (tab === 'enrollments') {
+  <div class="card mb-3"><div class="card-body py-2">
+    <div class="d-flex gap-2 align-items-end">
+      <div>
+        <label class="form-label small mb-0">Employee ID</label>
+        <input type="number" class="form-control form-control-sm" style="width:180px" [(ngModel)]="employeeIdLookup" (keyup.enter)="loadEnrollments()" />
+      </div>
+      <button class="btn btn-primary btn-sm" [disabled]="!employeeIdLookup" (click)="loadEnrollments()">Load</button>
+      <button *appHasPermission="'BIOMETRIC_MANAGE'" class="btn btn-outline-primary btn-sm" [disabled]="!employeeIdLookup" (click)="openEnroll()"><i class="bi bi-plus"></i> Enroll</button>
+    </div>
+  </div></div>
+
+  <!-- Enrollment modal -->
+  @if (showEnrollForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Enroll Biometric</h5>
+          <button class="btn-close" (click)="showEnrollForm = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-6"><input type="number" class="form-control form-control-sm" placeholder="Employee ID *" [(ngModel)]="enrollForm.employeeId" /></div>
+            <div class="col-md-6"><input type="number" class="form-control form-control-sm" placeholder="Device ID *" [(ngModel)]="enrollForm.deviceId" /></div>
+            <div class="col-md-6"><input class="form-control form-control-sm" placeholder="Biometric Type" [(ngModel)]="enrollForm.biometricType" /></div>
+            <div class="col-md-6"><input type="number" class="form-control form-control-sm" placeholder="Quality Score" [(ngModel)]="enrollForm.qualityScore" /></div>
+            <div class="col-12"><textarea class="form-control form-control-sm" rows="3" placeholder="Biometric Template (base64) *" [(ngModel)]="enrollForm.biometricTemplate"></textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showEnrollForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!enrollForm.employeeId || !enrollForm.deviceId || !enrollForm.biometricTemplate" (click)="saveEnroll()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (enrollmentLoading) { <app-loader /> }
+  @if (!enrollmentLoading && enrollments.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light"><tr><th>Device</th><th>Type</th><th>Quality</th><th>Successful</th><th>Failed</th><th>Last Verified</th><th></th></tr></thead>
+      <tbody>
+        @for (e of enrollments; track e.id) {
+        <tr>
+          <td>{{ e.deviceName || ('#' + e.deviceId) }}</td>
+          <td class="small">{{ e.biometricType }}</td>
+          <td class="small">{{ e.enrollmentQualityScore }}%</td>
+          <td class="small text-success">{{ e.successfulMatches }}</td>
+          <td class="small text-danger">{{ e.failedMatches }}</td>
+          <td class="small text-muted">{{ e.lastVerifiedTime ? (e.lastVerifiedTime | date:'medium') : '-' }}</td>
+          <td class="text-end"><button *appHasPermission="'BIOMETRIC_MANAGE'" class="btn btn-outline-danger btn-sm" (click)="deleteEnrollmentTarget = e"><i class="bi bi-trash"></i></button></td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div></div>
+  }
+  @if (!enrollmentLoading && !enrollments.length && employeeIdLookup) { <app-empty-state icon="bi-fingerprint" message="No biometric enrollments for this employee." /> }
+  }
+
+  <app-confirm-dialog [visible]="!!deleteDeviceTarget" title="Delete Device" message="Delete this biometric device?" (confirmed)="doDeleteDevice()" (cancelled)="deleteDeviceTarget = null" />
+  <app-confirm-dialog [visible]="!!deleteEnrollmentTarget" title="Remove Enrollment" message="Remove this biometric enrollment?" (confirmed)="doDeleteEnrollment()" (cancelled)="deleteEnrollmentTarget = null" />
+</div>

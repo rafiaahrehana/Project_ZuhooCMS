@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Required from API 33 for the per-app language picker (AppCompatDelegate.setApplicationLocales)
+     to appear in system settings and to be honoured. Without this the in-app picker silently
+     does nothing on modern devices. -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="bn" />
+</locale-config>

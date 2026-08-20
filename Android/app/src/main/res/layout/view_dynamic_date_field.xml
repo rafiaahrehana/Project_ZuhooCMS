@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Inflated (never included via <include>) by DynamicFormRenderer for TYPE_DATE custom fields —
+     one instance per date field on the form. Same TextInputLayout.Date + non-editable
+     TextInputEditText + DatePickerDialog-on-click pattern as the screen-level date fields in
+     activity_create_leave_request.xml. No layout_marginTop here — DynamicFormRenderer.applyTopSpacing()
+     sets it in code so the very first field in the form doesn't get an unwanted leading gap. -->
+<com.google.android.material.textfield.TextInputLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/dynamicDateInputLayout"
+    style="@style/Widget.Zuhoo.TextInputLayout.Date"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/dynamicDateText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:cursorVisible="false"
+        android:focusable="false"
+        android:inputType="none" />
+
+</com.google.android.material.textfield.TextInputLayout>

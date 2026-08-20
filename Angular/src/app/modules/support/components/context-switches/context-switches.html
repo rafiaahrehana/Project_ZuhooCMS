@@ -1,0 +1,92 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Support Context Switches</h4>
+    <button class="btn btn-primary btn-sm" (click)="openStart()"><i class="bi bi-arrow-left-right me-1"></i>Start Switch</button>
+  </div>
+
+  @if (showStart) {
+  <div class="card mb-3">
+    <div class="card-header py-2 fw-semibold">Start Context Switch</div>
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+          <label class="form-label small text-secondary mb-1">Company *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="startForm.viewedCompanyId">
+            <option [ngValue]="undefined">— Select company —</option>
+            @for (c of companies; track c.id) { <option [ngValue]="c.id">{{ c.companyName }}</option> }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-secondary mb-1">Purpose</label>
+          <input class="form-control form-control-sm" [(ngModel)]="startForm.purpose" placeholder="e.g. Investigating ticket #123" />
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+          <button class="btn btn-primary btn-sm" [disabled]="starting" (click)="startSwitch()">
+            @if (starting) { <span class="spinner-border spinner-border-sm"></span> } @else { Start }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <div class="card mb-3">
+    <div class="card-header py-2 fw-semibold">Currently Active</div>
+    <div class="card-body p-0">
+      @if (active.length) {
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr><th>Agent</th><th>Viewing Company</th><th>Since</th><th>Purpose</th><th></th></tr></thead>
+          <tbody>
+            @for (cs of active; track cs.id) {
+            <tr>
+              <td>{{ cs.supportAgentName || ('#' + cs.supportAgentId) }}</td>
+              <td>{{ cs.viewedCompanyName || ('#' + cs.viewedCompanyId) }}</td>
+              <td class="small text-muted">{{ cs.switchedInTime | date:'medium' }}</td>
+              <td class="small">{{ cs.purpose || '-' }}</td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" (click)="endSwitch(cs)">End</button></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+      @if (!active.length) { <div class="p-3"><app-empty-state icon="bi-arrow-left-right" message="No agents are currently viewing another company." /></div> }
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header py-2 fw-semibold">Agent History</div>
+    <div class="card-body">
+      <div class="d-flex gap-2 mb-3">
+        <input type="number" class="form-control form-control-sm" style="max-width:200px" placeholder="Support Agent ID" [(ngModel)]="agentIdFilter" />
+        <button class="btn btn-primary btn-sm" [disabled]="!agentIdFilter" (click)="page = 0; loadHistory()">Load History</button>
+      </div>
+      @if (history.length) {
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr><th>Company</th><th>Switched In</th><th>Switched Out</th><th>Purpose</th><th>Status</th></tr></thead>
+          <tbody>
+            @for (cs of history; track cs.id) {
+            <tr>
+              <td>{{ cs.viewedCompanyName || ('#' + cs.viewedCompanyId) }}</td>
+              <td class="small text-muted">{{ cs.switchedInTime | date:'medium' }}</td>
+              <td class="small text-muted">{{ cs.switchedOutTime ? (cs.switchedOutTime | date:'medium') : '-' }}</td>
+              <td class="small">{{ cs.purpose || '-' }}</td>
+              <td><span class="badge" [class.text-bg-success]="cs.stillActive" [class.text-bg-secondary]="!cs.stillActive">{{ cs.stillActive ? 'Active' : 'Ended' }}</span></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-center mt-3">
+        <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+      </div>
+      }
+      @if (!history.length && agentIdFilter) { <app-empty-state icon="bi-clock-history" message="No context switch history for this agent." /> }
+    </div>
+  </div>
+</div>

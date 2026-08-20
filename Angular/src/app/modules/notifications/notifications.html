@@ -1,0 +1,43 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div class="d-flex align-items-center gap-3">
+      <h4 class="mb-0">Notifications</h4>
+      <div class="btn-group btn-group-sm" role="group">
+        <button class="btn" [class.btn-primary]="filter === 'all'" [class.btn-outline-secondary]="filter !== 'all'" (click)="setFilter('all')">All</button>
+        <button class="btn" [class.btn-primary]="filter === 'unread'" [class.btn-outline-secondary]="filter !== 'unread'" (click)="setFilter('unread')">Unread</button>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm" (click)="markAllRead()">Mark all read</button>
+      <a class="btn btn-outline-secondary btn-sm" routerLink="/profile"><i class="bi bi-gear"></i> Preferences</a>
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && notifications.length) {
+  <div class="card">
+    <div class="list-group list-group-flush">
+      @for (n of notifications; track n.id) {
+      <a class="list-group-item list-group-item-action" role="button" [class.bg-light]="!n.read" (click)="openNotification(n)">
+        <div class="d-flex align-items-start gap-3">
+          @if (!n.read) { <span class="badge bg-primary rounded-circle p-1 mt-2" style="width: 10px; height: 10px;"></span> } @else { <span style="width: 10px;"></span> }
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-baseline gap-2">
+              <div class="fw-medium">{{ n.title }}</div>
+              <span class="badge {{ typeBadgeClass(n.type) }} small">{{ n.type | titlecase }}</span>
+            </div>
+            <div class="text-muted small mt-1">{{ n.message }}</div>
+            <div class="text-muted mt-1" style="font-size: 0.75rem">{{ n.createdAt | date:'medium' }}</div>
+          </div>
+        </div>
+      </a>
+      }
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !notifications.length) { <app-empty-state icon="bi-bell" [message]="filter === 'unread' ? 'No unread notifications.' : 'No notifications yet.'" /> }
+</div>

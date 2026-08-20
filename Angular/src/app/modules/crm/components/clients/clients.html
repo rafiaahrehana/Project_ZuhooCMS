@@ -1,0 +1,333 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h4 class="mb-0">Client Management</h4>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm" style="width: 160px" [(ngModel)]="statusFilter" (change)="page = 0; load()">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s | titlecase }}</option> }
+      </select>
+      <select class="form-select form-select-sm" style="width: 160px" [ngModel]="tagFilter" (ngModelChange)="setTagFilter($event)">
+        <option [ngValue]="null">All tags</option>
+        @for (t of tags; track t.id) { <option [ngValue]="t.id">{{ t.name }}</option> }
+      </select>
+      <button class="btn btn-outline-secondary btn-sm" routerLink="/crm/tags" title="Manage Tags">
+        <i class="bi bi-tags"></i>
+      </button>
+      <button *appHasPermission="'CLIENT_CREATE'" class="btn btn-primary btn-sm text-nowrap" (click)="openCreate()">
+        <i class="bi bi-plus-lg me-1"></i>Add Client
+      </button>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && clients.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Account</th><th>Industry</th><th>Contact</th><th>Status</th>
+            <th>Tags</th><th>Portal</th><th>Account Manager</th><th>Onboarded</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (client of clients; track client.id) {
+          <tr>
+            <td><a [routerLink]="['/crm/clients', client.id]">{{ client.clientCompanyName || (client.firstName + ' ' + client.lastName) }}</a></td>
+            <td>{{ client.industry || '-' }}</td>
+            <td>{{ client.email || '-' }}</td>
+            <td><span class="badge {{ statusClass(client.status) }}">{{ client.status }}</span></td>
+            <td>
+              @for (t of client.tagList; track t.id) {
+                <span class="badge rounded-pill me-1" [style.background-color]="t.color">{{ t.name }}</span>
+              }
+            </td>
+            <td>
+              @if (client.portalAccessEnabled) { <i class="bi bi-check-circle text-success"></i> }
+              @else { <i class="bi bi-dash-circle text-muted"></i> }
+            </td>
+            <td>{{ client.accountManagerName || '-' }}</td>
+            <td>{{ client.onboardedAt ? (client.onboardedAt | date:'mediumDate') : '-' }}</td>
+            <td class="text-end text-nowrap">
+              <!-- Creates a portal login and emails a set-password link. Wording
+                   switches to "Resend" once the client already has one, so it's
+                   clear this re-issues a link rather than creating a second account. -->
+              <button
+                *appHasPermission="'CLIENT_UPDATE'"
+                class="btn btn-sm me-1"
+                [class.btn-outline-primary]="!client.portalAccessEnabled"
+                [class.btn-outline-secondary]="client.portalAccessEnabled"
+                [disabled]="invitingId === client.id"
+                (click)="inviteTarget = client"
+                [title]="client.portalAccessEnabled ? 'Resend portal invite' : 'Invite to client portal'">
+                @if (invitingId === client.id) {
+                  <span class="spinner-border spinner-border-sm"></span>
+                } @else {
+                  <i class="bi" [class.bi-envelope-plus]="!client.portalAccessEnabled" [class.bi-envelope-arrow-up]="client.portalAccessEnabled"></i>
+                }
+              </button>
+              <button *appHasPermission="'CLIENT_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(client)" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button *appHasPermission="'CLIENT_DELETE'" class="btn btn-outline-danger btn-sm" (click)="deleteTarget = client" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+
+  @if (!loading && !clients.length) { <app-empty-state icon="bi-building" message="No clients found." /> }
+
+  <!-- Add Client modal -->
+  @if (showCreate) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Add Client</h5>
+          <button class="btn-close" (click)="showCreate = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Company Name <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.clientCompanyName" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Phone</label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.phone" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Industry</label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.industry" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Website</label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.website" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Tax ID</label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.taxId" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Account Manager</label>
+              <select class="form-select form-select-sm" [(ngModel)]="createForm.accountManagerId">
+                <option [ngValue]="null">— None —</option>
+                @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option> }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Employee Count</label>
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="createForm.employeeCount" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Annual Revenue</label>
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="createForm.annualRevenue" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Billing Address</label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.billingAddress" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Shipping Address</label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.shippingAddress" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Tags <span class="text-muted">(comma-separated)</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.tags" placeholder="vip, enterprise, renewal-risk" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Tags</label>
+              <div class="d-flex flex-wrap gap-2">
+                @for (t of tags; track t.id) {
+                <label class="form-check form-check-inline m-0 px-2 py-1 rounded-pill border small"
+                       [style.border-color]="t.color" [class.text-white]="createForm.tagIds.includes(t.id)"
+                       [style.background-color]="createForm.tagIds.includes(t.id) ? t.color : 'transparent'">
+                  <input type="checkbox" class="form-check-input d-none" [value]="t.id"
+                         [checked]="createForm.tagIds.includes(t.id)"
+                         (change)="createForm.tagIds.includes(t.id) ? createForm.tagIds = createForm.tagIds.filter(id => id !== t.id) : createForm.tagIds = [...createForm.tagIds, t.id]" />
+                  {{ t.name }}
+                </label>
+                }
+                @if (!tags.length) { <span class="text-muted small">No tags yet - <a routerLink="/crm/tags">create one</a>.</span> }
+              </div>
+              <div class="d-flex align-items-center gap-2 mt-2">
+                <input type="color" class="form-control form-control-color form-control-sm p-1" style="width: 38px" [(ngModel)]="newTagColor" title="Tag color" />
+                <input class="form-control form-control-sm" style="max-width: 220px" placeholder="Write a new tag..."
+                       [(ngModel)]="newTagName" maxlength="50" (keyup.enter)="createTag(createForm)" />
+                <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" [disabled]="!newTagName.trim() || addingTag" (click)="createTag(createForm)">
+                  @if (addingTag) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-plus-lg me-1"></i>Add Tag }
+                </button>
+              </div>
+            </div>
+            <div class="col-12 form-check mt-2 ms-1">
+              <input type="checkbox" class="form-check-input" id="provisionPortalLogin" [(ngModel)]="createForm.provisionPortalLogin" />
+              <label class="form-check-label small" for="provisionPortalLogin">Provision a portal login for this client now</label>
+            </div>
+            @if (createForm.provisionPortalLogin) {
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">First Name <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.firstName" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Last Name <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="createForm.lastName" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control form-control-sm" [(ngModel)]="createForm.email" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Portal Password <span class="text-danger">*</span></label>
+              <input type="password" class="form-control form-control-sm" [(ngModel)]="createForm.password" autocomplete="new-password" />
+            </div>
+            }
+          </div>
+          @if (!createForm.provisionPortalLogin) {
+          <div class="form-text small mt-2">No portal login will be created - the client record is created on its own. You can provision a login later from Edit.</div>
+          }
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showCreate = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="saveCreate()" [disabled]="saving">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Create Client
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Edit Client modal -->
+  @if (editing) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Edit Client</h5>
+          <button class="btn-close" (click)="editing = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Company Name</label>
+              <input class="form-control form-control-sm" [(ngModel)]="editForm.clientCompanyName" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Industry</label>
+              <input class="form-control form-control-sm" [(ngModel)]="editForm.industry" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Website</label>
+              <input class="form-control form-control-sm" [(ngModel)]="editForm.website" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Tax ID</label>
+              <input class="form-control form-control-sm" [(ngModel)]="editForm.taxId" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Status</label>
+              <select class="form-select form-select-sm" [(ngModel)]="editForm.status">
+                @for (s of statuses; track s) { <option [value]="s">{{ s | titlecase }}</option> }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Account Manager</label>
+              <select class="form-select form-select-sm" [(ngModel)]="editForm.accountManagerId">
+                <option [ngValue]="null">— None —</option>
+                @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option> }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Employee Count</label>
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="editForm.employeeCount" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Annual Revenue</label>
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="editForm.annualRevenue" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Billing Address</label>
+              <input class="form-control form-control-sm" [(ngModel)]="editForm.billingAddress" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Shipping Address</label>
+              <input class="form-control form-control-sm" [(ngModel)]="editForm.shippingAddress" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Tags <span class="text-muted">(comma-separated)</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="editForm.tags" placeholder="vip, enterprise, renewal-risk" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Tags</label>
+              <div class="d-flex flex-wrap gap-2">
+                @for (t of tags; track t.id) {
+                <label class="form-check form-check-inline m-0 px-2 py-1 rounded-pill border small"
+                       [style.border-color]="t.color" [class.text-white]="editForm.tagIds.includes(t.id)"
+                       [style.background-color]="editForm.tagIds.includes(t.id) ? t.color : 'transparent'">
+                  <input type="checkbox" class="form-check-input d-none" [value]="t.id"
+                         [checked]="editForm.tagIds.includes(t.id)"
+                         (change)="editForm.tagIds.includes(t.id) ? editForm.tagIds = editForm.tagIds.filter(id => id !== t.id) : editForm.tagIds = [...editForm.tagIds, t.id]" />
+                  {{ t.name }}
+                </label>
+                }
+                @if (!tags.length) { <span class="text-muted small">No tags yet - <a routerLink="/crm/tags">create one</a>.</span> }
+              </div>
+              <div class="d-flex align-items-center gap-2 mt-2">
+                <input type="color" class="form-control form-control-color form-control-sm p-1" style="width: 38px" [(ngModel)]="newTagColor" title="Tag color" />
+                <input class="form-control form-control-sm" style="max-width: 220px" placeholder="Write a new tag..."
+                       [(ngModel)]="newTagName" maxlength="50" (keyup.enter)="createTag(editForm)" />
+                <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" [disabled]="!newTagName.trim() || addingTag" (click)="createTag(editForm)">
+                  @if (addingTag) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-plus-lg me-1"></i>Add Tag }
+                </button>
+              </div>
+            </div>
+            <div class="col-12 form-check mt-2 ms-1">
+              <input type="checkbox" class="form-check-input" id="portalAccess" [(ngModel)]="editForm.portalAccessEnabled" />
+              <label class="form-check-label small" for="portalAccess">Portal access enabled</label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="editing = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="saveEdit()" [disabled]="saving">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Confirmed rather than one-click: this sends a real email to the client. -->
+  <app-confirm-dialog
+    [visible]="!!inviteTarget"
+    [title]="inviteTarget?.portalAccessEnabled ? 'Resend Portal Invite' : 'Invite to Client Portal'"
+    [message]="'Email a set-password link to ' + (inviteTarget?.clientCompanyName || 'this client') + '? They choose their own password - you will not see it.'"
+    [confirmLabel]="inviteTarget?.portalAccessEnabled ? 'Resend' : 'Send Invite'"
+    (confirmed)="confirmInvite()"
+    (cancelled)="inviteTarget = null" />
+
+  <app-confirm-dialog
+    [visible]="!!deleteTarget"
+    title="Delete Client"
+    [message]="'Delete client ' + (deleteTarget?.clientCompanyName || deleteTarget?.email || '') + '? This cannot be undone.'"
+    confirmLabel="Delete"
+    (confirmed)="confirmDelete()"
+    (cancelled)="deleteTarget = null" />
+
+  <app-duplicate-warning-modal [match]="duplicateMatch" (dismissed)="duplicateMatch = null" />
+</div>

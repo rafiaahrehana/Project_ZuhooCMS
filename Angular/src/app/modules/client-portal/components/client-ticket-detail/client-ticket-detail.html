@@ -1,0 +1,49 @@
+<div class="container-fluid py-3 ticket-detail-page">
+  <a routerLink="/client/tickets" class="small text-decoration-none d-inline-flex align-items-center mb-3">
+    <i class="bi bi-arrow-left me-1"></i>Back to Tickets
+  </a>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+
+  <div class="card border-0 shadow-sm rounded-4 ticket-card">
+    <div class="ticket-card__header">
+      <div class="ticket-card__title-row">
+        <span class="ticket-card__ticket-no">{{ ticket?.ticketNumber || ('#' + ticketId) }}</span>
+        @if (ticket) { <span class="badge {{ statusClass(ticket.status) }}">{{ ticket.status }}</span> }
+        @if (ticket) { <span class="badge {{ priorityClass(ticket.priority) }}">{{ ticket.priority }}</span> }
+      </div>
+      <h5 class="ticket-card__title">{{ ticket?.title || 'Loading…' }}</h5>
+      @if (ticket?.description) { <p class="ticket-card__description">{{ ticket?.description }}</p> }
+      @if (ticket?.attachmentUrl) {
+        <a class="ticket-card__attachment" [href]="ticket?.attachmentUrl" target="_blank" rel="noopener">
+          <i class="bi bi-paperclip"></i>{{ ticket?.attachmentFileName || 'View attachment' }}
+        </a>
+      }
+      <div class="ticket-card__meta">
+        <span><i class="bi bi-person-badge"></i> {{ ticket?.assignedEmployeeName || 'Not yet picked up by staff' }}</span>
+        @if (ticket?.createdAt) { <span><i class="bi bi-calendar"></i> Raised {{ ticket?.createdAt | date: 'MMM d, y' }}</span> }
+      </div>
+    </div>
+
+    @if (loading) { <app-loader /> }
+
+    @if (!loading) {
+    <div class="ticket-card__body">
+      <app-chat-thread
+        [messages]="chatMessages"
+        [currentUserId]="currentUserId"
+        [connected]="chatConnected"
+        [sending]="posting"
+        [disabled]="uploadingAttachment"
+        [allowAttachments]="true"
+        [pendingAttachmentName]="pendingAttachment?.fileName ?? (uploadingAttachment ? 'Uploading…' : null)"
+        placeholder="Write a message..."
+        emptyMessage="No messages yet — describe your issue and our team will reply here."
+        (send)="send($event)"
+        (attachFile)="onAttachFile($event)"
+        (removeAttachment)="removeAttachment()"
+      />
+    </div>
+    }
+  </div>
+</div>

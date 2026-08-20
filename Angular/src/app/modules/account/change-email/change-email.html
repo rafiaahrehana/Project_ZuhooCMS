@@ -1,0 +1,51 @@
+<div class="container-fluid py-3">
+  <div class="page-header-bar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h4 class="mb-0"><i class="bi bi-envelope-at me-2"></i>Change Email</h4>
+      <p class="mb-0 small">This is the address you sign in with.</p>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  <div class="row">
+    <div class="col-lg-7 col-xl-6">
+      <div class="card">
+        <div class="card-body">
+
+          <div class="mb-3">
+            <label class="form-label small text-secondary mb-1">Current email</label>
+            <input class="form-control" [value]="currentEmail" disabled />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-secondary mb-1">New email</label>
+            <input class="form-control" type="email" autocomplete="email"
+                   placeholder="you@company.com" [(ngModel)]="form.newEmail" />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-secondary mb-1">Current password</label>
+            <div class="input-group">
+              <input class="form-control" [type]="showPassword ? 'text' : 'password'"
+                     autocomplete="current-password" [(ngModel)]="form.currentPassword" />
+              <button class="btn btn-outline-secondary" type="button"
+                      [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+                      (click)="showPassword = !showPassword">
+                <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+              </button>
+            </div>
+            <div class="form-text">Required, because changing this changes how you sign in.</div>
+          </div>
+
+          <button class="btn btn-primary" [disabled]="saving" (click)="submit()">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Update Email
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

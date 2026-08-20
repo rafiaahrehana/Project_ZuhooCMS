@@ -1,0 +1,172 @@
+<div class="container-fluid py-3">
+  <div class="page-header-bar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h4 class="mb-0">{{ isApprover ? 'Leave Requests' : 'My Leaves' }}</h4>
+      <p class="mb-0 small">
+        {{ isApprover ? 'Every request across the company, newest first.' : 'Your requests and remaining entitlement.' }}
+      </p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <!-- Status filter is only meaningful over the full queue; an employee's
+           own list is short enough to scan. -->
+      @if (isApprover) {
+      <select class="form-select form-select-sm" style="width:150px" [(ngModel)]="statusFilter" (change)="page=0;load()">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s | titlecase }}</option> }
+      </select>
+      }
+      <!-- Approvers act on other people's requests rather than raising their own. -->
+      @if (!isApprover) {
+      <button *appHasPermission="'LEAVE_CREATE'" class="btn btn-primary btn-sm" (click)="openApply()"><i class="bi bi-plus"></i> Apply for Leave</button>
+      }
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  @if (!isApprover && balances.length) {
+  <div class="card mb-3">
+    <div class="card-header py-2 fw-semibold">Leave Balances · {{ balances[0].year }}</div>
+    <div class="card-body py-3">
+      <div class="row g-3">
+        @for (b of balances; track b.id) {
+        <div class="col-md-3 col-sm-6">
+          <div class="border rounded p-3 h-100">
+            <div class="text-muted small text-uppercase">{{ b.leaveType | titlecase }}</div>
+            <div class="d-flex align-items-baseline gap-1 mt-1">
+              <span class="fs-4 fw-medium">{{ b.remainingDays }}</span>
+              <span class="text-muted small">/ {{ b.entitledDays }} days</span>
+            </div>
+            <div class="text-muted small">Used {{ b.usedDays }} · Pending {{ b.pendingDays }}</div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (loading) { <app-loader /> }
+
+  <!-- Apply modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Apply for Leave</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Leave type</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.leaveType">
+                @for (t of leaveTypes; track t) { <option [value]="t">{{ t | titlecase }}</option> }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Start date <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" type="date" [(ngModel)]="form.startDate" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">End date <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" type="date" [(ngModel)]="form.endDate" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Reason</label>
+              <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="form.reason"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.leaveType || !form.startDate || !form.endDate" (click)="apply()">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && requests.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            @if (isApprover) { <th>Employee</th> }
+            <th>Type</th><th>Applied</th><th>Start</th><th>End</th><th class="text-end">Days</th><th>Reason</th><th>Status</th><th>Reviewed By</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of requests; track r.id) {
+          <tr>
+            @if (isApprover) { <td class="fw-medium">{{ r.employeeName || '-' }}</td> }
+            <td class="text-capitalize">{{ r.leaveType | lowercase }}</td>
+            <td class="text-muted small">{{ r.createdAt | date:'mediumDate' }}</td>
+            <td>{{ r.startDate | date:'mediumDate' }}</td>
+            <td>{{ r.endDate | date:'mediumDate' }}</td>
+            <td class="text-end">{{ r.totalDays }}</td>
+            <td class="text-truncate" style="max-width:220px" [title]="r.reason">{{ r.reason || '-' }}</td>
+            <td>
+              <span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span>
+              @if (r.status === 'REJECTED' && r.rejectionReason) {
+                <div class="text-danger" style="font-size: 0.7rem; max-width: 180px" [title]="r.rejectionReason">{{ r.rejectionReason }}</div>
+              }
+            </td>
+            <td class="text-muted small">
+              {{ r.reviewedByName || '-' }}
+              @if (r.reviewedAt) { <div style="font-size: 0.7rem">{{ r.reviewedAt | date:'mediumDate' }}</div> }
+            </td>
+            <td class="text-end text-nowrap">
+              @if (isApprover && r.status === 'PENDING') {
+              <button *appHasPermission="'LEAVE_APPROVE'" class="btn btn-outline-success btn-sm me-1" (click)="openReview(r, 'APPROVED')">Approve</button>
+              <button *appHasPermission="'LEAVE_APPROVE'" class="btn btn-outline-danger btn-sm me-1" (click)="openReview(r, 'REJECTED')">Reject</button>
+              }
+              @if (!isApprover && r.status === 'PENDING') {
+              <button class="btn btn-outline-secondary btn-sm" (click)="cancelTarget = r">Cancel</button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !requests.length && !showForm) { <app-empty-state icon="bi-calendar-x" message="No leave requests found." /> }
+
+  @if (reviewTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ reviewAction === 'APPROVED' ? 'Approve' : 'Reject' }} Leave Request</h5>
+          <button class="btn-close" (click)="reviewTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-muted small mb-2">
+            {{ reviewTarget.employeeName }} · {{ reviewTarget.leaveType | titlecase }} · {{ reviewTarget.totalDays }} day(s)
+          </div>
+          @if (reviewAction === 'REJECTED') {
+          <textarea class="form-control form-control-sm" rows="3" placeholder="Rejection reason (required)" [(ngModel)]="rejectionReason"></textarea>
+          }
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="reviewTarget = null">Cancel</button>
+          <button class="btn btn-sm"
+                  [class.btn-success]="reviewAction === 'APPROVED'"
+                  [class.btn-danger]="reviewAction === 'REJECTED'"
+                  [disabled]="reviewAction === 'REJECTED' && !rejectionReason"
+                  (click)="doReview()">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!cancelTarget" title="Cancel Leave Request" message="Cancel this leave request?" (confirmed)="doCancel()" (cancelled)="cancelTarget = null" />
+</div>

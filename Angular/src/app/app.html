@@ -1,0 +1,74 @@
+@if ((auth.isAuthenticated$ | async) && !isPortalRoute()) {
+  <div class="d-flex flex-column" style="height: 100vh; overflow: hidden;">
+    <app-impersonation-banner />
+    <!-- Read-only demo strip. Same slot as the impersonation banner: both mark
+         "this session is not a normal login". -->
+    @if (auth.isDemoSession()) {
+      <div class="demo-banner d-flex align-items-center gap-2 px-3 py-2">
+        <i class="bi bi-eye"></i>
+        <span class="flex-grow-1">
+          You're exploring a live demo of Dhrubotara Software Ltd. — everything is real, nothing is saveable.
+        </span>
+        <a routerLink="/auth/register" class="btn btn-light btn-sm fw-semibold">Start free trial</a>
+        <button type="button" class="btn btn-outline-light btn-sm" (click)="auth.exitDemo()">Exit demo</button>
+      </div>
+    }
+    <div class="d-flex app-shell flex-grow-1" style="min-height: 0;">
+      <!-- Sidebar column: brand at top, then the role-specific nav -->
+      <div class="sidebar-col d-flex flex-column">
+        <a class="sidebar-brand" routerLink="/dashboard">
+          <img src="/brand/logo-icon.png" alt="ZuhooCMS" class="sidebar-brand-icon" />
+          <span>ZuhooCMS</span>
+        </a>
+        @if (auth.isPlatformUser()) {
+          <app-platform-sidebar />
+        } @else if (auth.hasRole('CLIENT')) {
+          <app-client-sidebar />
+        } @else {
+          <app-sidebar />
+        }
+      </div>
+
+      <!-- Content column: top bar then the routed page -->
+      <div class="content-col d-flex flex-column flex-grow-1" style="min-width: 0;">
+        <app-navbar />
+        <main class="app-main flex-grow-1 overflow-auto p-4">
+          <router-outlet />
+        </main>
+      </div>
+    </div>
+  </div>
+} @else {
+  <router-outlet />
+}
+
+<!-- Floating AI Assistant Button -->
+@if ((auth.isAuthenticated$ | async) && !isPortalRoute() && permissionService.hasPermission('AI_CHAT')) {
+<button
+  id="ai-fab-btn"
+  class="ai-fab-btn"
+  [style.left]="posX() !== null ? posX() + 'px' : 'auto'"
+  [style.top]="posY() !== null ? posY() + 'px' : 'auto'"
+  [style.right]="posX() !== null ? 'auto' : '28px'"
+  [style.bottom]="posY() !== null ? 'auto' : '28px'"
+  [class.is-dragging]="isDragging"
+  (mousedown)="onMouseDown($event)"
+  (touchstart)="onTouchStart($event)"
+  (click)="goToAi()"
+  title="AI Assistant (Drag to move)"
+  aria-label="Open AI Assistant">
+  <i class="bi bi-stars"></i>
+  <span class="ai-fab-label">Ask AI</span>
+</button>
+}
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060">
+  @for (toast of notifications.toasts(); track toast.id) {
+  <div class="toast show text-bg-{{ toast.type }}">
+    <div class="d-flex">
+      <div class="toast-body">{{ toast.message }}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="notifications.dismiss(toast.id)"></button>
+    </div>
+  </div>
+  }
+</div>

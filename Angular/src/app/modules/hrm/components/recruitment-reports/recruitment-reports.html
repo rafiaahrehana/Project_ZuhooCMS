@@ -1,0 +1,217 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-bar-chart-line me-2"></i>Reports &amp; KPIs</h4>
+      <p class="small mb-0 page-subtitle">How the hiring process is performing, not another status to update</p>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3 col-6">
+          <label class="form-label small mb-0">Applied From</label>
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="fromDate" />
+        </div>
+        <div class="col-md-3 col-6">
+          <label class="form-label small mb-0">Applied To</label>
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="toDate" />
+        </div>
+        <div class="col-md-2 col-6">
+          <label class="form-label small mb-0">Min. Candidate Score</label>
+          <input type="number" min="0" max="100" placeholder="e.g. 80" class="form-control form-control-sm" [(ngModel)]="minScore" />
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+          <button class="btn btn-primary btn-sm" (click)="applyFilter()">Apply</button>
+          @if (appliedFromDate || appliedToDate || appliedMinScore != null) {
+            <button class="btn btn-outline-secondary btn-sm" (click)="clearFilter()">Clear</button>
+          }
+        </div>
+      </div>
+      @if (appliedFromDate || appliedToDate) {
+        <div class="small text-muted mt-2">
+          <i class="bi bi-funnel me-1"></i>Filtered to applications
+          {{ appliedFromDate ? 'from ' + (appliedFromDate | date:'mediumDate') : '' }}
+          {{ appliedToDate ? 'to ' + (appliedToDate | date:'mediumDate') : '' }}
+          — Open Positions and Hired This Month always show current, unfiltered figures.
+        </div>
+      }
+      @if (appliedMinScore != null) {
+        <div class="small text-muted mt-1">
+          <i class="bi bi-star me-1"></i>Top Evaluated Candidates below is narrowed to a score of {{ appliedMinScore }}% or higher — the rest of the report is unaffected, since most applications are never scored.
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && summary) {
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-6">
+      <app-stat-card label="Open Positions" [value]="summary.openPositions" icon="bi-briefcase" variant="primary" />
+    </div>
+    <div class="col-md-3 col-6">
+      <app-stat-card label="Candidates" [value]="summary.totalCandidates" icon="bi-people-fill" variant="info"
+        [sub]="summary.totalApplications + ' applications'" />
+    </div>
+    <div class="col-md-3 col-6">
+      <app-stat-card label="Hired This Month" [value]="summary.hiresThisMonth" icon="bi-person-check" variant="success"
+        [sub]="summary.hiresTotal + ' total hires'" />
+    </div>
+    <div class="col-md-3 col-6">
+      <app-stat-card label="Offer Acceptance" [value]="pctLabel(summary.offerAcceptanceRate)" icon="bi-envelope-check" variant="purple" />
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <app-stat-card label="Avg. Time to Hire" [value]="daysLabel(summary.avgTimeToHireDays)" icon="bi-hourglass-split" variant="dark" />
+    </div>
+    <div class="col-md-3 col-6">
+      <app-stat-card label="Avg. Time to Fill" [value]="daysLabel(summary.avgTimeToFillDays)" icon="bi-calendar-check" variant="dark" />
+    </div>
+    <div class="col-md-3 col-6">
+      <app-stat-card label="Application → Interview" [value]="pctLabel(summary.applicationToInterviewRate)" icon="bi-signpost-split" variant="info" />
+    </div>
+    <div class="col-md-3 col-6">
+      <app-stat-card label="Interview → Hire" [value]="pctLabel(summary.interviewToHireRate)" icon="bi-graph-up-arrow" variant="success" />
+    </div>
+    <div class="col-md-3 col-6">
+      <app-stat-card label="Avg. ATS Match" [value]="pctLabel(summary.avgAtsMatchScore)" icon="bi-robot" variant="primary"
+        sub="Automated resume match, scored applications only" />
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 fw-semibold">Pipeline Funnel</div>
+        <div class="card-body" style="min-height:280px">
+          <canvas baseChart [data]="funnelChartData!" type="bar" [options]="funnelChartOptions"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 fw-semibold">Source of Hire</div>
+        <div class="card-body" style="min-height:280px">
+          @if (summary.sourceBreakdown.length) {
+            <canvas baseChart [data]="sourceChartData!" type="doughnut" [options]="sourceChartOptions"></canvas>
+          } @else {
+            <div class="text-muted small text-center py-5">No applications yet</div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white py-2 fw-semibold">By Job</div>
+    @if (jobChartData?.labels?.length) {
+      <div class="card-body pb-2" style="min-height:260px">
+        <canvas baseChart [data]="jobChartData!" type="bar" [options]="jobChartOptions"></canvas>
+      </div>
+    }
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Job</th><th>Status</th><th class="text-end">Applications</th><th class="text-end">Shortlisted</th>
+            <th class="text-end">Interviews</th><th class="text-end">Offers</th><th class="text-end">Hired</th>
+            <th class="text-end">Time to Fill</th><th class="text-end">Offer Accept</th><th class="text-end">Avg. ATS Match</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (j of summary.jobKpis; track j.jobPostingId) {
+          <tr>
+            <td class="fw-medium">{{ j.jobTitle }}</td>
+            <td><span class="badge text-bg-light border">{{ j.status | titlecase }}</span></td>
+            <td class="text-end">{{ j.applications }}</td>
+            <td class="text-end">{{ j.shortlisted }}</td>
+            <td class="text-end">{{ j.interviews }}</td>
+            <td class="text-end">{{ j.offers }}</td>
+            <td class="text-end">{{ j.hired }}</td>
+            <td class="text-end text-muted">{{ daysLabel(j.timeToFillDays) }}</td>
+            <td class="text-end text-muted">{{ pctLabel(j.offerAcceptanceRate) }}</td>
+            <td class="text-end text-muted">{{ pctLabel(j.avgAtsMatchScore) }}</td>
+          </tr>
+          }
+          @if (!summary.jobKpis.length) {
+          <tr><td colspan="10" class="text-center text-muted py-4">No job postings yet</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white py-2 fw-semibold">By Recruiter</div>
+    @if (recruiterChartData?.labels?.length) {
+      <div class="card-body pb-2" style="min-height:260px">
+        <canvas baseChart [data]="recruiterChartData!" type="bar" [options]="recruiterChartOptions"></canvas>
+      </div>
+    }
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Recruiter</th><th class="text-end">Jobs</th><th class="text-end">Applications</th>
+            <th class="text-end">Shortlisted</th><th class="text-end">Interviews</th><th class="text-end">Offers</th>
+            <th class="text-end">Hires</th><th class="text-end">Avg. Time to Hire</th><th class="text-end">Offer Accept</th><th class="text-end">Avg. ATS Match</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of summary.recruiterKpis; track r.recruiterId) {
+          <tr>
+            <td class="fw-medium">{{ r.recruiterName || '—' }}</td>
+            <td class="text-end">{{ r.jobsManaged }}</td>
+            <td class="text-end">{{ r.applications }}</td>
+            <td class="text-end">{{ r.shortlisted }}</td>
+            <td class="text-end">{{ r.interviews }}</td>
+            <td class="text-end">{{ r.offers }}</td>
+            <td class="text-end">{{ r.hires }}</td>
+            <td class="text-end text-muted">{{ daysLabel(r.avgTimeToHireDays) }}</td>
+            <td class="text-end text-muted">{{ pctLabel(r.offerAcceptanceRate) }}</td>
+            <td class="text-end text-muted">{{ pctLabel(r.avgAtsMatchScore) }}</td>
+          </tr>
+          }
+          @if (!summary.recruiterKpis.length) {
+          <tr><td colspan="10" class="text-center text-muted py-4">No job postings have an assigned recruiter yet</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-2 fw-semibold d-flex justify-content-between align-items-center">
+      <span>Top Evaluated Candidates</span>
+      @if (appliedMinScore != null) { <span class="badge badge-soft-primary">≥ {{ appliedMinScore }}%</span> }
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>#</th><th>Candidate</th><th>Applied For</th><th class="text-end">Score</th></tr>
+        </thead>
+        <tbody>
+          @for (c of summary.topCandidates; track c.applicationId; let i = $index) {
+          <tr>
+            <td class="text-muted">{{ i + 1 }}</td>
+            <td class="fw-medium">{{ c.candidateName }}</td>
+            <td>{{ c.jobTitle || '-' }}</td>
+            <td class="text-end fw-semibold">{{ c.overallScore }}%</td>
+          </tr>
+          }
+          @if (!summary.topCandidates.length) {
+          <tr><td colspan="4" class="text-center text-muted py-4">
+            {{ appliedMinScore != null ? 'No candidates score ' + appliedMinScore + '% or higher' : 'No candidates evaluated yet' }}
+          </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+</div>

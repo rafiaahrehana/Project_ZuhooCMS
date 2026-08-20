@@ -1,0 +1,245 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-envelope-check me-2"></i>Offers</h4>
+      <p class="small mb-0 page-subtitle">Salary offers, acceptance status and the terms onboarding will use</p>
+    </div>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm" style="width: 150px" [(ngModel)]="statusFilter" (change)="page = 0; load()">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+      <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-primary btn-sm text-nowrap" (click)="openCreate()">
+        <i class="bi bi-plus-lg me-1"></i>New Offer
+      </button>
+    </div>
+  </div>
+
+  @if (error && !showForm) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && offers.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Candidate</th><th>Offered Title</th><th class="text-end">Gross Salary</th>
+            <th>Joining</th><th>Expires</th><th>Status</th><th>Timeline</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of offers; track o.id) {
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ o.applicantName }}</div>
+              <div class="text-muted small">{{ o.jobPostingTitle || '-' }}</div>
+            </td>
+            <td>{{ o.offeredJobTitle }}</td>
+            <td class="text-end fw-semibold">{{ o.grossSalary != null ? (o.grossSalary | bosCurrency:'BDT':'symbol':'1.0-0') : '-' }}</td>
+            <td class="small">{{ o.joiningDate ? (o.joiningDate | date:'mediumDate') : '-' }}</td>
+            <td class="small" [class.text-danger]="o.expired">{{ o.expiryDate ? (o.expiryDate | date:'mediumDate') : '-' }}</td>
+            <td>
+              <span class="badge {{ statusBadge(o) }}">{{ statusLabel(o) }}</span>
+              @if (o.status === 'DECLINED' && o.declineReason) {
+                <div class="text-danger text-truncate" style="font-size: 0.7rem; max-width: 160px" [title]="o.declineReason">{{ o.declineReason }}</div>
+              }
+            </td>
+            <td class="small text-muted">
+              @if (o.sentAt) { <div>Sent {{ o.sentAt | date:'MMM d' }}</div> }
+              @if (o.decidedAt) { <div>Decided {{ o.decidedAt | date:'MMM d' }}</div> }
+            </td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-outline-secondary btn-sm me-1" title="View" (click)="viewing = o"><i class="bi bi-eye"></i></button>
+              @if (o.status === 'DRAFT') {
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" title="Edit" (click)="openEdit(o)"><i class="bi bi-pencil"></i></button>
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-primary btn-sm me-1" (click)="action(o, 'send')">Send</button>
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-danger btn-sm" title="Delete draft" (click)="deleteTarget = o"><i class="bi bi-trash"></i></button>
+              }
+              @if (o.status === 'SENT') {
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-success btn-sm me-1" (click)="action(o, 'accept')">Accepted</button>
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-danger btn-sm me-1" (click)="declineTarget = o">Declined</button>
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-secondary btn-sm" title="Withdraw offer" (click)="withdrawTarget = o"><i class="bi bi-arrow-counterclockwise"></i></button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !offers.length) {
+    <app-empty-state icon="bi-envelope-check" message="No offers yet — create one from an interviewed application." />
+  }
+
+  <!-- Create / edit modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Offer' : 'New Offer' }}</h5>
+          <button class="btn-close" (click)="showForm = false; editingId = null"></button>
+        </div>
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="row g-2">
+            @if (!editingId) {
+            <div class="col-md-7">
+              <label class="form-label small text-secondary mb-1">Application <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.jobApplicationId">
+                <option [ngValue]="undefined">— Select candidate —</option>
+                @for (a of applications; track a.id) { <option [ngValue]="a.id">{{ a.applicantName }}{{ a.jobTitle ? ' · ' + a.jobTitle : '' }}</option> }
+              </select>
+            </div>
+            }
+            <div class="col-md-5">
+              <label class="form-label small text-secondary mb-1">Grade Template</label>
+              <select class="form-select form-select-sm" [(ngModel)]="selectedTemplateId" (ngModelChange)="onTemplateSelected()" title="Fills gross and the salary breakdown from a Payroll grade template">
+                <option [ngValue]="null">— Manual entry —</option>
+                @for (t of templates; track t.id) { <option [ngValue]="t.id">{{ t.structureName }}{{ t.defaultGross ? ' · ' + t.defaultGross : '' }}</option> }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Offered Job Title <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.offeredJobTitle" maxlength="150" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-secondary mb-1">Joining Date</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="form.joiningDate" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-secondary mb-1">Offer Expires</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="form.expiryDate" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Gross Salary</label>
+              <input type="number" min="0" class="form-control form-control-sm" [(ngModel)]="form.grossSalary" (ngModelChange)="onTemplateSelected()" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Basic</label>
+              <input type="number" min="0" class="form-control form-control-sm" [(ngModel)]="form.basicSalary" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">House Rent</label>
+              <input type="number" min="0" class="form-control form-control-sm" [(ngModel)]="form.houseRent" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Medical</label>
+              <input type="number" min="0" class="form-control form-control-sm" [(ngModel)]="form.medicalAllowance" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Transport</label>
+              <input type="number" min="0" class="form-control form-control-sm" [(ngModel)]="form.transportAllowance" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Notes</label>
+              <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="form.notes" placeholder="Negotiation notes, benefits, conditions..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="saving" (click)="save()">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            {{ editingId ? 'Save Changes' : 'Create Draft' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- View modal: every field of the offer -->
+  @if (viewing; as o) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)" (click)="viewing = null">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Offer · {{ o.applicantName }}</h5>
+          <button class="btn-close" (click)="viewing = null"></button>
+        </div>
+        <div class="modal-body small">
+          <div class="row g-2">
+            <div class="col-6"><span class="text-muted d-block">Status</span><span class="badge {{ statusBadge(o) }}">{{ statusLabel(o) }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Offered Title</span><span class="fw-semibold">{{ o.offeredJobTitle }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Candidate Email</span>{{ o.applicantEmail || '-' }}</div>
+            <div class="col-6"><span class="text-muted d-block">Application</span>{{ o.jobPostingTitle || '-' }} ({{ o.applicationStatus }})</div>
+            <div class="col-6"><span class="text-muted d-block">Joining</span>{{ o.joiningDate ? (o.joiningDate | date:'mediumDate') : '-' }}</div>
+            <div class="col-6"><span class="text-muted d-block">Expires</span>{{ o.expiryDate ? (o.expiryDate | date:'mediumDate') : '-' }}</div>
+            <div class="col-12"><hr class="my-1" /></div>
+            <div class="col-6"><span class="text-muted d-block">Gross</span><span class="fw-bold">{{ o.grossSalary != null ? (o.grossSalary | bosCurrency) : '-' }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Basic</span>{{ o.basicSalary != null ? (o.basicSalary | bosCurrency) : '-' }}</div>
+            <div class="col-4"><span class="text-muted d-block">House Rent</span>{{ o.houseRent != null ? (o.houseRent | bosCurrency) : '-' }}</div>
+            <div class="col-4"><span class="text-muted d-block">Medical</span>{{ o.medicalAllowance != null ? (o.medicalAllowance | bosCurrency) : '-' }}</div>
+            <div class="col-4"><span class="text-muted d-block">Transport</span>{{ o.transportAllowance != null ? (o.transportAllowance | bosCurrency) : '-' }}</div>
+            @if (o.sentAt) { <div class="col-6"><span class="text-muted d-block">Sent</span>{{ o.sentAt | date:'medium' }}</div> }
+            @if (o.decidedAt) { <div class="col-6"><span class="text-muted d-block">Decided</span>{{ o.decidedAt | date:'medium' }}</div> }
+            @if (o.declineReason) { <div class="col-12"><span class="text-muted d-block">Decline Reason</span>{{ o.declineReason }}</div> }
+            @if (o.notes) { <div class="col-12"><span class="text-muted d-block">Notes</span>{{ o.notes }}</div> }
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="viewing = null">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Decline modal -->
+  @if (declineTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2"><h5 class="modal-title fs-6 fw-semibold">Offer Declined</h5><button class="btn-close" (click)="declineTarget = null"></button></div>
+        <div class="modal-body">
+          <div class="small text-muted mb-2">{{ declineTarget.applicantName }} declined the {{ declineTarget.offeredJobTitle }} offer?</div>
+          <textarea class="form-control form-control-sm" rows="2" placeholder="Reason (optional - salary, competing offer, timing...)" [(ngModel)]="declineReason"></textarea>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="declineTarget = null">Cancel</button>
+          <button class="btn btn-danger btn-sm" (click)="doDecline()">Mark Declined</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Withdraw confirm -->
+  @if (withdrawTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2"><h5 class="modal-title fs-6 fw-semibold">Withdraw Offer</h5><button class="btn-close" (click)="withdrawTarget = null"></button></div>
+        <div class="modal-body small">Withdraw the offer to {{ withdrawTarget.applicantName }}? The candidate can no longer accept it.</div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="withdrawTarget = null">Cancel</button>
+          <button class="btn btn-warning btn-sm" (click)="doWithdraw()">Withdraw</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Delete draft confirm -->
+  @if (deleteTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2"><h5 class="modal-title fs-6 fw-semibold">Delete Draft</h5><button class="btn-close" (click)="deleteTarget = null"></button></div>
+        <div class="modal-body small">Delete the draft offer for {{ deleteTarget.applicantName }}?</div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="deleteTarget = null">Cancel</button>
+          <button class="btn btn-danger btn-sm" (click)="doDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

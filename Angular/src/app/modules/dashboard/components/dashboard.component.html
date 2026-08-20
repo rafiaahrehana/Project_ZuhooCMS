@@ -1,0 +1,1340 @@
+<div class="container-fluid py-4">
+  <!-- Dynamic Greeting Header -->
+  <div class="page-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold text-dark-contrast mb-1">
+        @if (isPlatformRole) {
+          {{ timeGreeting }}, {{ userFirstName }}!
+        } @else if (isCompanyRole) {
+          {{ timeGreeting }}, {{ userFirstName }}!
+        } @else {
+          Welcome back, {{ userFirstName }}!
+        }
+      </h3>
+      <div class="text-secondary-contrast">{{ subtitle }}</div>
+    </div>
+    
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <!-- Calendar view select label -->
+      <div class="bg-white border rounded-3 px-3 py-2 shadow-sm fw-semibold text-dark-contrast d-flex align-items-center gap-2">
+        <i class="bi bi-calendar3 text-secondary"></i>
+        <span>{{ currentRangeLabel }}</span>
+      </div>
+      
+      <div class="btn-group bg-white rounded-3 shadow-sm border p-1">
+        <button class="btn btn-sm rounded-3 px-3 fw-semibold" [class]="selectedRange === 'day' ? 'btn-primary-bos' : 'btn-light border-0 text-muted bg-transparent'" (click)="setRange('day')">Day</button>
+        <button class="btn btn-sm rounded-3 px-3 fw-semibold" [class]="selectedRange === 'week' ? 'btn-primary-bos' : 'btn-light border-0 text-muted bg-transparent'" (click)="setRange('week')">Week</button>
+        <button class="btn btn-sm rounded-3 px-3 fw-semibold" [class]="selectedRange === 'month' ? 'btn-primary-bos' : 'btn-light border-0 text-muted bg-transparent'" (click)="setRange('month')">Month</button>
+        <button class="btn btn-sm rounded-3 px-3 fw-semibold" [class]="selectedRange === 'year' ? 'btn-primary-bos' : 'btn-light border-0 text-muted bg-transparent'" (click)="setRange('year')">Year</button>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <app-loader />
+  }
+
+  @if (error) {
+    <div class="alert alert-danger py-2 mb-4">{{ error }}</div>
+  }
+
+  <!-- ============ COMPANY VIEW (COMPANY_OWNER / EMPLOYEE) ============ -->
+  @if (isCompanyRole && summary) {
+    
+    <!-- Top Stat Cards (Pastels) -->
+    <div class="row g-3 mb-4">
+      <!-- Total Leads -->
+      @if (permissionService.hasPermission('LEAD_VIEW')) {
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden" style="background-color: #f3e8ff; min-height: 110px; border-top: 3px solid #8b5cf6 !important;">
+          <div class="card-body p-3 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-purple-contrast fw-bold small text-uppercase tracking-wider">Total Leads</span>
+              <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                <i class="bi bi-people-fill text-purple fs-5"></i>
+              </div>
+            </div>
+            <div class="mt-2">
+              <h2 class="fw-extrabold text-purple-dark mb-1" style="font-size: 1.4rem;">{{ summary.totalLeads }}</h2>
+              <div class="text-purple-success small fw-semibold d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-up-right"></i>
+                <span>{{ summary.leadsTrend >= 0 ? '+' : '' }}{{ summary.leadsTrend | number:'1.0-0' }}% vs last 7 days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Total Clients -->
+      @if (permissionService.hasPermission('CLIENT_VIEW')) {
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden" style="background-color: #dbeafe; min-height: 110px; border-top: 3px solid #2563eb !important;">
+          <div class="card-body p-3 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-blue-contrast fw-bold small text-uppercase tracking-wider">Total Clients</span>
+              <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                <i class="bi bi-building text-blue fs-5"></i>
+              </div>
+            </div>
+            <div class="mt-2">
+              <h2 class="fw-extrabold text-blue-dark mb-1" style="font-size: 1.4rem;">{{ summary.totalClients }}</h2>
+              <div class="text-blue-success small fw-semibold d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-up-right"></i>
+                <span>{{ summary.clientsTrend >= 0 ? '+' : '' }}{{ summary.clientsTrend | number:'1.0-0' }}% vs last 7 days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Open Opportunities -->
+      @if (permissionService.hasPermission('OPPORTUNITY_VIEW')) {
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden" style="background-color: #ccfbf1; min-height: 110px; border-top: 3px solid #0d9488 !important;">
+          <div class="card-body p-3 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-teal-contrast fw-bold small text-uppercase tracking-wider">Open Opportunities</span>
+              <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                <i class="bi bi-bullseye text-teal fs-5"></i>
+              </div>
+            </div>
+            <div class="mt-2">
+              <h2 class="fw-extrabold text-teal-dark mb-1" style="font-size: 1.4rem;">{{ summary.openOpportunities }}</h2>
+              <div class="text-teal-success small fw-semibold d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-up-right"></i>
+                <span>{{ summary.opportunitiesTrend >= 0 ? '+' : '' }}{{ summary.opportunitiesTrend | number:'1.0-0' }}% vs last 7 days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Weighted Forecast -->
+      @if (permissionService.hasPermission('OPPORTUNITY_VIEW')) {
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden" style="background-color: #ecfccb; min-height: 110px; border-top: 3px solid #65a30d !important;">
+          <div class="card-body p-3 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-lime-contrast fw-bold small text-uppercase tracking-wider">Weighted Forecast</span>
+              <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                <i class="bi bi-graph-up text-lime fs-5"></i>
+              </div>
+            </div>
+            <div class="mt-2">
+              <h2 class="fw-extrabold text-lime-dark mb-1" style="font-size: 1.2rem;">{{ formatCurrency(summary.weightedForecast) }}</h2>
+              <div class="text-lime-success small fw-semibold d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-up-right"></i>
+                <span>{{ summary.weightedForecastTrend >= 0 ? '+' : '' }}{{ summary.weightedForecastTrend | number:'1.0-0' }}% vs last 7 days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Second Row of Stat Cards (SLA, Support, Leaves, Payroll) -->
+    <div class="row g-3 mb-4">
+      <!-- Service Requests -->
+      @if (permissionService.hasPermission('SERVICE_REQUEST_VIEW')) {
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden" style="background-color: #ede9fe; min-height: 110px; border-top: 3px solid #7c3aed !important;">
+            <div class="card-body p-3 d-flex flex-column justify-content-between">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-purple-contrast fw-bold small text-uppercase tracking-wider">Service Requests</span>
+                <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                  <i class="bi bi-clipboard-check text-purple fs-5"></i>
+                </div>
+              </div>
+              <div class="mt-2">
+                <h2 class="fw-extrabold text-purple-dark mb-1" style="font-size: 1.4rem;">{{ summary.totalServiceRequests }}</h2>
+                <div class="small fw-semibold d-flex align-items-center gap-1" style="color: #6b21a8;">
+                  <i class="bi bi-people"></i>
+                  <span>Requested by clients</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Support Tickets -->
+      @if (permissionService.hasPermission('TICKET_VIEW')) {
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden" style="background-color: #e0f2fe; min-height: 110px; border-top: 3px solid #0ea5e9 !important;">
+            <div class="card-body p-3 d-flex flex-column justify-content-between">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-blue-contrast fw-bold small text-uppercase tracking-wider">Support Tickets</span>
+                <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                  <i class="bi bi-ticket-perforated text-blue fs-5"></i>
+                </div>
+              </div>
+              <div class="mt-2">
+                <h2 class="fw-extrabold text-blue-dark mb-1" style="font-size: 1.4rem;">{{ summary.openTickets }}</h2>
+                <div class="small fw-semibold d-flex align-items-center gap-1" style="color: #0369a1;">
+                  <i class="bi bi-info-circle"></i>
+                  <span>Active open tickets</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Pending Leave Approvals -->
+      @if (permissionService.hasPermission('LEAVE_VIEW')) {
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden" style="background-color: #d1fae5; min-height: 110px; border-top: 3px solid #10b981 !important;">
+            <div class="card-body p-3 d-flex flex-column justify-content-between">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold small text-uppercase tracking-wider" style="color: #065f46;">Pending Leaves</span>
+                <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                  <i class="bi bi-calendar-minus text-success fs-5"></i>
+                </div>
+              </div>
+              <div class="mt-2">
+                <h2 class="fw-extrabold text-emerald-dark mb-1" style="font-size: 1.4rem;">{{ summary.pendingLeaveApprovals }}</h2>
+                <div class="small fw-semibold d-flex align-items-center gap-1" style="color: #047857;">
+                  <i class="bi bi-check-circle"></i>
+                  <span>Requests awaiting review</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Payroll Status -->
+      @if (permissionService.hasPermission('PAYROLL_VIEW')) {
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden" style="background-color: #e0e7ff; min-height: 110px; border-top: 3px solid #6366f1 !important;">
+            <div class="card-body p-3 d-flex flex-column justify-content-between">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold small text-uppercase tracking-wider" style="color: #3730a3;">Payroll Status</span>
+                <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                  <i class="bi bi-card-checklist text-indigo fs-5"></i>
+                </div>
+              </div>
+              <div class="mt-2">
+                <h2 class="fw-extrabold text-purple-dark mb-1" style="font-size: 1.4rem;">{{ summary.payrollProcessedThisMonth }}</h2>
+                <div class="small fw-semibold d-flex align-items-center gap-1" style="color: #4338ca;">
+                  <i class="bi bi-credit-card"></i>
+                  <span>Processed this month</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Middle Widgets Row -->
+    <div class="row g-4 mb-4">
+      <!-- Sales Overview Chart -->
+      @if (permissionService.hasPermission('LEAD_VIEW')) {
+      <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 dashboard-card h-100">
+          <div class="card-header border-0 d-flex justify-content-between align-items-center px-4 pt-4 pb-0">
+            <div>
+              <h5 class="fw-bold text-dark-contrast mb-0">Sales Overview</h5>
+              <div class="small text-secondary-contrast mt-1">
+                Total Leads: <span class="fw-bold">{{ summary.totalLeads }}</span>
+                <span class="text-success ms-2 fw-semibold"><i class="bi bi-arrow-up-short"></i>18%</span>
+              </div>
+            </div>
+            <div class="dropdown">
+              <button class="btn btn-light btn-sm border dropdown-toggle fw-semibold rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                {{ rangeLabel }}
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
+                <li><a class="dropdown-item" (click)="setRange('day')">Today</a></li>
+                <li><a class="dropdown-item" (click)="setRange('week')">This Week</a></li>
+                <li><a class="dropdown-item" (click)="setRange('month')">This Month</a></li>
+                <li><a class="dropdown-item" (click)="setRange('year')">This Year</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-body px-4 pb-4 pt-2">
+            <!-- Native SVG line chart -->
+            <div class="mt-3" style="min-height: 180px;">
+              <svg viewBox="0 0 520 200" class="w-100 h-100" style="overflow: visible;">
+                <!-- Y Axis Labels -->
+                <text x="20" y="34" text-anchor="end" font-size="10" fill="#94a3b8" font-weight="500">300</text>
+                <text x="20" y="59" text-anchor="end" font-size="10" fill="#94a3b8" font-weight="500">250</text>
+                <text x="20" y="84" text-anchor="end" font-size="10" fill="#94a3b8" font-weight="500">200</text>
+                <text x="20" y="109" text-anchor="end" font-size="10" fill="#94a3b8" font-weight="500">150</text>
+                <text x="20" y="134" text-anchor="end" font-size="10" fill="#94a3b8" font-weight="500">100</text>
+                <text x="20" y="159" text-anchor="end" font-size="10" fill="#94a3b8" font-weight="500">50</text>
+                <text x="20" y="184" text-anchor="end" font-size="10" fill="#94a3b8" font-weight="500">0</text>
+
+                <!-- Grid lines -->
+                <line x1="25" y1="180" x2="495" y2="180" stroke="#f1f5f9" stroke-width="2" />
+                <line x1="25" y1="155" x2="495" y2="155" stroke="#f1f5f9" stroke-width="2" />
+                <line x1="25" y1="130" x2="495" y2="130" stroke="#f1f5f9" stroke-width="2" />
+                <line x1="25" y1="105" x2="495" y2="105" stroke="#f1f5f9" stroke-width="2" />
+                <line x1="25" y1="80" x2="495" y2="80" stroke="#f1f5f9" stroke-width="2" />
+                <line x1="25" y1="55" x2="495" y2="55" stroke="#f1f5f9" stroke-width="2" />
+                <line x1="25" y1="30" x2="495" y2="30" stroke="#f1f5f9" stroke-width="2" />
+                
+                <!-- Area path (gradient fill) -->
+                <path [attr.d]="getAreaPath(summary.salesOverviewData)" 
+                      fill="url(#purple-grad)" />
+                      
+                <!-- Curved Line path -->
+                <path [attr.d]="getLinePath(summary.salesOverviewData)" 
+                      fill="none" 
+                      stroke="#8b5cf6" 
+                      stroke-width="3.5" 
+                      stroke-linecap="round" />
+                      
+                <!-- Data points -->
+                @for (val of summary.salesOverviewData; track $index) {
+                  <circle [attr.cx]="$index * 75 + 25" 
+                          [attr.cy]="getYCoordinate(val)" 
+                          r="6" 
+                          fill="#8b5cf6" 
+                          stroke="#ffffff" 
+                          stroke-width="2" />
+                }
+                
+                <!-- X Axis Date Labels -->
+                @for (lbl of summary.salesOverviewLabels; track $index) {
+                  <text [attr.x]="$index * 75 + 25" 
+                        y="198" 
+                        text-anchor="middle" 
+                        font-size="10.5" 
+                        fill="#64748b" 
+                        font-weight="600">
+                    {{ lbl }}
+                  </text>
+                }
+
+                <!-- Gradients -->
+                <defs>
+                  <linearGradient id="purple-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.25" />
+                    <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.0" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Service Desk Overview -->
+      @if (permissionService.hasPermission('SERVICE_REQUEST_VIEW')) {
+      <div class="col-12 col-md-7 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 dashboard-card h-100">
+          <div class="card-header border-0 d-flex justify-content-between align-items-center px-4 pt-4 pb-0">
+            <div>
+              <h5 class="fw-bold text-dark-contrast mb-0">Company Services Overview</h5>
+            </div>
+            <div class="dropdown">
+              <button class="btn btn-light btn-sm border dropdown-toggle fw-semibold rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                {{ rangeLabel }}
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
+                <li><a class="dropdown-item" (click)="setRange('day')">Today</a></li>
+                <li><a class="dropdown-item" (click)="setRange('week')">This Week</a></li>
+                <li><a class="dropdown-item" (click)="setRange('month')">This Month</a></li>
+                <li><a class="dropdown-item" (click)="setRange('year')">This Year</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-body px-4 pb-4 pt-2 d-flex align-items-center">
+            <div class="row w-100 align-items-center g-3">
+              <div class="col-12 col-sm-6 d-flex justify-content-center position-relative mb-2 mb-sm-0">
+                <!-- Native Donut Chart SVG -->
+                <svg viewBox="0 0 160 160" style="max-height: 140px; width: 140px; transform: rotate(-90deg);">
+                  <!-- Base circle -->
+                  <circle cx="80" cy="80" r="60" fill="transparent" stroke="#f1f5f9" stroke-width="16" />
+                  
+                  <!-- Segments -->
+                  <circle cx="80" cy="80" r="60" fill="transparent" 
+                          [attr.stroke]="getDonutSegment(0).stroke" 
+                          stroke-width="16"
+                          [attr.stroke-dasharray]="getDonutSegment(0).dashArray" 
+                          [attr.stroke-dashoffset]="getDonutSegment(0).dashOffset" />
+                          
+                  <circle cx="80" cy="80" r="60" fill="transparent" 
+                          [attr.stroke]="getDonutSegment(1).stroke" 
+                          stroke-width="16"
+                          [attr.stroke-dasharray]="getDonutSegment(1).dashArray" 
+                          [attr.stroke-dashoffset]="getDonutSegment(1).dashOffset" />
+                          
+                  <circle cx="80" cy="80" r="60" fill="transparent" 
+                          [attr.stroke]="getDonutSegment(2).stroke" 
+                          stroke-width="16"
+                          [attr.stroke-dasharray]="getDonutSegment(2).dashArray" 
+                          [attr.stroke-dashoffset]="getDonutSegment(2).dashOffset" />
+                          
+                  <circle cx="80" cy="80" r="60" fill="transparent" 
+                          [attr.stroke]="getDonutSegment(3).stroke" 
+                          stroke-width="16"
+                          [attr.stroke-dasharray]="getDonutSegment(3).dashArray" 
+                          [attr.stroke-dashoffset]="getDonutSegment(3).dashOffset" />
+                </svg>
+                <div class="position-absolute d-flex flex-column align-items-center justify-content-center" style="top: 0; left: 0; right: 0; bottom: 0;">
+                  <span class="fs-4 fw-extrabold text-dark-contrast leading-none">{{ summary.serviceDeskPendingCount + summary.serviceDeskInProgressCount + summary.serviceDeskResolvedCount + summary.serviceDeskOnHoldCount }}</span>
+                  <span class="text-secondary small fw-semibold" style="font-size: 11px;">Total</span>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6">
+                <div class="d-flex flex-column gap-2">
+                  <div class="d-flex align-items-center justify-content-between small">
+                    <span class="text-secondary-contrast fw-semibold"><i class="bi bi-circle-fill me-2" style="color: #f59e0b; font-size: 8px;"></i>Pending</span>
+                    <span class="fw-bold text-dark-contrast">{{ summary.serviceDeskPendingCount }}</span>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between small">
+                    <span class="text-secondary-contrast fw-semibold"><i class="bi bi-circle-fill me-2" style="color: #0284c7; font-size: 8px;"></i>In Progress</span>
+                    <span class="fw-bold text-dark-contrast">{{ summary.serviceDeskInProgressCount }}</span>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between small">
+                    <span class="text-secondary-contrast fw-semibold"><i class="bi bi-circle-fill me-2" style="color: #10b981; font-size: 8px;"></i>Resolved</span>
+                    <span class="fw-bold text-dark-contrast">{{ summary.serviceDeskResolvedCount }}</span>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between small">
+                    <span class="text-secondary-contrast fw-semibold"><i class="bi bi-circle-fill me-2" style="color: #6b7280; font-size: 8px;"></i>On Hold</span>
+                    <span class="fw-bold text-dark-contrast">{{ summary.serviceDeskOnHoldCount }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Task Summary -->
+      @if (permissionService.hasPermission('SERVICE_REQUEST_VIEW')) {
+      <div class="col-12 col-md-5 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 dashboard-card h-100">
+          <div class="card-header border-0 d-flex justify-content-between align-items-center px-4 pt-4 pb-0">
+            <div>
+              <h5 class="fw-bold text-dark-contrast mb-0">Task Summary</h5>
+            </div>
+            <div class="dropdown">
+              <button class="btn btn-light btn-sm border dropdown-toggle fw-semibold rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                {{ rangeLabel }}
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
+                <li><a class="dropdown-item" (click)="setRange('day')">Today</a></li>
+                <li><a class="dropdown-item" (click)="setRange('week')">This Week</a></li>
+                <li><a class="dropdown-item" (click)="setRange('month')">This Month</a></li>
+                <li><a class="dropdown-item" (click)="setRange('year')">This Year</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-body px-4 pb-4 pt-3">
+            <div class="d-flex flex-column gap-3">
+              <!-- Tasks Created -->
+              <div class="d-flex align-items-center gap-3">
+                <div class="bg-light p-2.5 rounded-3 d-flex align-items-center justify-content-center text-primary" style="width: 44px; height: 44px; background-color: #f1f5f9;">
+                  <i class="bi bi-check2-square fs-4"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="text-secondary-contrast small fw-semibold">Tasks Created</div>
+                  <h5 class="fw-bold text-dark-contrast mb-0">{{ summary.tasksCreatedCount }}</h5>
+                </div>
+                <span [class]="summary.tasksCreatedTrend >= 0 ? 'text-success small fw-semibold' : 'text-danger small fw-semibold'">
+                  <i [class]="summary.tasksCreatedTrend >= 0 ? 'bi bi-arrow-up' : 'bi bi-arrow-down'"></i>
+                  {{ summary.tasksCreatedTrend > 0 ? summary.tasksCreatedTrend : (summary.tasksCreatedTrend * -1) | number:'1.0-0' }}%
+                </span>
+              </div>
+              
+              <!-- Tasks Completed -->
+              <div class="d-flex align-items-center gap-3">
+                <div class="bg-light p-2.5 rounded-3 d-flex align-items-center justify-content-center text-success" style="width: 44px; height: 44px; background-color: #f1f5f9;">
+                  <i class="bi bi-check2-all fs-4"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="text-secondary-contrast small fw-semibold">Tasks Completed</div>
+                  <h5 class="fw-bold text-dark-contrast mb-0">{{ summary.tasksCompletedCount }}</h5>
+                </div>
+                <span [class]="summary.tasksCompletedTrend >= 0 ? 'text-success small fw-semibold' : 'text-danger small fw-semibold'">
+                  <i [class]="summary.tasksCompletedTrend >= 0 ? 'bi bi-arrow-up' : 'bi bi-arrow-down'"></i>
+                  {{ summary.tasksCompletedTrend > 0 ? summary.tasksCompletedTrend : (summary.tasksCompletedTrend * -1) | number:'1.0-0' }}%
+                </span>
+              </div>
+
+              <!-- Overdue Tasks -->
+              <div class="d-flex align-items-center gap-3">
+                <div class="bg-light p-2.5 rounded-3 d-flex align-items-center justify-content-center text-danger" style="width: 44px; height: 44px; background-color: #f1f5f9;">
+                  <i class="bi bi-exclamation-octagon fs-4"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="text-secondary-contrast small fw-semibold">Overdue Tasks</div>
+                  <h5 class="fw-bold text-dark-contrast mb-0">{{ summary.tasksOverdueCount }}</h5>
+                </div>
+                <span class="text-secondary small fw-semibold"><i class="bi bi-dash"></i>0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Bottom Widgets Row -->
+    <div class="row g-3">
+      <!-- Outstanding Invoices -->
+      @if (permissionService.hasPermission('INVOICE_VIEW')) {
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 dashboard-card h-100" style="background-color: #ffe4e6;">
+          <div class="card-header border-0 d-flex justify-content-between align-items-center px-4 pt-3 pb-0">
+            <h6 class="fw-bold text-dark-contrast mb-0" style="font-size: 0.9rem;">Outstanding Invoices</h6>
+            <a routerLink="/finance/invoices" class="view-all-link">View All</a>
+          </div>
+          <div class="card-body px-4 pb-3 pt-2">
+            <div class="mb-2">
+              <h3 class="fw-extrabold text-danger-dark mb-1" style="font-size: 1.4rem;">{{ formatCurrency(summary.outstandingInvoiceAmount) }}</h3>
+              <span class="badge rounded-pill bg-white bg-opacity-75 text-danger-contrast px-2 py-0.5" style="font-size: 0.7rem;">{{ summary.overdueInvoices?.length || 0 }} Invoices Overdue</span>
+            </div>
+            <div class="list-group list-group-flush mt-2">
+              @for (inv of summary.overdueInvoices; track inv.invoiceNumber) {
+                <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-2 px-0">
+                  <div>
+                    <div class="fw-bold text-dark-contrast small">{{ inv.invoiceNumber }}</div>
+                    <div class="text-secondary-contrast" style="font-size: 11px;">{{ inv.clientName }}</div>
+                  </div>
+                  <div class="text-end">
+                    <div class="fw-bold text-dark-contrast small">{{ formatCurrency(inv.amount) }}</div>
+                    <span class="text-danger-contrast" style="font-size: 10px; font-weight: 600;">Overdue {{ inv.daysOverdue }} days</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Wallet Overview -->
+      @if (permissionService.hasPermission('WALLET_VIEW')) {
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 dashboard-card h-100" style="background-color: #d1fae5;">
+          <div class="card-header border-0 d-flex justify-content-between align-items-center px-4 pt-3 pb-0">
+            <h6 class="fw-bold text-dark-contrast mb-0" style="font-size: 0.9rem;">Wallet Overview</h6>
+            <a routerLink="/finance/wallet" class="view-all-link">View All</a>
+          </div>
+          <div class="card-body px-4 pb-3 pt-2">
+            <div class="mb-1">
+              <div class="text-secondary-contrast small fw-semibold" style="font-size: 11px;">Wallet Balance</div>
+              <h3 class="fw-extrabold text-emerald-dark mb-1" style="font-size: 1.4rem;">{{ formatCurrency(summary.walletBalance) }}</h3>
+              <span class="text-emerald-contrast small fw-semibold"><i class="bi bi-arrow-up-right me-1"></i>+{{ formatCurrency(summary.walletBalanceTrend) }} this month</span>
+            </div>
+            <div class="row g-2 mt-2">
+              <div class="col-6">
+                <div class="p-2 bg-white bg-opacity-75 rounded-3 text-center">
+                  <div class="text-secondary-contrast fw-semibold" style="font-size: 10px;">Wallet Credits</div>
+                  <div class="fw-bold text-dark-contrast small">{{ formatCurrency(summary.walletCredits) }}</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="p-2 bg-white bg-opacity-75 rounded-3 text-center">
+                  <div class="text-secondary-contrast fw-semibold" style="font-size: 10px;">Wallet Debits</div>
+                  <div class="fw-bold text-dark-contrast small">{{ formatCurrency(summary.walletDebits) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Employees -->
+      @if (permissionService.hasPermission('EMPLOYEE_VIEW')) {
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 dashboard-card h-100" style="background-color: #e0e7ff;">
+          <div class="card-header border-0 d-flex justify-content-between align-items-center px-4 pt-3 pb-0">
+            <h6 class="fw-bold text-dark-contrast mb-0" style="font-size: 0.9rem;">Employees</h6>
+            <a routerLink="/hrm/employees" class="view-all-link">View All</a>
+          </div>
+          <div class="card-body px-4 pb-3 pt-2">
+            <div class="mb-2">
+              <div class="text-secondary-contrast small fw-semibold" style="font-size: 11px;">Total Employees</div>
+              <h3 class="fw-extrabold text-indigo-dark mb-1" style="font-size: 1.4rem;">{{ summary.totalEmployees }}</h3>
+              <span class="text-indigo-contrast small fw-semibold"><i class="bi bi-arrow-up-right me-1"></i>+{{ summary.employeesTrend | number:'1.0-0' }} vs last month</span>
+            </div>
+            <div class="mt-2">
+              <div class="mb-2">
+                <div class="d-flex justify-content-between text-secondary-contrast small fw-semibold mb-1">
+                  <span>Present Today</span>
+                  <span class="text-dark-contrast fw-bold">{{ summary.employeesPresentToday }}</span>
+                </div>
+                <div class="progress" style="background-color: rgba(255,255,255,0.6);">
+                  <div class="progress-bar progress-bar-indigo" role="progressbar" [style.width.%]="(summary.employeesPresentToday / summary.totalEmployees) * 100"></div>
+                </div>
+              </div>
+              <div class="mb-0">
+                <div class="d-flex justify-content-between text-secondary-contrast small fw-semibold mb-1">
+                  <span>On Leave</span>
+                  <span class="text-dark-contrast fw-bold">{{ summary.employeesOnLeave }}</span>
+                </div>
+                <div class="progress" style="background-color: rgba(255,255,255,0.6);">
+                  <div class="progress-bar progress-bar-teal" role="progressbar" [style.width.%]="(summary.employeesOnLeave / summary.totalEmployees) * 100"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Announcements -->
+      @if (permissionService.hasPermission('ANNOUNCEMENT_VIEW')) {
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 dashboard-card h-100" style="background-color: #fef3c7;">
+          <div class="card-header border-0 d-flex justify-content-between align-items-center px-4 pt-3 pb-0">
+            <h6 class="fw-bold text-dark-contrast mb-0" style="font-size: 0.9rem;">Announcements</h6>
+            <a routerLink="/hrm/announcements" class="view-all-link">View All</a>
+          </div>
+          <div class="card-body px-4 pb-3 pt-2">
+            <div class="list-group list-group-flush">
+              @for (ann of summary.announcements; track ann.title) {
+                <div class="list-group-item bg-transparent d-flex gap-3 align-items-start py-2 px-0">
+                  <div class="rounded-3 bg-white bg-opacity-75 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
+                    <i class="bi bi-megaphone text-amber-contrast" style="font-size: 0.85rem;"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <h6 class="fw-bold text-dark-contrast small mb-0">{{ ann.title }}</h6>
+                      <span class="text-muted text-nowrap ms-2" style="font-size: 10px;">{{ ann.timeAgo }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+    @if (quickLinks && quickLinks.length) {
+    <h6 class="text-uppercase text-muted small mt-4 mb-2">Quick Actions</h6>
+    <div class="row g-3">
+      @for (q of quickLinks; track q.label) {
+        <div class="col-6 col-md-4 col-lg-3">
+          <a [routerLink]="q.link" class="card text-decoration-none h-100 transition-hover border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+              <i class="bi fs-4 text-primary" [class]="q.icon"></i>
+              <div>
+                <div class="fw-semibold text-dark">{{ q.label }}</div>
+                <div class="text-muted small">{{ q.description }}</div>
+              </div>
+            </div>
+          </a>
+        </div>
+      }
+    </div>
+    }
+  }
+
+  <!-- ============ SUPPORT AGENT DASHBOARD ============ -->
+  @if (isSupportAgentRole) {
+    <!-- TOP METRICS CARDS -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-4">
+      <!-- ASSIGNED TO ME -->
+      <div class="col">
+        <div class="card border-0 shadow-sm h-100" style="border-top: 4px solid #8b5cf6; border-radius: 12px;">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">Assigned to Me</span>
+              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #f3e8ff; color: #8b5cf6;">
+                <i class="bi bi-person-workspace fs-6"></i>
+              </div>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">{{ agentAssignedCount }}</div>
+            <div class="text-muted small" style="font-size: 0.75rem;">Total tickets in your queue</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY OPEN & ACTIVE -->
+      <div class="col">
+        <div class="card border-0 shadow-sm h-100" style="border-top: 4px solid #b45309; border-radius: 12px;">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">My Open &amp; Active</span>
+              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #fef3c7; color: #b45309;">
+                <i class="bi bi-hourglass-split fs-6"></i>
+              </div>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">{{ agentOpenCount }}</div>
+            <div class="text-muted small" style="font-size: 0.75rem;">Awaiting your response</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY RESOLVED TICKETS -->
+      <div class="col">
+        <div class="card border-0 shadow-sm h-100" style="border-top: 4px solid #059669; border-radius: 12px;">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">My Resolved</span>
+              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #d1fae5; color: #059669;">
+                <i class="bi bi-check2-circle fs-6"></i>
+              </div>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">{{ agentResolvedCount }}</div>
+            <div class="text-muted small" style="font-size: 0.75rem;">Completed resolutions</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY SLA RISK / BREACHED -->
+      <div class="col">
+        <div class="card border-0 shadow-sm h-100" style="border-top: 4px solid #dc2626; border-radius: 12px;">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">My SLA Risk</span>
+              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #fee2e2; color: #dc2626;">
+                <i class="bi bi-alarm fs-6"></i>
+              </div>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">{{ agentSlaRiskCount }}</div>
+            <div class="text-muted small" style="font-size: 0.75rem;">Tickets near SLA deadline</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN AGENT WORKSTATION ROW -->
+    <div class="row g-3 mb-4">
+      <!-- MY ASSIGNED & COMPANY TICKETS WORKSTATION TABLE -->
+      <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-header bg-transparent border-0 px-4 pt-4 pb-2 d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="fw-bold text-dark mb-0">Active Support Tickets &amp; Workflow Queue</h5>
+              <div class="text-muted small">Company support tickets and active agent workstation queue</div>
+            </div>
+            <a routerLink="/support/tickets" class="btn btn-primary btn-sm rounded-pill px-3">Open Full Tickets Desk</a>
+          </div>
+          <div class="card-body px-4 pb-4 pt-0">
+            @if (displayAgentTickets.length === 0) {
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-check-circle-fill fs-1 d-block mb-2 text-success"></i>
+                <div class="fw-semibold text-dark">No Active Tickets</div>
+                <div class="small text-muted">There are no pending support tickets across client companies right now.</div>
+              </div>
+            } @else {
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light text-muted small text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                    <tr>
+                      <th>Ticket #</th>
+                      <th>Raised By</th>
+                      <th>Subject</th>
+                      <th>Priority</th>
+                      <th>Status Workflow</th>
+                      <th>Quick Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (t of displayAgentTickets.slice(0, 8); track t.id) {
+                      <tr>
+                        <td class="fw-bold text-primary" style="font-size: 0.85rem;">{{ t.ticketNumber }}</td>
+                        <td>
+                          <div class="fw-semibold text-dark small">{{ t.createdByName || 'Client User' }}</div>
+                        </td>
+                        <td>
+                          <div class="text-dark small text-truncate" style="max-width: 180px;" [title]="t.title">{{ t.title }}</div>
+                        </td>
+                        <td>
+                          <span class="badge rounded-pill" 
+                                [class.text-bg-danger]="t.priority === 'CRITICAL'"
+                                [class.text-bg-warning]="t.priority === 'HIGH'"
+                                [class.text-bg-info]="t.priority === 'MEDIUM'"
+                                [class.text-bg-secondary]="t.priority === 'LOW'">
+                            {{ t.priority }}
+                          </span>
+                        </td>
+                        <td>
+                          <!-- WORKFLOW STATUS SELECTOR -->
+                          <select class="form-select form-select-sm py-1 px-2 border-0 bg-light rounded-pill fw-semibold"
+                                  style="font-size: 0.75rem; width: 120px;"
+                                  [ngModel]="t.status"
+                                  [disabled]="updatingTicketId === t.id"
+                                  (ngModelChange)="updateTicketStatus(t, $event)">
+                            <option value="NEW">New</option>
+                            <option value="OPEN">Open</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="WAITING">Waiting</option>
+                            <option value="RESOLVED">Resolved</option>
+                          </select>
+                        </td>
+                        <td>
+                          <div class="d-flex gap-1">
+                            @if (!t.assignedToAgentId) {
+                              <button class="btn btn-sm btn-outline-primary px-2 py-1"
+                                      style="font-size: 0.72rem;"
+                                      [disabled]="updatingTicketId === t.id"
+                                      (click)="claimTicket(t)">
+                                <i class="bi bi-person-plus"></i> Claim
+                              </button>
+                            } @else {
+                              <button class="btn btn-sm btn-success px-2 py-1"
+                                      style="font-size: 0.72rem;"
+                                      (click)="openResolveModal(t)">
+                                <i class="bi bi-check2"></i> Resolve
+                              </button>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- UNASSIGNED PICKUP QUEUE -->
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-header bg-transparent border-0 px-4 pt-4 pb-2">
+            <h5 class="fw-bold text-dark mb-0">Unassigned Queue</h5>
+            <div class="text-muted small">Open tickets ready to be claimed</div>
+          </div>
+          <div class="card-body px-4 pb-4 pt-0">
+            @if (unassignedTicketsQueue.length === 0) {
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1 text-secondary d-block mb-2"></i>
+                <div class="fw-semibold text-dark">Queue Empty</div>
+                <div class="small">All tickets have been assigned to agents.</div>
+              </div>
+            } @else {
+              <div class="d-flex flex-column gap-3">
+                @for (t of unassignedTicketsQueue.slice(0, 4); track t.id) {
+                  <div class="p-3 rounded-3 border bg-light">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                      <span class="fw-bold text-primary small">{{ t.ticketNumber }}</span>
+                      <span class="badge bg-secondary text-white">{{ t.priority }}</span>
+                    </div>
+                    <div class="fw-semibold text-dark small mb-1">{{ t.title }}</div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                      <span class="text-muted" style="font-size: 0.75rem;">{{ t.createdByName || 'Client User' }}</span>
+                      <button class="btn btn-primary btn-sm py-0 px-2" style="font-size: 0.75rem;" (click)="claimTicket(t)">Claim Ticket</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    @if (quickLinks && quickLinks.length) {
+    <h6 class="text-uppercase text-muted small mt-4 mb-2">Support Agent Quick Actions</h6>
+    <div class="row g-3">
+      @for (q of quickLinks; track q.label) {
+        <div class="col-6 col-md-4 col-lg-3">
+          <a [routerLink]="q.link" class="card text-decoration-none h-100 transition-hover border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+              <i class="bi fs-4 text-primary" [class]="q.icon"></i>
+              <div>
+                <div class="fw-semibold text-dark">{{ q.label }}</div>
+                <div class="text-muted small">{{ q.description }}</div>
+              </div>
+            </div>
+          </a>
+        </div>
+      }
+    </div>
+    }
+  }
+
+  <!-- ============ SUPPORT MANAGER DASHBOARD ============ -->
+  @if (isSupportManagerRole) {
+    <!-- TOP METRICS CARDS -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-4">
+      <!-- TOTAL TICKETS -->
+      <div class="col">
+        <div class="card border-0 shadow-sm h-100" style="border-top: 4px solid #8b5cf6; border-radius: 12px;">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">Total Platform Tickets</span>
+              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #f3e8ff; color: #8b5cf6;">
+                <i class="bi bi-life-preserver fs-6"></i>
+              </div>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">{{ managerTotalCount }}</div>
+            <div class="text-muted small" style="font-size: 0.75rem;">Platform-wide ticket volume</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNASSIGNED TICKETS QUEUE -->
+      <div class="col">
+        <div class="card border-0 shadow-sm h-100" style="border-top: 4px solid #b45309; border-radius: 12px;">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">Unassigned Queue</span>
+              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #fef3c7; color: #b45309;">
+                <i class="bi bi-person-plus fs-6"></i>
+              </div>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">{{ managerUnassignedCount }}</div>
+            <div class="text-muted small" style="font-size: 0.75rem;">Needs agent allocation</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLA BREACHED / CRITICAL -->
+      <div class="col">
+        <div class="card border-0 shadow-sm h-100" style="border-top: 4px solid #dc2626; border-radius: 12px;">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">SLA Breaches / Escalated</span>
+              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #fee2e2; color: #dc2626;">
+                <i class="bi bi-exclamation-octagon fs-6"></i>
+              </div>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">{{ managerSlaBreachedCount }}</div>
+            <div class="text-muted small" style="font-size: 0.75rem;">Requires manager intervention</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE AGENTS ROSTER -->
+      <div class="col">
+        <div class="card border-0 shadow-sm h-100" style="border-top: 4px solid #0d9488; border-radius: 12px;">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">Active Support Team</span>
+              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #ccfbf1; color: #0d9488;">
+                <i class="bi bi-people fs-6"></i>
+              </div>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">{{ managerActiveAgentsCount }} / {{ teamAgents.length }}</div>
+            <div class="text-muted small" style="font-size: 0.75rem;">Agents currently accepting tickets</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN MANAGER ROW: SLA ESCALATIONS & TEAM ROSTER -->
+    <div class="row g-3 mb-4">
+      <!-- ESCALATIONS & SLA BREACHES TABLE -->
+      <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-header bg-transparent border-0 px-4 pt-4 pb-2 d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="fw-bold text-dark mb-0">Manager Ticket Escalations &amp; SLA Alerts</h5>
+              <div class="text-muted small">High-priority tickets requiring manager re-assignment</div>
+            </div>
+            <a routerLink="/support/tickets" class="btn btn-outline-primary btn-sm rounded-pill px-3">Manage All Tickets</a>
+          </div>
+          <div class="card-body px-4 pb-4 pt-0">
+            @if (slaBreachedTickets.length === 0 && criticalTickets.length === 0) {
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-shield-check fs-1 text-success d-block mb-2"></i>
+                <div class="fw-semibold text-dark">Zero SLA Violations</div>
+                <div class="small text-muted">All company support tickets are meeting SLA response deadlines.</div>
+              </div>
+            } @else {
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light text-muted small text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                    <tr>
+                      <th>Ticket #</th>
+                      <th>Raised By</th>
+                      <th>Assignee</th>
+                      <th>Issue Priority</th>
+                      <th>SLA Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (t of slaBreachedTickets.slice(0, 6); track t.id) {
+                      <tr>
+                        <td class="fw-bold text-danger" style="font-size: 0.85rem;">{{ t.ticketNumber }}</td>
+                        <td>
+                          <div class="fw-semibold text-dark small">{{ t.createdByName || 'Company User' }}</div>
+                        </td>
+                        <td>
+                          <span class="small text-muted">{{ t.assignedToAgentName || 'Unassigned' }}</span>
+                        </td>
+                        <td>
+                          <span class="badge bg-danger text-white rounded-pill">{{ t.priority }}</span>
+                        </td>
+                        <td>
+                          <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">SLA Breached</span>
+                        </td>
+                        <td>
+                          <a routerLink="/support/tickets" class="btn btn-sm btn-outline-danger px-2 py-1" style="font-size: 0.75rem;">
+                            Reassign
+                          </a>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- SUPPORT TEAM ROSTER & WORKLOAD -->
+      <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-header bg-transparent border-0 px-4 pt-4 pb-2 d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="fw-bold text-dark mb-0">Support Team Roster</h5>
+              <div class="text-muted small">Live agent availability &amp; workload</div>
+            </div>
+            <a routerLink="/support/agents" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Team Roster</a>
+          </div>
+          <div class="card-body px-4 pb-4 pt-0">
+            @if (teamAgents.length === 0) {
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-person-badge fs-1 text-secondary d-block mb-2"></i>
+                <div>No support agents registered.</div>
+              </div>
+            } @else {
+              <div class="d-flex flex-column gap-3">
+                @for (a of teamAgents.slice(0, 5); track a.id) {
+                  <div class="p-3 rounded-3 border d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                        {{ a.fullName.charAt(0) }}
+                      </div>
+                      <div>
+                        <div class="fw-semibold text-dark small">{{ a.fullName }}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">{{ a.department || 'Support' }} &bull; {{ a.totalTicketsHandled }} tickets handled</div>
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <span class="badge rounded-pill"
+                            [class.text-bg-success]="a.status === 'AVAILABLE'"
+                            [class.text-bg-warning]="a.status === 'BUSY'"
+                            [class.text-bg-secondary]="a.status === 'OFFLINE'">
+                        {{ a.status }}
+                      </span>
+                      <div class="text-muted small mt-1" style="font-size: 0.72rem;">⭐ {{ a.satisfactionScore ? a.satisfactionScore.toFixed(1) : '5.0' }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    @if (quickLinks && quickLinks.length) {
+    <h6 class="text-uppercase text-muted small mt-4 mb-2">Support Manager Quick Actions</h6>
+    <div class="row g-3">
+      @for (q of quickLinks; track q.label) {
+        <div class="col-6 col-md-4 col-lg-3">
+          <a [routerLink]="q.link" class="card text-decoration-none h-100 transition-hover border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+              <i class="bi fs-4 text-primary" [class]="q.icon"></i>
+              <div>
+                <div class="fw-semibold text-dark">{{ q.label }}</div>
+                <div class="text-muted small">{{ q.description }}</div>
+              </div>
+            </div>
+          </a>
+        </div>
+      }
+    </div>
+    }
+  }
+
+  <!-- ============ PLATFORM VIEW (SaaS staff roles) ============ -->
+  @if (isPlatformRole && platformSummary) {
+    <div class="row g-3 mb-3">
+      <div class="col-12"><h6 class="text-uppercase text-muted small mb-0">Companies</h6></div>
+
+      <div class="col-6 col-lg-3">
+        <a [routerLink]="canManagePlatform ? '/platform/companies' : null" class="card border-0 shadow-sm rounded-4 h-100 text-decoration-none platform-kpi-card pk-purple">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="text-muted small text-uppercase fw-semibold" style="letter-spacing:.04em">Total Companies</span>
+              <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:36px;height:36px;background-color:#ede9fe">
+                <i class="bi bi-buildings" style="color:#8b5cf6"></i>
+              </div>
+            </div>
+            <div class="fs-2 fw-bold text-dark-contrast mb-2">{{ platformSummary.totalCompanies }}</div>
+            <div class="text-muted small mb-2">All registered companies</div>
+            <svg viewBox="0 0 100 32" class="w-100" style="height:28px;overflow:visible">
+              <path [attr.d]="sparklineArea(companyCountSeries('totalCompanies'))" fill="#8b5cf6" fill-opacity="0.12" />
+              <path [attr.d]="sparklinePath(companyCountSeries('totalCompanies'))" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <a [routerLink]="canManagePlatform ? '/platform/companies' : null" [queryParams]="{status: 'ACTIVE'}" class="card border-0 shadow-sm rounded-4 h-100 text-decoration-none platform-kpi-card pk-green">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="text-muted small text-uppercase fw-semibold" style="letter-spacing:.04em">Active Companies</span>
+              <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:36px;height:36px;background-color:#d1fae5">
+                <i class="bi bi-people" style="color:#059669"></i>
+              </div>
+            </div>
+            <div class="fs-2 fw-bold text-dark-contrast mb-2">{{ platformSummary.activeCompanies }}</div>
+            <div class="text-muted small mb-2">Currently active</div>
+            <svg viewBox="0 0 100 32" class="w-100" style="height:28px;overflow:visible">
+              <path [attr.d]="sparklineArea(companyCountSeries('activeCompanies'))" fill="#059669" fill-opacity="0.12" />
+              <path [attr.d]="sparklinePath(companyCountSeries('activeCompanies'))" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <a [routerLink]="canManagePlatform ? '/platform/companies' : null" [queryParams]="{status: 'TRIAL'}" class="card border-0 shadow-sm rounded-4 h-100 text-decoration-none platform-kpi-card pk-blue">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="text-muted small text-uppercase fw-semibold" style="letter-spacing:.04em">On Trial</span>
+              <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:36px;height:36px;background-color:#dbeafe">
+                <i class="bi bi-hourglass-split" style="color:#0284c7"></i>
+              </div>
+            </div>
+            <div class="fs-2 fw-bold text-dark-contrast mb-2">{{ platformSummary.trialCompanies }}</div>
+            <div class="text-muted small mb-2">{{ platformSummary.trialsExpiringWithin7Days }} expiring within 7 days</div>
+            <svg viewBox="0 0 100 32" class="w-100" style="height:28px;overflow:visible">
+              <path [attr.d]="sparklineArea(companyCountSeries('trialCompanies'))" fill="#0284c7" fill-opacity="0.12" />
+              <path [attr.d]="sparklinePath(companyCountSeries('trialCompanies'))" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <a [routerLink]="canManagePlatform ? '/platform/companies' : null" [queryParams]="{status: 'SUSPENDED'}" class="card border-0 shadow-sm rounded-4 h-100 text-decoration-none platform-kpi-card pk-amber">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="text-muted small text-uppercase fw-semibold" style="letter-spacing:.04em">Suspended</span>
+              <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:36px;height:36px;background-color:#fef3c7">
+                <i class="bi bi-pause-circle" style="color:#b45309"></i>
+              </div>
+            </div>
+            <div class="fs-2 fw-bold text-dark-contrast mb-2">{{ platformSummary.suspendedCompanies }}</div>
+            <div class="text-muted small mb-2">{{ platformSummary.pendingVerificationCompanies }} pending verification</div>
+            <svg viewBox="0 0 100 32" class="w-100" style="height:28px;overflow:visible">
+              <path [attr.d]="sparklineArea(companyCountSeries('suspendedCompanies'))" fill="#b45309" fill-opacity="0.12" />
+              <path [attr.d]="sparklinePath(companyCountSeries('suspendedCompanies'))" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <!-- Subscriptions & Revenue -->
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-body p-4">
+            <h6 class="fw-bold text-dark-contrast mb-3">Subscriptions &amp; Revenue</h6>
+
+            <div class="row g-2 mb-4">
+              @for (p of platformSummary.companiesByPlan; track p.code) {
+              <div class="col-6 col-md-3">
+                <a routerLink="/platform/companies" [queryParams]="{plan: p.code}" class="border rounded-3 p-2 h-100 d-block text-decoration-none">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <div class="rounded-2 d-flex align-items-center justify-content-center" style="width:28px;height:28px;background-color:#ede9fe">
+                      <i class="bi bi-box small" style="color:#8b5cf6"></i>
+                    </div>
+                    <span class="text-muted small">{{ p.name }}</span>
+                  </div>
+                  <div class="fs-5 fw-bold text-dark-contrast">{{ p.count }}</div>
+                  <div class="text-muted small">Companies on this plan</div>
+                </a>
+              </div>
+              }
+              <div class="col-6 col-md-3">
+                <a [routerLink]="canManagePlatform ? '/platform/platform-users' : null" class="border rounded-3 p-2 h-100 d-block text-decoration-none">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <div class="rounded-2 d-flex align-items-center justify-content-center" style="width:28px;height:28px;background-color:#dbeafe">
+                      <i class="bi bi-person-badge small" style="color:#0284c7"></i>
+                    </div>
+                    <span class="text-muted small">Platform Users</span>
+                  </div>
+                  <div class="fs-5 fw-bold text-dark-contrast">{{ platformSummary.totalPlatformUsers }}</div>
+                  <div class="text-muted small">Total platform users</div>
+                </a>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="text-muted small text-uppercase fw-semibold d-flex align-items-center gap-1" style="letter-spacing:.04em">
+                  Total Revenue
+                  <i class="bi bi-info-circle" title="Sum of SubscriptionHistory.amountPaid"></i>
+                </div>
+                <div class="fs-2 fw-bold text-dark-contrast">{{ fmt(platformSummary.totalRevenue) }}</div>
+                <div class="text-muted small">{{ fmt(platformSummary.revenueThisMonth) }} this month</div>
+              </div>
+              <div class="dropdown">
+                <button class="btn btn-light btn-sm border dropdown-toggle fw-semibold rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                  {{ rangeLabel }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
+                  <li><a class="dropdown-item" (click)="setRange('day')">Today</a></li>
+                  <li><a class="dropdown-item" (click)="setRange('week')">This Week</a></li>
+                  <li><a class="dropdown-item" (click)="setRange('month')">This Month</a></li>
+                  <li><a class="dropdown-item" (click)="setRange('year')">This Year</a></li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="mt-2" style="min-height:160px">
+              <svg viewBox="0 0 520 175" class="w-100 h-100" style="overflow:visible">
+                @for (yl of revenueYLabels(); track $index) {
+                  <text x="20" [attr.y]="160 - (yl / revenueChartMax) * 160 + 4" text-anchor="end" font-size="10" fill="#94a3b8" font-weight="500">{{ yl | number:'1.0-0' }}</text>
+                  <line x1="25" [attr.y1]="160 - (yl / revenueChartMax) * 160" x2="495" [attr.y2]="160 - (yl / revenueChartMax) * 160" stroke="#f1f5f9" stroke-width="1.5" />
+                }
+                <path [attr.d]="revenueAreaPath()" fill="url(#revenue-grad)" />
+                <path [attr.d]="revenueLinePath()" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" />
+                @for (lbl of revenueXLabels(); track $index) {
+                  <text [attr.x]="lbl.x" y="173" text-anchor="middle" font-size="10" fill="#64748b" font-weight="600">{{ lbl.label }}</text>
+                }
+                <defs>
+                  <linearGradient id="revenue-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.2" />
+                    <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform Overview -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-body p-4">
+            <h6 class="fw-bold text-dark-contrast mb-3">Platform Overview</h6>
+            <div class="d-flex flex-column gap-3">
+              @for (row of platformOverviewRows; track row.label) {
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                       style="width:36px;height:36px" [style.background-color]="row.bg">
+                    <i class="bi small" [class]="row.icon" [style.color]="row.fg"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="text-muted small">{{ row.label }}</div>
+                  </div>
+                  <div class="text-end">
+                    <div class="fw-bold text-dark-contrast">{{ row.value }}</div>
+                  </div>
+                  @if (row.pct !== null) {
+                    <span class="badge rounded-pill small" [class]="row.value > 0 ? 'text-bg-success' : 'text-bg-secondary'" style="min-width:52px">{{ row.pct }}%</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h6 class="text-uppercase text-muted small mb-2">Quick Actions</h6>
+    <div class="row g-3">
+      @for (q of quickLinks; track q.label) {
+        <div class="col-6 col-md-4 col-lg-3">
+          <a [routerLink]="q.link" class="card text-decoration-none h-100 transition-hover">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+              <i class="bi fs-4 text-primary" [class]="q.icon"></i>
+              <div>
+                <div class="fw-semibold text-dark">{{ q.label }}</div>
+                <div class="text-muted small">{{ q.description }}</div>
+              </div>
+            </div>
+          </a>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ============ CLIENT VIEW ============ -->
+  @if (isClientRole && clientSummary) {
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <app-stat-card label="Pending Requests" [value]="clientSummary.pendingRequests" icon="bi-hourglass-split"
+          variant="purple" link="/servicedesk/requests" />
+      </div>
+      <div class="col-6 col-lg-3">
+        <app-stat-card label="In Progress" [value]="clientSummary.inProgressRequests" icon="bi-arrow-repeat"
+          variant="info" [sub]="clientSummary.completedRequests + ' completed'" link="/servicedesk/requests" />
+      </div>
+      <div class="col-6 col-lg-3">
+        <app-stat-card label="Unpaid Invoices" [value]="clientSummary.unpaidInvoices" icon="bi-receipt"
+          [variant]="clientSummary.unpaidInvoices > 0 ? 'danger' : 'success'" />
+      </div>
+      <div class="col-6 col-lg-3">
+        <app-stat-card label="Amount Due" [value]="fmt(clientSummary.outstandingInvoiceAmount)" icon="bi-cash-stack"
+          variant="dark" />
+      </div>
+    </div>
+
+    <div class="row g-3">
+      @for (q of quickLinks; track q.label) {
+        <div class="col-6 col-md-4 col-lg-3">
+          <a [routerLink]="q.link" class="card text-decoration-none h-100 transition-hover">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+              <i class="bi fs-4 text-primary" [class]="q.icon"></i>
+              <div>
+                <div class="fw-semibold text-dark">{{ q.label }}</div>
+                <div class="text-muted small">{{ q.description }}</div>
+              </div>
+            </div>
+          </a>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- RESOLUTION NOTES MODAL -->
+  @if (resolvingTicketTarget) {
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold">Resolve Support Ticket</h5>
+            <button type="button" class="btn-close" (click)="resolvingTicketTarget = null"></button>
+          </div>
+          <div class="modal-body py-3">
+            <div class="p-3 bg-light rounded-3 mb-3">
+              <div class="fw-bold text-primary small mb-1">{{ resolvingTicketTarget.ticketNumber }}</div>
+              <div class="fw-semibold text-dark">{{ resolvingTicketTarget.title }}</div>
+              <div class="text-muted small">Raised by: {{ resolvingTicketTarget.createdByName || 'Client User' }}</div>
+            </div>
+            <label class="form-label fw-semibold small">Resolution Summary / Notes *</label>
+            <textarea class="form-control form-control-sm"
+                      rows="4"
+                      placeholder="Describe how this issue was resolved..."
+                      [(ngModel)]="resolutionNotesInput"></textarea>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" (click)="resolvingTicketTarget = null">Cancel</button>
+            <button type="button"
+                    class="btn btn-success btn-sm rounded-pill px-4"
+                    [disabled]="!resolutionNotesInput.trim() || updatingTicketId === resolvingTicketTarget.id"
+                    (click)="submitTicketResolution()">
+              Submit Resolution
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

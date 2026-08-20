@@ -1,0 +1,152 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h4 class="mb-0">Software Licenses</h4>
+    <div class="d-flex gap-2 flex-wrap">
+      <div class="form-check form-switch mb-0 d-flex align-items-center gap-1">
+        <input class="form-check-input" type="checkbox" id="expiringToggle" [(ngModel)]="showExpiring" (change)="page=0;load()" />
+        <label class="form-check-label small" for="expiringToggle">Expiring soon</label>
+      </div>
+      <select class="form-select form-select-sm" style="width:160px" [(ngModel)]="statusFilter" (change)="page=0;load()" [disabled]="showExpiring">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+      <button *appHasPermission="'SOFTWARE_LICENSE_CREATE'" class="btn btn-primary btn-sm" (click)="editId=null; form={}; showForm=!showForm"><i class="bi bi-plus"></i> Add License</button>
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (showForm) {
+  <div class="card mb-3"><div class="card-body">
+    <div class="row g-2">
+      <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Software Name *" [(ngModel)]="form.softwareName" /></div>
+      <div class="col-md-2"><input class="form-control form-control-sm" placeholder="Publisher *" [(ngModel)]="form.publisher" /></div>
+      <div class="col-md-2"><input class="form-control form-control-sm" placeholder="Version" [(ngModel)]="form.version" /></div>
+      <div class="col-md-2"><select class="form-select form-select-sm" [(ngModel)]="form.licenseType"><option value="">License Type *</option>@for (t of licenseTypes; track t) { <option [value]="t">{{ t }}</option> }</select></div>
+      <div class="col-md-1"><input class="form-control form-control-sm" type="number" min="1" placeholder="Seats" [(ngModel)]="form.totalSeatsLicensed" /></div>
+      <div class="col-md-2"><input class="form-control form-control-sm" placeholder="License Key *" [(ngModel)]="form.licenseKey" /></div>
+
+      <div class="col-md-2">
+        <label class="form-label small mb-0">Purchase Date *</label>
+        <input class="form-control form-control-sm" type="date" [(ngModel)]="form.licensePurchaseDate" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-0">Expiry Date *</label>
+        <input class="form-control form-control-sm" type="date" [(ngModel)]="form.licenseExpiryDate" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-0">Cost *</label>
+        <input class="form-control form-control-sm" type="number" min="0" step="0.01" [(ngModel)]="form.licenseCost" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-0">Renewal Type *</label>
+        <select class="form-select form-select-sm" [(ngModel)]="form.renewalType">
+          <option value="">Select</option>
+          @for (t of renewalTypes; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-0">Next Renewal</label>
+        <input class="form-control form-control-sm" type="date" [(ngModel)]="form.nextRenewalDate" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-0">Renewal Cost</label>
+        <input class="form-control form-control-sm" type="number" min="0" step="0.01" [(ngModel)]="form.renewalCost" />
+      </div>
+
+      <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Vendor" [(ngModel)]="form.vendor" /></div>
+      <div class="col-md-3"><input class="form-control form-control-sm" type="email" placeholder="Account Email" [(ngModel)]="form.accountEmail" /></div>
+      <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Installation Location" [(ngModel)]="form.installationLocation" /></div>
+      <div class="col-md-3"><input class="form-control form-control-sm" type="number" min="0" placeholder="Estimated Users" [(ngModel)]="form.estimatedUserCount" /></div>
+
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary btn-sm" (click)="save()">Save</button>
+        <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+      </div>
+    </div>
+  </div></div>
+  }
+
+  @if (!loading && licenses.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light"><tr><th>Software</th><th>Publisher</th><th>Type</th><th>Seats</th><th>Used</th><th>Expiry</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @for (l of licenses; track l.id) {
+        <!-- Expired rows use a neutral grey rather than Bootstrap's red wash: a
+             whole table of red reads as an outage. The STATUS badge carries the
+             signal; the row tint only needs to de-emphasise the record. -->
+        <tr [class.table-warning]="l.expiringSoon" [class.row-expired]="l.expired">
+          <td>{{ l.softwareName }}<div class="text-muted small">v{{ l.version }}</div></td>
+          <td>{{ l.publisher || '-' }}</td>
+          <td><span class="badge text-bg-light border">{{ l.licenseType }}</span></td>
+          <td>{{ l.totalSeatsLicensed }}</td>
+          <td>
+            {{ l.seatsUsed }} <span class="text-muted small">({{ l.seatsAvailable }} free)</span>
+            <div class="mt-1">
+              <button *appHasPermission="'SOFTWARE_LICENSE_ASSIGN'" class="btn btn-outline-primary btn-sm" (click)="openSeats(l)"><i class="bi bi-people me-1"></i>Manage Seats</button>
+            </div>
+          </td>
+          <td class="small">{{ l.licenseExpiryDate ? (l.licenseExpiryDate | date:'mediumDate') : '∞' }}</td>
+          <td><span class="badge {{ statusClass(l.licenseStatus) }}">{{ l.licenseStatus }}</span></td>
+          <td class="text-end">
+            <button *appHasPermission="'SOFTWARE_LICENSE_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="editId=l.id; form={...l}; showForm=true"><i class="bi bi-pencil"></i></button>
+            <button *appHasPermission="'SOFTWARE_LICENSE_DELETE'" class="btn btn-outline-danger btn-sm" (click)="deleteTarget = l"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-end"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+  </div>
+  }
+  @if (!loading && !licenses.length && !showForm) { <app-empty-state icon="bi-file-earmark-code" message="No software licenses." /> }
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete License" message="Delete this license?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+
+  @if (seatsTarget) {
+  <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Manage Seats - {{ seatsTarget.softwareName }}</h5>
+          <button type="button" class="btn-close" (click)="seatsTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="d-flex gap-2 mb-3">
+            <select class="form-select form-select-sm" [(ngModel)]="newSeatEmployeeId">
+              <option [ngValue]="null" disabled>Select an employee</option>
+              @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }} ({{ e.employeeNumber }})</option> }
+            </select>
+            <button class="btn btn-primary btn-sm text-nowrap" [disabled]="!newSeatEmployeeId || seatsTarget.seatsAvailable <= 0" (click)="assignSeat()">
+              <i class="bi bi-person-plus me-1"></i>Assign
+            </button>
+          </div>
+
+          @if (seatsLoading) { <app-loader /> }
+          @if (!seatsLoading && seatHolders.length) {
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Employee</th><th>Assigned</th><th></th></tr></thead>
+            <tbody>
+              @for (s of seatHolders; track s.id) {
+              <tr>
+                <td>{{ s.employeeName }}</td>
+                <td class="small text-muted">{{ s.assignedAt | date:'mediumDate' }}</td>
+                <td class="text-end"><button class="btn btn-outline-danger btn-sm" (click)="releaseSeat(s)"><i class="bi bi-person-dash"></i> Release</button></td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
+          @if (!seatsLoading && !seatHolders.length) { <p class="text-muted small mb-0">No seats currently assigned.</p> }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="seatsTarget = null">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

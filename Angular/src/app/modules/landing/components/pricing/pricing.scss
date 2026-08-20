@@ -1,0 +1,68 @@
+// Pricing on the charcoal band: four glass tier cards (Pro lifted and
+// accent-ringed) and the annual deal as a banner strip. Surface and card
+// chrome come from .accent-section-charcoal / .glass-card-dark.
+
+.plan-price {
+  font-size: clamp(1.35rem, 1.9vw, 2rem);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #94A8A0;
+
+  i { color: var(--accent); font-size: 0.85rem; }
+}
+
+.pricing-card {
+  z-index: 2;
+  position: relative;
+
+  .feature-text { color: #C9D4CF; }
+}
+
+.pricing-card-highlighted {
+  border-color: rgba(var(--accent-rgb), 0.6);
+  background: rgba(var(--accent-rgb), 0.08);
+  transform: translateY(-14px);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--accent-rgb), 0.15);
+
+  &:hover {
+    transform: translateY(-18px);
+  }
+}
+
+.popular-badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  letter-spacing: 0.02em;
+  color: #06281C;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #fff));
+}
+
+.pricing-divider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+// Ghost CTA for the non-highlighted tiers.
+.btn-outline-dark-glass {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #E7ECEF;
+  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: rgba(var(--accent-rgb), 0.7);
+    color: #fff;
+    background: rgba(var(--accent-rgb), 0.12);
+  }
+}
+

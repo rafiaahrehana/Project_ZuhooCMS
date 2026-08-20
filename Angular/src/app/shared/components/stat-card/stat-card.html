@@ -1,0 +1,23 @@
+@if (link) {
+  <a [routerLink]="link" [queryParams]="queryParams" class="stat-card d-block text-decoration-none rounded-4 p-3 h-100" [class]="'variant-' + variant">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div class="stat-label text-uppercase small fw-semibold mb-1">{{ label }}</div>
+        <div class="stat-value fw-bold">{{ value }}</div>
+        @if (sub) { <div class="stat-sub small mt-1">{{ sub }}</div> }
+      </div>
+      <i class="bi stat-icon" [class]="icon"></i>
+    </div>
+  </a>
+} @else {
+  <div class="stat-card rounded-4 p-3 h-100" [class]="'variant-' + variant">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div class="stat-label text-uppercase small fw-semibold mb-1">{{ label }}</div>
+        <div class="stat-value fw-bold">{{ value }}</div>
+        @if (sub) { <div class="stat-sub small mt-1">{{ sub }}</div> }
+      </div>
+      <i class="bi stat-icon" [class]="icon"></i>
+    </div>
+  </div>
+}

@@ -1,0 +1,62 @@
+<div class="container-fluid py-3">
+  <div class="mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0">Attendance — Check In / Out</h4>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <div class="row g-3">
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-header py-2 fw-semibold">Today's Attendance</div>
+        <div class="card-body">
+          @if (todayRecord) {
+          <table class="table table-sm mb-3">
+            <tbody>
+              <tr><td class="text-muted">Status</td><td><span class="badge {{ statusClass(todayRecord.status) }}">{{ todayRecord.status }}</span></td></tr>
+              <tr><td class="text-muted">Check In</td><td>{{ todayRecord.checkInTime || '-' }}</td></tr>
+              <tr><td class="text-muted">Check Out</td><td>{{ todayRecord.checkOutTime || 'Not yet' }}</td></tr>
+              <tr><td class="text-muted">Hours</td><td>{{ todayRecord.totalWorkingHours || '-' }}</td></tr>
+              @if (todayRecord.isLate) { <tr><td class="text-muted">Late By</td><td class="text-warning">{{ todayRecord.lateMinutes }} min</td></tr> }
+            </tbody>
+          </table>
+          @if (!todayRecord.checkOutTime) {
+          <input class="form-control form-control-sm mb-2" placeholder="Location (optional)" [(ngModel)]="location" />
+          <button class="btn btn-warning btn-sm w-100" (click)="checkOut()"><i class="bi bi-box-arrow-right"></i> Check Out</button>
+          }
+          }
+          @if (!todayRecord) {
+          <p class="text-muted small mb-3">You have not checked in today.</p>
+          <input class="form-control form-control-sm mb-2" placeholder="Location (optional)" [(ngModel)]="location" />
+          <input class="form-control form-control-sm mb-2" placeholder="Notes (optional)" [(ngModel)]="notes" />
+          <button class="btn btn-success btn-sm w-100" (click)="checkIn()"><i class="bi bi-box-arrow-in-right"></i> Check In</button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card">
+        <div class="card-header py-2 fw-semibold">Recent Records</div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light"><tr><th>Employee</th><th>Date</th><th>In</th><th>Out</th><th>Hours</th><th>Status</th></tr></thead>
+            <tbody>
+              @for (r of consolidatedRecentRecords; track (r.id + '_' + r.attendanceDate)) {
+              <tr>
+                <td>{{ r.employeeName }}</td>
+                <td class="small">{{ r.attendanceDate | date:'mediumDate' }}</td>
+                <td class="small font-monospace">{{ r.checkInTime || '-' }}</td>
+                <td class="small font-monospace">{{ r.checkOutTime || '-' }}</td>
+                <td class="small fw-semibold">{{ r.totalWorkingHours || '-' }}</td>
+                <td><span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span></td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

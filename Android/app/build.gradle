@@ -1,0 +1,142 @@
+plugins {
+    alias(libs.plugins.android.application)
+    // Reads app/google-services.json. A placeholder is committed so the project builds out of
+    // the box — replace it with the real file from your Firebase project before push will work.
+    id 'com.google.gms.google-services'
+}
+
+android {
+    namespace 'com.raf.zuhoo'
+    compileSdk {
+        version = release(36) {
+            minorApiLevel = 1
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.raf.zuhoo"
+        minSdk 26
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // The WebSocket URL is never declared separately — ChatSocket derives it from API_BASE_URL
+    // (http->ws, https->wss) so the two can't drift apart the way the old hardcoded pair did.
+    flavorDimensions += "env"
+
+    productFlavors {
+        dev {
+            dimension "env"
+            applicationIdSuffix ".dev"
+            versionNameSuffix "-dev"
+            // Port 8085 is Spring-boot/ (BusinessOS), the single backend in this repo — it also
+            // serves the Angular and Flutter clients. The separate Zuhoo backend on 8086 is gone;
+            // its one extra endpoint (/api/hr/attendance-location-settings) was ported here.
+            // 10.0.2.2 is the emulator's alias for the host loopback. On a real device, replace
+            // with the host's LAN IP (e.g. "http://192.168.1.106:8085/") — same Wi-Fi required.
+            buildConfigField "String", "API_BASE_URL", '"http://10.0.2.2:8085/"'
+        }
+        prod {
+            dimension "env"
+            // TODO(release): point at the real production host before the first Play Store upload.
+            buildConfigField "String", "API_BASE_URL", '"https://api.zuhoo.app/"'
+        }
+    }
+
+    // Release signing. Credentials come from keystore.properties (gitignored) or the
+    // environment, never from this file — a keystore password in version control is a keystore
+    // you have to replace. Absent config leaves signingConfig null, so `assembleRelease` still
+    // builds an unsigned APK for local checks instead of failing the whole project.
+    signingConfigs {
+        release {
+            def propsFile = rootProject.file("keystore.properties")
+
+            if (propsFile.exists()) {
+                def props = new Properties()
+                propsFile.withInputStream { props.load(it) }
+                storeFile = file(props['storeFile'])
+                storePassword = props['storePassword']
+                keyAlias = props['keyAlias']
+                keyPassword = props['keyPassword']
+            } else if (System.getenv("ZUHOO_KEYSTORE_FILE")) {
+                storeFile = file(System.getenv("ZUHOO_KEYSTORE_FILE"))
+                storePassword = System.getenv("ZUHOO_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ZUHOO_KEY_ALIAS")
+                keyPassword = System.getenv("ZUHOO_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // R8 on. Every DTO carries @SerializedName, so field renaming can't break JSON
+            // mapping — see proguard-rules.pro for what still has to be kept and why.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+
+            signingConfig signingConfigs.release.storeFile != null
+                    ? signingConfigs.release : null
+        }
+        debug {
+            // Keep debug fast and debuggable; the release variant is what gets verified.
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+}
+
+dependencies {
+    implementation libs.appcompat
+    implementation libs.credentials
+    implementation libs.credentials.play.services.auth
+    implementation libs.firebase.auth
+    implementation libs.googleid
+    implementation libs.material
+    testImplementation libs.junit
+    androidTestImplementation libs.espresso.core
+    androidTestImplementation libs.ext.junit
+
+//    retrofit
+    implementation 'com.squareup.retrofit2:retrofit:3.0.0'
+    implementation 'com.squareup.retrofit2:converter-gson:3.0.0'
+
+//    okhttp
+    implementation 'com.squareup.okhttp3:okhttp:5.4.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.4.0'
+
+    implementation 'com.google.code.gson:gson:2.14.0'
+
+//    encrypted session storage
+    implementation 'androidx.security:security-crypto:1.1.0'
+
+//    biometric login gate
+    implementation 'androidx.biometric:biometric:1.1.0'
+
+//    ViewModel + LiveData — the Java-friendly half of Lifecycle (no coroutines/Flow needed).
+//    Keeps network callbacks off the Activity so they can't touch a destroyed view binding.
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.7.0'
+    implementation 'androidx.activity:activity:1.8.2'
+
+//    read-only cache so lists render instantly and survive a dropped connection
+    implementation 'androidx.room:room-runtime:2.6.1'
+    annotationProcessor 'androidx.room:room-compiler:2.6.1'
+
+//    push notifications — reaches the device when the app is backgrounded or killed, which the
+//    STOMP socket cannot
+    implementation platform('com.google.firebase:firebase-bom:33.7.0')
+    implementation 'com.google.firebase:firebase-messaging'
+}

@@ -1,0 +1,104 @@
+<nav class="navbar appbar">
+  <div class="navbar-content">
+
+    <!-- Left: sidebar toggle + workspace context -->
+    <div class="d-flex align-items-center gap-3 flex-shrink-0">
+      <button type="button" class="nav-hamburger" (click)="toggleSidebar()"
+              title="Toggle Sidebar" aria-label="Toggle sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+
+      <!-- Hidden on small screens: the search needs the width more than this does. -->
+      <div class="header-context d-none d-lg-block">
+        <strong>Workspace</strong>
+      </div>
+    </div>
+
+    <!-- Middle: search. Icon sits inside the field on the left, the way a
+         search pill reads, rather than as a trailing button. -->
+    <div class="header-search">
+      <div class="search-wrapper">
+        <button type="button" class="search-icon" (click)="goSearch()" aria-label="Search">
+          <i class="bi bi-search"></i>
+        </button>
+        <input name="searchQuery" class="form-control search-input" placeholder="Search workspace..."
+               autocomplete="off" [(ngModel)]="searchQuery" (keyup.enter)="goSearch()" />
+      </div>
+    </div>
+
+    <!-- Right: actions + profile -->
+    <!-- Spacing comes from .header-actions, not a gap-* utility: Bootstrap's
+         utilities are !important and would override it. -->
+    <div class="d-flex align-items-center flex-shrink-0 header-actions">
+      <button type="button" class="header-action" (click)="theme.toggle()"
+              [title]="theme.theme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+              [attr.aria-label]="theme.theme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+              [attr.aria-pressed]="theme.theme() === 'dark'">
+        <i class="bi" [class.bi-moon-stars]="theme.theme() === 'light'"
+                      [class.bi-sun]="theme.theme() === 'dark'"></i>
+      </button>
+
+      <button type="button" class="header-action d-none d-sm-flex" (click)="toggleFullscreen()"
+              title="Fullscreen" aria-label="Toggle fullscreen">
+        <i class="bi" [class.bi-fullscreen]="!isFullscreen" [class.bi-fullscreen-exit]="isFullscreen"></i>
+      </button>
+
+      <app-notification-bell />
+
+      <div class="dropdown">
+        <a class="profile-trigger text-decoration-none" role="button"
+           data-bs-toggle="dropdown" aria-label="Profile">
+          @if ((auth.currentUser$ | async)?.profileImageUrl; as pic) {
+          <img [src]="pic" alt="Profile picture" class="profile-avatar rounded-circle" />
+          } @else {
+          <span class="profile-avatar profile-avatar-fallback rounded-circle d-flex align-items-center justify-content-center fw-bold">
+            {{ ((auth.currentUser$ | async)?.fullName || 'U').substring(0,1).toUpperCase() }}
+          </span>
+          }
+        </a>
+
+        <ul class="dropdown-menu dropdown-menu-end profile-menu border-0 shadow-sm mt-2">
+          <li class="profile-menu-header d-flex align-items-center gap-2 px-3 py-2">
+            @if ((auth.currentUser$ | async)?.profileImageUrl; as pic) {
+            <img [src]="pic" alt="Profile picture" class="rounded-circle"
+                 style="width: 32px; height: 32px; object-fit: cover;" />
+            } @else {
+            <span class="profile-avatar-fallback d-flex align-items-center justify-content-center fw-bold rounded-circle"
+                  style="width: 32px; height: 32px; font-size: 0.85rem;">
+              {{ ((auth.currentUser$ | async)?.fullName || 'U').substring(0,1).toUpperCase() }}
+            </span>
+            }
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="fw-bold text-truncate profile-menu-name">{{ ((auth.currentUser$ | async)?.fullName || 'User') }}</div>
+              <div class="text-muted text-truncate" style="font-size: 0.78rem;">{{ roleLabel((auth.currentUser$ | async)?.roles) }}</div>
+            </div>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2" [routerLink]="settingsLink()">
+              <i class="bi bi-person opacity-75"></i>Profile
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2" [routerLink]="accountSettingsLink()">
+              <i class="bi bi-gear opacity-75"></i>Settings
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2" routerLink="/account/password">
+              <i class="bi bi-key opacity-75"></i>Change Password
+            </a>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 text-danger" role="button"
+               (click)="auth.logout()">
+              <i class="bi bi-box-arrow-right"></i>Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</nav>

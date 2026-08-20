@@ -1,0 +1,598 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Payroll</h4>
+    <div class="d-flex gap-2">
+      <select
+        class="form-select form-select-sm"
+        style="width: 110px"
+        [(ngModel)]="month"
+        (change)="page = 0; load()"
+      >
+        @for (m of months; track m) {
+          <option [ngValue]="m">{{ m | number: '2.0' }}</option>
+        }
+      </select>
+      <select
+        class="form-select form-select-sm"
+        style="width: 110px"
+        [(ngModel)]="year"
+        (change)="page = 0; load()"
+      >
+        @for (y of years; track y) {
+          <option [ngValue]="y">{{ y }}</option>
+        }
+      </select>
+      <button
+        *appHasPermission="'PAYROLL_PROCESS'"
+        class="btn btn-outline-primary btn-sm text-nowrap"
+        [disabled]="generating"
+        (click)="openGenerate()"
+      >
+        @if (generating) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+        } @else {
+          <i class="bi bi-lightning-charge me-1"></i>
+        }
+        Generate for All Employees
+      </button>
+      <!-- Exports APPROVED payrolls only, for upload to the bank's corporate
+           portal. Downloading moves no money and changes no status. -->
+      <button
+        *appHasPermission="'PAYROLL_VIEW'"
+        class="btn btn-outline-success btn-sm text-nowrap"
+        [disabled]="downloadingCsv"
+        (click)="downloadDisbursement()"
+        title="Download the bank bulk-salary file for this period (approved payrolls only)"
+      >
+        @if (downloadingCsv) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+        } @else {
+          <i class="bi bi-bank me-1"></i>
+        }
+        Bank Disbursement File
+      </button>
+      <button *appHasPermission="'PAYROLL_PROCESS'" class="btn btn-primary btn-sm text-nowrap" (click)="showForm = true">
+        <i class="bi bi-plus-lg me-1"></i>Add Payroll
+      </button>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="alert alert-danger py-2">{{ error }}</div>
+  }
+  @if (success) {
+    <div class="alert alert-success py-2">{{ success }}</div>
+  }
+  @if (runError) {
+    <div class="alert alert-danger py-2">{{ runError }}</div>
+  }
+
+  <!-- ── Payroll run (batch) for this period ─────────────────
+       Draft → Calculated → Pending Approval → Approved → Paid.
+       Approving locks the lines; paying drives each through the
+       normal payment flow (GL posting, references). -->
+  <div class="card mb-3" *appHasPermission="'PAYROLL_PROCESS'">
+    <div class="card-body py-3 d-flex flex-wrap align-items-center gap-3">
+      @if (run) {
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold">{{ run.runNumber }}</span>
+          <span class="badge" [ngClass]="runStatusBadge(run.status)">{{ run.status.replaceAll('_', ' ') }}</span>
+        </div>
+        <div class="small text-muted">
+          {{ run.totalEmployees }} employees ·
+          Gross {{ run.totalGross | number:'1.2-2' }} ·
+          Deductions {{ run.totalDeduction | number:'1.2-2' }} ·
+          <span class="fw-semibold">Net {{ run.totalNet | number:'1.2-2' }}</span>
+          @if (run.paymentDate) { · Paid {{ run.paymentDate | date:'mediumDate' }} }
+        </div>
+        @if (run.rejectionReason && run.status === 'REJECTED') {
+          <div class="small text-danger w-100 mb-0">Rejected: {{ run.rejectionReason }}</div>
+        }
+        <div class="ms-auto d-flex gap-2 flex-wrap">
+          @if (run.status === 'DRAFT' || run.status === 'CALCULATED' || run.status === 'REJECTED') {
+            <button class="btn btn-outline-secondary btn-sm" [disabled]="runBusy" (click)="recalcRun()">Recalculate</button>
+            <button class="btn btn-primary btn-sm" [disabled]="runBusy" (click)="submitRun()">Submit for Approval</button>
+          }
+          @if (run.status === 'PENDING_APPROVAL') {
+            <button class="btn btn-success btn-sm" [disabled]="runBusy" (click)="approveRun()">Approve Run</button>
+            <button class="btn btn-outline-danger btn-sm" [disabled]="runBusy" (click)="showRejectBox = true">Reject</button>
+          }
+          @if (run.status === 'APPROVED') {
+            <button class="btn btn-success btn-sm" [disabled]="runBusy" (click)="showRunPay = true">
+              <i class="bi bi-cash-coin me-1"></i>Mark All Paid
+            </button>
+          }
+          @if (run.status !== 'PAID' && run.status !== 'CANCELLED' && run.status !== 'APPROVED') {
+            <button class="btn btn-outline-secondary btn-sm" [disabled]="runBusy" (click)="cancelRun()">Cancel Run</button>
+          }
+          @if (runBusy) { <span class="spinner-border spinner-border-sm align-self-center"></span> }
+        </div>
+      } @else {
+        <div class="small text-muted">No payroll run for this period yet — a run generates every employee's payroll and walks it through approval to payment.</div>
+        <button class="btn btn-primary btn-sm ms-auto" [disabled]="runBusy" (click)="createRun()">
+          @if (runBusy) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          <i class="bi bi-play-circle me-1"></i>Create Payroll Run
+        </button>
+      }
+    </div>
+    @if (showRejectBox) {
+      <div class="card-footer d-flex gap-2 align-items-center">
+        <input class="form-control form-control-sm" placeholder="Reason for rejection…" [(ngModel)]="rejectReason" style="max-width: 420px">
+        <button class="btn btn-danger btn-sm" [disabled]="!rejectReason.trim()" (click)="rejectRun()">Confirm Reject</button>
+        <button class="btn btn-secondary btn-sm" (click)="showRejectBox = false">Cancel</button>
+      </div>
+    }
+    @if (showRunPay) {
+      <div class="card-footer d-flex gap-2 align-items-center">
+        <select class="form-select form-select-sm" style="max-width: 220px" [(ngModel)]="runPayMethod">
+          <option value="">Payment method…</option>
+          @for (m of paymentMethods; track m) { <option [value]="m">{{ m }}</option> }
+        </select>
+        <button class="btn btn-success btn-sm" [disabled]="!runPayMethod" (click)="payRun()">Pay {{ run?.totalEmployees }} Employees</button>
+        <button class="btn btn-secondary btn-sm" (click)="showRunPay = false">Cancel</button>
+      </div>
+    }
+  </div>
+  @if (generateResult) {
+    <div class="alert alert-info py-2">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <strong>{{ generateResult.created.length }}</strong> payroll draft(s) created.
+          @if (generateResult.skippedAlreadyExists.length) {
+            <div class="small mt-1">
+              Already existed ({{ generateResult.skippedAlreadyExists.length }}):
+              {{ generateResult.skippedAlreadyExists.join(', ') }}
+            </div>
+          }
+          @if (generateResult.skippedNoSalaryStructure.length) {
+            <div class="small mt-1">
+              No salary structure ({{ generateResult.skippedNoSalaryStructure.length }}):
+              {{ generateResult.skippedNoSalaryStructure.join(', ') }}
+            </div>
+          }
+        </div>
+        <button type="button" class="btn-close" (click)="generateResult = null"></button>
+      </div>
+    </div>
+  }
+  @if (loading) {
+    <app-loader />
+  }
+
+  @if (!loading && payrolls.length) {
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Employee</th>
+              <th>Period</th>
+              <th class="text-end">Basic</th>
+              <th class="text-end">Bonus</th>
+              <th class="text-end">Billable</th>
+              <th class="text-end">Absent</th>
+              <th class="text-end">Deductions</th>
+              <th class="text-end">Net</th>
+              <th>Status</th>
+              <th>Paid</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of payrolls; track p.id) {
+              <tr>
+                <td>{{ p.employeeName }}</td>
+                <td>{{ p.payMonth | number: '2.0' }}/{{ p.payYear }}</td>
+                <td class="text-end">{{ p.basicSalary | number: '1.2-2' }}</td>
+                <td class="text-end">{{ p.bonus ?? 0 | number: '1.2-2' }}</td>
+                <td class="text-end">
+                  @if (p.billablePay) {
+                    <span [title]="(p.billableHours ?? 0) + ' hrs × ' + (p.billableRate ?? 0) + '/hr'">
+                      {{ p.billablePay | number: '1.2-2' }}
+                    </span>
+                  } @else {
+                    <span class="text-muted">-</span>
+                  }
+                </td>
+                <td class="text-end">
+                  @if (p.absentDays) {
+                    <span class="text-danger" [title]="(p.attendanceDeduction ?? 0) + ' deducted'">
+                      {{ p.absentDays }} day{{ p.absentDays === 1 ? '' : 's' }}
+                    </span>
+                  } @else {
+                    <span class="text-muted">-</span>
+                  }
+                </td>
+                <td class="text-end">
+                  {{
+                    (p.deductions ?? 0) + (p.taxDeduction ?? 0) + (p.insuranceDeduction ?? 0) + (p.providentFundDeduction ?? 0) + (p.attendanceDeduction ?? 0)
+                      | number: '1.2-2'
+                  }}
+                </td>
+                <td class="text-end fw-semibold">{{ p.netSalary | number: '1.2-2' }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.text-bg-secondary]="p.status === 'DRAFT'"
+                    [class.text-bg-info]="p.status === 'APPROVED'"
+                    [class.text-bg-success]="p.status === 'PAID'"
+                    [class.text-bg-danger]="p.status === 'CANCELLED'"
+                  >
+                    {{ p.status }}
+                  </span>
+                </td>
+                <td class="small">
+                  {{ p.paidAt ? (p.paidAt | date: 'mediumDate') : '-' }}
+                  @if (p.paymentMethod) {
+                    <div class="text-muted">{{ p.paymentMethod }}</div>
+                  }
+                  @if (p.paymentReference) {
+                    <div class="text-muted">{{ p.paymentReference }}</div>
+                  }
+                </td>
+                <td class="text-end text-nowrap">
+                  @if (p.status === 'DRAFT') {
+                    <button
+                      *appHasPermission="'PAYROLL_APPROVE'"
+                      class="btn btn-outline-info btn-sm py-0 me-1"
+                      title="Approve"
+                      (click)="approve(p)"
+                    >
+                      <i class="bi bi-check2-circle"></i>
+                    </button>
+                    <button
+                      *appHasPermission="'PAYROLL_PROCESS'"
+                      class="btn btn-outline-danger btn-sm py-0"
+                      title="Delete"
+                      (click)="deleteTarget = p"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  }
+                  @if (p.status === 'APPROVED') {
+                    <button
+                      *appHasPermission="'PAYROLL_APPROVE'"
+                      class="btn btn-outline-success btn-sm py-0"
+                      title="Mark Paid"
+                      (click)="openPay(p)"
+                    >
+                      <i class="bi bi-cash-coin"></i>
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex justify-content-end">
+        <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+      </div>
+    </div>
+  }
+
+  @if (!loading && !payrolls.length) {
+    <app-empty-state icon="bi-cash-stack" message="No payroll records for this period." />
+  }
+</div>
+
+<!-- Create payroll modal -->
+@if (showForm) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <form #f="ngForm" (ngSubmit)="f.valid && save()">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Payroll</h5>
+            <button type="button" class="btn-close" (click)="showForm = false"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info py-2 small mb-3">
+              <i class="bi bi-info-circle me-1"></i>Billable pay is calculated automatically from the employee's
+              approved timesheet hours × their billable rate for this period - no manual entry needed here.
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Employee *</label>
+                <select
+                  class="form-select form-select-sm"
+                  name="employeeId"
+                  [(ngModel)]="form.employeeId"
+                  (change)="onEmployeeSelected()"
+                  required
+                >
+                  <option [ngValue]="undefined" disabled>Select employee</option>
+                  @for (e of employees; track e.id) {
+                    <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option>
+                  }
+                </select>
+                <!-- Says where the amounts below came from. Without it, a form
+                     that silently filled itself from a partial source looked
+                     the same as one that filled correctly. -->
+                @if (structureNote) {
+                  <div class="form-text small mt-1">{{ structureNote }}</div>
+                }
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Month *</label>
+                <select
+                  class="form-select form-select-sm"
+                  name="payMonth"
+                  [(ngModel)]="form.payMonth"
+                  required
+                >
+                  @for (m of months; track m) {
+                    <option [ngValue]="m">{{ m | number: '2.0' }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Year *</label>
+                <select
+                  class="form-select form-select-sm"
+                  name="payYear"
+                  [(ngModel)]="form.payYear"
+                  required
+                >
+                  @for (y of years; track y) {
+                    <option [ngValue]="y">{{ y }}</option>
+                  }
+                </select>
+              </div>
+              <!-- Percentages come from company payroll settings. The toggle
+                   is off when an approved salary structure filled the form, so
+                   editing Basic cannot silently replace approved figures with
+                   company defaults. -->
+              @if (settings) {
+              <div class="col-12">
+                <div class="d-flex align-items-center flex-wrap gap-2 p-2 rounded-3 bg-body-tertiary border">
+                  <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="autoCalc" name="autoCalc"
+                           [(ngModel)]="autoCalc" (change)="onBasicChanged()" />
+                    <label class="form-check-label small fw-semibold" for="autoCalc">
+                      Derive components from Basic
+                    </label>
+                  </div>
+                  <button type="button" class="btn btn-outline-primary btn-sm"
+                          [disabled]="!form.basicSalary" (click)="applyPercentages()">
+                    <i class="bi bi-calculator me-1"></i>Apply percentages now
+                  </button>
+                  <span class="text-muted small ms-auto">
+                    House rent {{ percentHint('houseRent') }} &middot;
+                    PF {{ percentHint('providentFund') }} &middot;
+                    Tax {{ percentHint('tax') }}
+                  </span>
+                </div>
+              </div>
+              }
+
+              <div class="col-md-3">
+                <label class="form-label">Basic Salary</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="basicSalary"
+                  [(ngModel)]="form.basicSalary"
+                  (ngModelChange)="onBasicChanged()"
+                  min="0"
+                  placeholder="From salary structure"
+                />
+                <div class="form-text small">Everything below is a percentage of this.</div>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">House Rent</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="houseRent"
+                  [(ngModel)]="form.houseRent"
+                  min="0"
+                />
+                @if (percentHint('houseRent')) { <div class="form-text small">{{ percentHint('houseRent') }}</div> }
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Medical</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="medicalAllowance"
+                  [(ngModel)]="form.medicalAllowance"
+                  min="0"
+                />
+                @if (percentHint('medical')) { <div class="form-text small">{{ percentHint('medical') }}</div> }
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Transport</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="transportAllowance"
+                  [(ngModel)]="form.transportAllowance"
+                  min="0"
+                />
+                @if (percentHint('transport')) { <div class="form-text small">{{ percentHint('transport') }}</div> }
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Food</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="foodAllowance"
+                  [(ngModel)]="form.foodAllowance"
+                  min="0"
+                />
+                @if (percentHint('food')) { <div class="form-text small">{{ percentHint('food') }}</div> }
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Special Allowance</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="specialAllowance"
+                  [(ngModel)]="form.specialAllowance"
+                  min="0"
+                />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Bonus</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="bonus"
+                  [(ngModel)]="form.bonus"
+                  min="0"
+                />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Deductions</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="deductions"
+                  [(ngModel)]="form.deductions"
+                  min="0"
+                />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Tax Deduction</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="taxDeduction"
+                  [(ngModel)]="form.taxDeduction"
+                  min="0"
+                />
+                @if (percentHint('tax')) {
+                  <div class="form-text small">
+                    {{ percentHint('tax') }} &middot; flat rate, not NBR slabs
+                  </div>
+                }
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Insurance Deduction</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="insuranceDeduction"
+                  [(ngModel)]="form.insuranceDeduction"
+                  min="0"
+                />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Provident Fund</label>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="providentFundDeduction"
+                  [(ngModel)]="form.providentFundDeduction"
+                  min="0"
+                />
+                @if (percentHint('providentFund')) { <div class="form-text small">{{ percentHint('providentFund') }}</div> }
+              </div>
+
+              <!-- The figures the form is about to save. Absence and overtime
+                   are added by the server from attendance, so the saved net can
+                   differ from this - said here rather than discovered later. -->
+              <div class="col-12">
+                <div class="d-flex flex-wrap align-items-center gap-3 p-2 rounded-3 bg-body-tertiary border">
+                  <span class="small"><span class="text-muted">Gross</span>
+                    <strong class="ms-1">{{ previewGross | number:'1.2-2' }}</strong></span>
+                  <span class="small"><span class="text-muted">Deductions</span>
+                    <strong class="ms-1 text-danger">{{ previewDeductions | number:'1.2-2' }}</strong></span>
+                  <span class="small"><span class="text-muted">Net</span>
+                    <strong class="ms-1 text-success">{{ previewNet | number:'1.2-2' }}</strong></span>
+                  <span class="text-muted small ms-auto">
+                    Absence and overtime are added from attendance on save.
+                  </span>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Notes</label>
+                <textarea
+                  class="form-control form-control-sm"
+                  name="notes"
+                  [(ngModel)]="form.notes"
+                  rows="2"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="showForm = false">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving">
+              @if (saving) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              Create
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Mark paid modal -->
+@if (payTarget) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Mark as Paid</h5>
+          <button type="button" class="btn-close" (click)="payTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <p class="small mb-2">
+            {{ payTarget.employeeName }} — {{ payTarget.payMonth | number: '2.0' }}/{{
+              payTarget.payYear
+            }}, net <strong>{{ payTarget.netSalary | number: '1.2-2' }}</strong>
+          </p>
+          <label class="form-label">Payment Method (optional)</label>
+          <select class="form-select form-select-sm mb-2" [(ngModel)]="paymentMethod">
+            <option value="">Select method</option>
+            @for (m of paymentMethods; track m) {
+              <option [value]="m">{{ m }}</option>
+            }
+          </select>
+          <label class="form-label">Payment Reference (optional)</label>
+          <input
+            class="form-control form-control-sm"
+            [(ngModel)]="paymentReference"
+            placeholder="e.g. bank transfer ID"
+          />
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="payTarget = null">Cancel</button>
+          <button class="btn btn-success btn-sm" (click)="confirmPay()">Mark Paid</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="confirmGenerate"
+  title="Generate Payroll for All Employees"
+  [message]="
+    'Create a DRAFT payroll for every active employee with a salary structure for ' +
+    month +
+    '/' +
+    year +
+    ' who does not already have one. Continue?'
+  "
+  confirmLabel="Generate"
+  (confirmed)="runGenerate()"
+  (cancelled)="confirmGenerate = false"
+/>
+
+<app-confirm-dialog
+  [visible]="!!deleteTarget"
+  title="Delete Payroll"
+  [message]="'Delete payroll for ' + $safeNavigationMigration(deleteTarget?.employeeName) + '?'"
+  confirmLabel="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="deleteTarget = null"
+/>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Inflated (never included via <include>) by DynamicFormRenderer for TYPE_DROPDOWN custom
+     fields — one instance per dropdown field on the form, built at runtime because the field set
+     itself isn't known until a service is chosen. Mirrors the Spinner -> exposed-dropdown pattern
+     used for the screen's own static dropdowns; kept as an inflated resource rather than
+     constructed purely in Java because TextInputLayout has no public constructor that accepts a
+     style resource directly. No layout_marginTop here — DynamicFormRenderer.applyTopSpacing()
+     sets it in code so the very first field in the form doesn't get an unwanted leading gap. -->
+<com.google.android.material.textfield.TextInputLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/dynamicDropdownInputLayout"
+    style="@style/Widget.Zuhoo.TextInputLayout.Dropdown"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <AutoCompleteTextView
+        android:id="@+id/dynamicDropdown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="none" />
+
+</com.google.android.material.textfield.TextInputLayout>

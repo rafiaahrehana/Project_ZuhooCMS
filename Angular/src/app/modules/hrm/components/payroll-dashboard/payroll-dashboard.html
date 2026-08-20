@@ -1,0 +1,91 @@
+<div class="container-fluid py-3">
+  <div class="mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div class="d-flex align-items-center flex-wrap gap-3">
+      <h4 class="mb-0 fw-bold"><i class="bi bi-speedometer2 me-2"></i>Payroll Dashboard</h4>
+      <!-- Kept beside the title, not floated to the far edge of the bar - the
+           period picker IS what the numbers below are scoped to. -->
+      <div class="d-flex gap-2">
+        <select class="form-select form-select-sm" style="width: auto" [(ngModel)]="month" (change)="load()">
+          @for (m of months; track m; let i = $index) { <option [ngValue]="i + 1">{{ m }}</option> }
+        </select>
+        <select class="form-select form-select-sm" style="width: auto" [(ngModel)]="year" (change)="load()">
+          @for (y of years; track y) { <option [ngValue]="y">{{ y }}</option> }
+        </select>
+      </div>
+    </div>
+    <p class="small mb-0 mt-1 page-subtitle">This month's cost, run status, and the six-month trend</p>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && view) {
+  <!-- KPI cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+      <app-stat-card label="Total Employees" [value]="view.totalEmployees" icon="bi-people" variant="primary" sub="on the roster" link="/hrm/employees" />
+    </div>
+    <div class="col-6 col-lg-3">
+      <app-stat-card label="Employees Paid" [value]="view.employeesPaid + ' / ' + view.payrollCount" icon="bi-check-circle" variant="success" sub="payslips paid this month" link="/hrm/payroll" />
+    </div>
+    <div class="col-6 col-lg-3">
+      <app-stat-card label="Pending Payroll" [value]="view.pendingCount" icon="bi-hourglass-split" [variant]="view.pendingCount ? 'danger' : 'success'" sub="draft or awaiting payment" link="/hrm/payroll" />
+    </div>
+    <div class="col-6 col-lg-3">
+      <app-stat-card label="Upcoming Pay Date" [value]="view.nextPayDate ? (view.nextPayDate | date:'MMM d') : '-'" icon="bi-calendar-event" variant="info" sub="end of period" />
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <app-stat-card label="Total Gross" [value]="(view.totalGross | bosCurrency:'BDT':'symbol':'1.0-0') || ''" icon="bi-wallet2" variant="purple" sub="all earnings this month" />
+    </div>
+    <div class="col-md-4">
+      <app-stat-card label="Total Deductions" [value]="(view.totalDeductions | bosCurrency:'BDT':'symbol':'1.0-0') || ''" icon="bi-arrow-down-circle" variant="danger" sub="tax, PF, absence, components" />
+    </div>
+    <div class="col-md-4">
+      <app-stat-card label="Total Net Payable" [value]="(view.totalNet | bosCurrency:'BDT':'symbol':'1.0-0') || ''" icon="bi-cash-stack" variant="success" sub="what employees receive" />
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Run status - a quick-action panel, not a text block: ~40% width -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-transparent fw-semibold"><i class="bi bi-cash-coin me-2 text-primary"></i>This Month's Run</div>
+        <div class="card-body">
+          @if (view.runNumber) {
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="fw-bold">{{ view.runNumber }}</span>
+              <span class="badge {{ runBadge(view.runStatus) }}">{{ view.runStatus?.replaceAll('_', ' ') }}</span>
+            </div>
+            <p class="text-muted small mb-3">The batch that generates, approves and pays every payslip for {{ months[view.month - 1] }} {{ view.year }}.</p>
+          } @else {
+            <p class="text-muted small mb-3">No payroll run yet for {{ months[view.month - 1] }} {{ view.year }} — create one to generate every employee's payslip in a single batch.</p>
+          }
+          <a routerLink="/hrm/payroll" class="btn btn-primary btn-sm"><i class="bi bi-arrow-right me-1"></i>Go to Payroll Runs</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6-month trend - the chart, ~60% width -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-transparent fw-semibold"><i class="bi bi-graph-up me-2 text-primary"></i>Net Payroll — Last 6 Months <span class="text-muted small fw-normal">(paid only)</span></div>
+        <div class="card-body">
+          <div class="d-flex align-items-end justify-content-between gap-2" style="height: 180px">
+            @for (t of view.trend; track (t.year + '-' + t.month)) {
+            <div class="d-flex flex-column align-items-center flex-grow-1 h-100 justify-content-end">
+              <div class="small fw-semibold mb-1" style="font-size: 0.7rem">{{ t.netPaid ? (t.netPaid | bosCurrency:'BDT':'symbol':'1.0-0') : '' }}</div>
+              <div class="w-100 rounded-top" style="max-width: 56px; background: var(--bos-brand); opacity: 0.85"
+                   [style.height.%]="barHeight(t)" [style.opacity]="t.netPaid ? 0.85 : 0.15"></div>
+              <div class="text-muted small mt-1">{{ monthShort(t.month) }}</div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Detail-screen pattern (see activity_invoice_detail.xml): unboxed header, then the
+     substantive content. A KB article is just a title + one body block, so per the
+     "avoid decorating every component" rule the body is left unboxed instead of wrapped
+     in bg_card — there are no distinct sub-fields here that would benefit from grouping. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/screen_padding_h"
+        android:paddingTop="@dimen/screen_padding_v"
+        android:paddingBottom="@dimen/space_32">
+
+        <TextView
+            android:id="@+id/detailTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleLarge" />
+
+        <TextView
+            android:id="@+id/detailCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_4"
+            android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+
+        <TextView
+            android:id="@+id/detailContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:lineSpacingExtra="6dp"
+            android:textAppearance="@style/TextAppearance.Zuhoo.BodyLarge" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnMarkHelpful"
+            style="@style/Widget.Zuhoo.Button.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:text="@string/action_mark_helpful" />
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/space_16"
+            android:indeterminate="true"
+            app:indicatorColor="@color/brand_primary"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</ScrollView>

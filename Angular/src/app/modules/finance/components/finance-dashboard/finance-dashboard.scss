@@ -1,0 +1,82 @@
+// KPI card: value first, label under it, icon tile top-right, and a delta line
+// beneath - the same anatomy as the reference dashboard's stat card.
+.fin-kpi {
+  .fin-kpi-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--bos-text);
+  }
+
+  .fin-kpi-label {
+    font-size: 0.8125rem;
+    color: var(--bos-muted);
+  }
+
+  .fin-kpi-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: var(--bs-border-radius-lg);
+    font-size: 1.2rem;
+  }
+
+  .fin-kpi-change {
+    margin-top: 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+}
+
+// Revenue vs expenses, drawn as paired bars. Plain divs rather than a charting
+// dependency for one visual on one screen.
+.trend-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  height: 180px;
+}
+
+.trend-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.trend-bars {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+}
+
+.trend-bar {
+  width: 40%;
+  max-width: 18px;
+  border-radius: 3px 3px 0 0;
+  transition: height var(--bos-transition);
+}
+
+.trend-revenue { background-color: var(--bs-success); }
+.trend-expense { background-color: var(--bs-danger); }
+
+.trend-label {
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--bos-muted);
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 0.3rem;
+}

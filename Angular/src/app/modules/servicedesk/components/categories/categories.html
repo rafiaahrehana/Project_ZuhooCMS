@@ -1,0 +1,114 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0">Service Categories</h4>
+    <button *appHasPermission="'SERVICE_CATEGORY_CREATE'" class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> New Category</button>
+  </div>
+
+  <div class="input-group mb-3" style="max-width: 320px;">
+    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+    <input class="form-control border-start-0 ps-0" placeholder="Search categories..." [(ngModel)]="searchTerm" />
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Category' : 'New Category' }}</h5>
+          <button class="btn-close" (click)="showForm = false; editingId = null"></button>
+        </div>
+        <div class="modal-body">
+      <div class="row g-2">
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Name *" [(ngModel)]="form.name" /></div>
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Name (Bangla)" [(ngModel)]="form.nameBn" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Sort order" [(ngModel)]="form.sortOrder" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" placeholder="Icon URL" [(ngModel)]="form.iconUrl" /></div>
+        <div class="col-12"><textarea class="form-control form-control-sm" rows="2" placeholder="Description" [(ngModel)]="form.description"></textarea></div>
+      </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.name" (click)="save()">{{ editingId ? 'Update' : 'Save' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && categories.length && filteredCategories.length) {
+  <div class="row g-3">
+    @for (c of filteredCategories; track c.id; let i = $index) {
+    <div class="col-md-6 col-lg-4 col-xl-3">
+      <!-- One accent per card drives the top bar, the background wash, the icon
+           tile, the sort number and the Edit button. -->
+      <div class="category-card rounded-4 p-4 h-100 d-flex flex-column position-relative"
+           [style.--card-accent]="getIconColor(c, i)">
+        
+        <!-- Status Badge -->
+        <div class="position-absolute top-0 end-0 p-3">
+          <span class="badge rounded-pill" 
+                [class.bg-success-subtle]="c.active" [class.text-success]="c.active" 
+                [class.bg-secondary-subtle]="!c.active" [class.text-secondary]="!c.active"
+                style="font-size: 0.7rem;">
+            {{ c.active ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+
+        <!-- Icon Wrapper -->
+        <div class="icon-wrapper rounded-3 d-inline-flex align-items-center justify-content-center mb-3 flex-shrink-0"
+             [style.background]="getIconBg(c, i)"
+             [style.color]="getIconColor(c, i)"
+             style="width: 48px; height: 48px;">
+          <i class="bi fs-5" [ngClass]="getCategoryIcon(c)"></i>
+        </div>
+
+        <!-- Card Content -->
+        <div class="flex-grow-1">
+          <h5 class="fw-bold mb-1 fs-6 text-dark">
+            {{ c.name }}
+            @if (c.nameBn) {
+              <span class="text-muted fw-normal d-block mt-1" style="font-size: 0.75rem;">{{ c.nameBn }}</span>
+            }
+          </h5>
+          @if (c.description) {
+            <p class="text-muted small mt-2 mb-3 category-desc">{{ c.description }}</p>
+          } @else {
+            <p class="text-muted small mt-2 mb-3 category-desc text-opacity-50">No description provided for this category.</p>
+          }
+        </div>
+
+        <!-- Order & Actions -->
+        <div class="mt-auto pt-3 card-divider">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span class="small text-muted" style="font-size: 0.75rem;">Sort Order</span>
+              <div class="fw-bold fs-6 sort-order-value">
+                <i class="bi bi-sort-numeric-down me-1"></i>#{{ c.sortOrder || 0 }}
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 pt-2 card-divider">
+            <button *appHasPermission="'SERVICE_CATEGORY_UPDATE'" class="btn btn-outline-secondary btn-xs flex-grow-1 bg-white" (click)="toggle(c)">
+              {{ c.active ? 'Disable' : 'Enable' }}
+            </button>
+            <button *appHasPermission="'SERVICE_CATEGORY_UPDATE'" class="btn btn-accent-outline btn-xs px-3" (click)="openEdit(c)">
+              <i class="bi bi-pencil me-1"></i>Edit
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    }
+  </div>
+  }
+  @if (!loading && categories.length && !filteredCategories.length) {
+    <app-empty-state icon="bi-search" [message]="'No categories match \'' + searchTerm + '\'.'" />
+  }
+  @if (!loading && !categories.length && !showForm) { <app-empty-state icon="bi-tags" message="No categories yet. Create your first category to start building the service catalog." /> }
+</div>

@@ -1,0 +1,40 @@
+<div class="container-fluid py-3">
+  <h4 class="mb-3">Search</h4>
+  <!-- Search bar has been moved to the header nav -->
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (askResult) {
+  <div class="card mb-3 border-primary" style="max-width: 760px">
+    <div class="card-header py-2 fw-semibold"><i class="bi bi-stars me-1"></i>AI Answer</div>
+    <div class="card-body"><p class="mb-0" style="white-space: pre-wrap">{{ askResult.answer }}</p></div>
+    <div class="card-footer text-muted small">Grounded on {{ askResult.sources.length }} record(s) below</div>
+  </div>
+  }
+
+  @if (!loading && searched && results.length) {
+  <div class="row g-3">
+    @for (type of groupTypes(); track type) {
+    <div class="col-md-6 col-xl-4">
+      <div class="card h-100">
+        <div class="card-header py-2 fw-semibold small text-uppercase">
+          <i class="bi {{ typeIcons[type] }} me-1"></i>{{ type.replace('_', ' ') }}
+        </div>
+        <ul class="list-group list-group-flush">
+          @for (item of byType(type); track item.id) {
+          <li class="list-group-item py-2">
+            <a [routerLink]="item.link" class="fw-semibold small d-block" [innerHTML]="highlight(item.title)"></a>
+            <span class="text-muted small" [innerHTML]="highlight(item.subtitle)"></span>
+          </li>
+          }
+        </ul>
+      </div>
+    </div>
+    }
+  </div>
+  }
+  @if (!loading && searched && !results.length) {
+  <app-empty-state icon="bi-search" message="No records matched your search." />
+  }
+</div>

@@ -1,0 +1,25 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Release signing — the keystore and its passwords must never be committed.
+keystore.properties
+*.jks
+*.keystore
+
+# Real Firebase config; the committed google-services.json is a placeholder.
+# Uncomment once you add the real one and would rather keep it out of the repo.
+#app/google-services.json
+/.idea/appInsightsSettings.xml

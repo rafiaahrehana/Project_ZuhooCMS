@@ -1,0 +1,206 @@
+<div class="container-fluid py-3" style="height: calc(100vh - 90px);">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="mb-0"><i class="bi bi-stars me-1"></i>AI Assistant</h4>
+    <div class="btn-group btn-group-sm" role="group">
+      <button type="button" class="btn" [class.btn-primary]="view === 'chat'" [class.btn-outline-primary]="view !== 'chat'"
+              (click)="view = 'chat'">
+        <i class="bi bi-chat-dots me-1"></i>Chat
+      </button>
+      <button type="button" class="btn" [class.btn-primary]="view === 'drafts'" [class.btn-outline-primary]="view !== 'drafts'"
+              (click)="view = 'drafts'">
+        <i class="bi bi-file-earmark-text me-1"></i>Quick Drafts
+      </button>
+    </div>
+  </div>
+
+  @if (briefing && !briefingDismissed) {
+  <div class="alert alert-primary d-flex align-items-start gap-2 py-2 mb-3">
+    <i class="bi bi-sun mt-1"></i>
+    <div class="flex-grow-1 small">{{ briefing }}</div>
+    <button type="button" class="btn-close" aria-label="Dismiss" (click)="dismissBriefing()"></button>
+  </div>
+  }
+
+  @if (view === 'chat') {
+  <div class="row g-3 h-100">
+    <!-- Thread list -->
+    <div class="col-lg-3 d-flex flex-column" style="height: calc(100% - 60px);">
+      <button class="btn btn-primary btn-sm mb-2" (click)="startNewChat()">
+        <i class="bi bi-plus-lg me-1"></i>New Chat
+      </button>
+      <div class="card flex-grow-1 overflow-auto">
+        @if (loadingThreads) { <app-loader /> }
+        <ul class="list-group list-group-flush">
+          @for (t of threads; track t.id) {
+          <li class="list-group-item py-2 d-flex align-items-center justify-content-between"
+              role="button" [class.active]="t.id === activeThreadId" (click)="openThread(t.id)">
+            <span class="small text-truncate">{{ t.title || 'New conversation' }}</span>
+            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" title="Delete"
+                    (click)="deleteThread(t.id, $event)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </li>
+          }
+          @if (!loadingThreads && !threads.length) {
+          <li class="list-group-item text-muted small py-3">No conversations yet — start a new chat.</li>
+          }
+        </ul>
+      </div>
+    </div>
+
+    <!-- Conversation -->
+    <div class="col-lg-9 d-flex flex-column" style="height: calc(100% - 60px);">
+      <div class="card flex-grow-1 d-flex flex-column overflow-hidden">
+        <div class="card-body overflow-auto flex-grow-1">
+          @if (loadingMessages) { <app-loader /> }
+          @if (!loadingMessages && !bubbles.length) {
+          <div class="text-muted small text-center mt-4">
+            Ask me to check your leave balance, log a timesheet entry, apply for leave, check your attendance,
+            see what's assigned to you, or look up upcoming holidays.
+          </div>
+          }
+          @for (b of bubbles; track $index) {
+          <div class="d-flex mb-3" [class.justify-content-end]="b.role === 'user'">
+            <div class="p-2 px-3 rounded-3"
+                 [class.bg-primary]="b.role === 'user'" [class.text-white]="b.role === 'user'"
+                 [class.bg-light]="b.role === 'assistant'"
+                 style="max-width: 75%; white-space: pre-wrap;">
+              <div class="small">{{ b.text }}</div>
+              @if (b.meta) { <div class="small mt-1 opacity-75" style="font-size: 0.7rem">{{ b.meta }}</div> }
+              @if (b.awaitingConfirmation) {
+              <div class="mt-2 pt-2 border-top d-flex gap-2">
+                <button class="btn btn-success btn-sm" (click)="confirmPendingAction()" [disabled]="sending">
+                  <i class="bi bi-check-lg me-1"></i>Confirm
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" (click)="cancelPendingAction()" [disabled]="sending">
+                  <i class="bi bi-x-lg me-1"></i>Cancel
+                </button>
+              </div>
+              }
+            </div>
+          </div>
+          }
+          @if (sending) {
+          <div class="d-flex mb-3">
+            <div class="p-2 px-3 rounded-3 bg-light small text-muted">
+              <span class="spinner-grow spinner-grow-sm me-1"></span>Thinking…
+            </div>
+          </div>
+          }
+        </div>
+        @if (chatError) { <div class="alert alert-danger py-2 mx-3 mb-2 small">{{ chatError }}</div> }
+        <div class="card-footer bg-white">
+          <div class="input-group">
+            <textarea class="form-control" rows="1" placeholder="Type a message…"
+                      [(ngModel)]="composerText"
+                      (keydown.enter)="$event.preventDefault(); sendMessage()"></textarea>
+            @if (voiceSupported) {
+            <button class="btn" [class.btn-outline-danger]="listening" [class.btn-outline-secondary]="!listening"
+                    type="button" title="Speak instead of typing" (click)="toggleVoiceInput()">
+              <i class="bi" [class.bi-mic-fill]="listening" [class.bi-mic]="!listening"></i>
+            </button>
+            }
+            <button class="btn btn-primary" (click)="sendMessage()" [disabled]="sending || !composerText.trim()">
+              <i class="bi bi-send"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (view === 'drafts') {
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-body">
+          <div class="mb-2">
+            <label class="form-label small text-muted">Feature</label>
+            <select class="form-select form-select-sm" [(ngModel)]="feature">
+              @for (f of features; track f.value) { <option [value]="f.value">{{ f.label }}</option> }
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small text-muted">Prompt</label>
+            <textarea class="form-control form-control-sm" rows="5"
+                      placeholder="Describe what you need — e.g. 'Draft an announcement about our new office opening in July'"
+                      [(ngModel)]="prompt"></textarea>
+          </div>
+          <button class="btn btn-primary btn-sm" (click)="generate()" [disabled]="generating || !prompt.trim()">
+            @if (generating) { <span class="spinner-border spinner-border-sm me-1"></span> Generating... }
+            @else { <i class="bi bi-magic"></i> Generate }
+          </button>
+        </div>
+      </div>
+
+      @if (result) {
+      <div class="card mt-3 border-primary">
+        <div class="card-header py-2 d-flex justify-content-between small">
+          <span class="fw-semibold">Result</span>
+          <span class="text-muted">{{ result.provider }} · {{ result.model }} · {{ result.executionTimeMs }}ms</span>
+        </div>
+        <div class="card-body"><div style="white-space: pre-wrap" class="small">{{ result.result }}</div></div>
+      </div>
+      }
+
+      @if (announcementDraft) {
+      <div class="card mt-3 border-primary">
+        <div class="card-header py-2 fw-semibold small">Draft Announcement</div>
+        <div class="card-body">
+          <div class="fw-semibold mb-1">{{ announcementDraft.title }}</div>
+          <div style="white-space: pre-wrap" class="small mb-3">{{ announcementDraft.body }}</div>
+          @if (announcementSaved) {
+          <div class="alert alert-success py-2 small mb-0">Saved as a real announcement — visible on the Announcements page.</div>
+          } @else {
+          <button class="btn btn-primary btn-sm" [disabled]="savingAnnouncement" (click)="saveAsAnnouncement()">
+            @if (savingAnnouncement) { <span class="spinner-border spinner-border-sm me-1"></span> Saving... }
+            @else { <i class="bi bi-megaphone me-1"></i> Save as Announcement }
+          </button>
+          }
+        </div>
+      </div>
+      }
+
+      @if (holidayDraft) {
+      <div class="card mt-3 border-primary">
+        <div class="card-header py-2 fw-semibold small">Draft Holiday</div>
+        <div class="card-body">
+          <div class="fw-semibold mb-1">{{ holidayDraft.name }}</div>
+          <div class="small text-muted mb-2">{{ holidayDraft.date }} · {{ holidayDraft.type }}</div>
+          <div style="white-space: pre-wrap" class="small mb-3">{{ holidayDraft.description }}</div>
+          @if (holidaySaved) {
+          <div class="alert alert-success py-2 small mb-0">Saved as a real holiday — visible on the Holidays page.</div>
+          } @else {
+          <button class="btn btn-primary btn-sm" [disabled]="savingHoliday" (click)="saveAsHoliday()">
+            @if (savingHoliday) { <span class="spinner-border spinner-border-sm me-1"></span> Saving... }
+            @else { <i class="bi bi-calendar-event me-1"></i> Save as Holiday }
+          </button>
+          }
+        </div>
+      </div>
+      }
+
+      @if (leavePolicyDraft) {
+      <div class="card mt-3 border-primary">
+        <div class="card-header py-2 fw-semibold small">Draft Leave Policy</div>
+        <div class="card-body">
+          <div style="white-space: pre-wrap" class="small">{{ leavePolicyDraft.document }}</div>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-body small text-muted">
+          Quick Drafts are one-shot, structured outputs (an announcement, a holiday, a leave policy document) that
+          you review and save directly into a real record — they don't need a back-and-forth conversation, so they
+          stay separate from Chat.
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

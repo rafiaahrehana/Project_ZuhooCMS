@@ -1,0 +1,248 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-3 rounded-3 shadow-sm page-header-bar">
+    <div class="d-flex align-items-center gap-3">
+      <h4 class="mb-0">Packages</h4>
+      <div class="btn-group btn-group-sm" role="group">
+        <button class="btn" [class.btn-primary]="tab === 'packages'" [class.btn-outline-secondary]="tab !== 'packages'" (click)="setTab('packages')">Packages</button>
+        <button class="btn" [class.btn-primary]="tab === 'subscriptions'" [class.btn-outline-secondary]="tab !== 'subscriptions'" (click)="setTab('subscriptions')">Subscriptions</button>
+      </div>
+    </div>
+    @if (tab === 'packages') {
+    <button class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> New Package</button>
+    }
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (tab === 'packages' && showForm) {
+  <div class="card mb-3">
+    <div class="card-header py-2 fw-semibold">{{ editingId ? 'Edit Package' : 'New Package' }}</div>
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Name *" [(ngModel)]="form.name" /></div>
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Name (Bangla)" [(ngModel)]="form.nameBn" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Manual price (optional)" [(ngModel)]="form.packagePrice" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" step="0.01" placeholder="Discount %" [(ngModel)]="form.discountPercent" /></div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="form.billingCycle">
+            <option [ngValue]="undefined">Billing cycle</option>
+            @for (b of billingCycles; track b) { <option [value]="b">{{ b | titlecase }}</option> }
+          </select>
+        </div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Request quota" [(ngModel)]="form.requestQuota" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Delivery days" [(ngModel)]="form.deliveryDays" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" placeholder="Icon URL" [(ngModel)]="form.iconUrl" /></div>
+        <div class="col-12"><textarea class="form-control form-control-sm" rows="2" placeholder="Description" [(ngModel)]="form.description"></textarea></div>
+        <div class="col-12"><textarea class="form-control form-control-sm" rows="2" placeholder="Terms" [(ngModel)]="form.terms"></textarea></div>
+        <div class="col-12 d-flex flex-wrap gap-3 pt-1">
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="pkg-featured" [(ngModel)]="form.featured" /><label class="form-check-label small" for="pkg-featured">Featured</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="pkg-popular" [(ngModel)]="form.popular" /><label class="form-check-label small" for="pkg-popular">Popular</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="pkg-renew" [(ngModel)]="form.autoRenew" /><label class="form-check-label small" for="pkg-renew">Auto renew</label></div>
+        </div>
+        <div class="col-12">
+          <label class="form-label small text-muted mb-1">Included services</label>
+          <div class="border rounded p-2" style="max-height: 180px; overflow-y: auto;">
+            @if (!availableServices.length) { <div class="text-muted small">No active services available.</div> }
+            @for (s of availableServices; track s.id) {
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [id]="'pkg-svc-' + s.id" [checked]="isServiceSelected(s.id)" (change)="toggleService(s.id)" />
+              <label class="form-check-label small" [for]="'pkg-svc-' + s.id">{{ s.name }} <span class="text-muted">· {{ s.price | bosCurrency:s.currency }}</span></label>
+            </div>
+            }
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="alert alert-light border py-2 px-3 mb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="small">
+              Services total: <strong>{{ computedTotalPrice | bosCurrency }}</strong>
+              @if (form.discountPercent) {
+                <span class="text-muted"> &middot; after {{ form.discountPercent }}% discount:</span> <strong>{{ computedEffectivePrice | bosCurrency }}</strong>
+              }
+              @if (form.packagePrice != null) {
+                <span class="text-warning ms-1"><i class="bi bi-exclamation-triangle"></i> Manual price override is set - it will be used instead of the auto-calculated total.</span>
+              } @else {
+                <span class="text-muted"> - this auto-calculated amount will be used as the package price.</span>
+              }
+            </div>
+            @if (form.packagePrice != null) {
+              <button type="button" class="btn btn-outline-secondary btn-xs" (click)="useAutoPrice()">Use auto price</button>
+            }
+          </div>
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary btn-sm" [disabled]="!form.name" (click)="save()">{{ editingId ? 'Update' : 'Save' }}</button>
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (tab === 'packages' && !loading && packages.length) {
+  <div class="row g-3">
+    @for (p of packages; track p.id; let i = $index) {
+    <div class="col-md-6 col-lg-4 col-xl-3">
+      <div class="package-card rounded-4 p-4 h-100 d-flex flex-column position-relative"
+           [style.--card-border-color]="getPackageBorderColor(i)"
+           [style.--card-hover-border-color]="getPackageHoverBorderColor(i)"
+           [style.--card-bg-color]="getIconColor(i)">
+        
+        <!-- Status & Badges -->
+        <div class="position-absolute top-0 end-0 p-3 d-flex gap-1 flex-wrap justify-content-end" style="max-width: 70%;">
+          @if (p.featured) {
+            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill" style="font-size: 0.7rem;">Featured</span>
+          }
+          @if (p.popular) {
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.7rem;">Popular</span>
+          }
+          <span class="badge rounded-pill" 
+                [class.bg-success-subtle]="p.active" [class.text-success]="p.active" 
+                [class.bg-secondary-subtle]="!p.active" [class.text-secondary]="!p.active"
+                style="font-size: 0.7rem;">
+            {{ p.active ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+
+        <!-- Icon Wrapper -->
+        <div class="icon-wrapper rounded-3 d-inline-flex align-items-center justify-content-center mb-3 flex-shrink-0"
+             [style.background]="getIconBg(i)"
+             [style.color]="getIconColor(i)"
+             style="width: 48px; height: 48px;">
+          <i class="bi fs-5" [ngClass]="p.iconUrl || (p.popular ? 'bi-stars' : (p.featured ? 'bi-award' : 'bi-box-seam'))"></i>
+        </div>
+
+        <!-- Card Content -->
+        <div class="flex-grow-1">
+          <h5 class="fw-bold mb-1 fs-6 text-dark">{{ p.name }}</h5>
+          <div class="text-primary fw-semibold small mb-2" style="font-size: 0.8rem;">
+            {{ p.billingCycle ? (p.billingCycle | titlecase) : 'One-time' }} Billing
+          </div>
+          @if (p.description) {
+            <p class="text-muted small mb-3 package-desc">{{ p.description }}</p>
+          }
+
+          <!-- Included Services list -->
+          <div class="mb-3">
+            <div class="small fw-semibold text-secondary mb-1">
+              <i class="bi bi-grid-3x3-gap me-1"></i>{{ p.services?.length || 0 }} Included Service(s)
+            </div>
+            @if (p.services?.length) {
+              <ul class="list-unstyled small text-muted mb-0 ps-3" style="font-size: 0.75rem; max-height: 80px; overflow-y: auto;">
+                @for (s of p.services; track s.id) {
+                  <li><i class="bi bi-check2 text-success me-1"></i>{{ s.name }}</li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+
+        <!-- Meta info & Actions -->
+        <div class="mt-auto pt-3 border-top border-light-subtle">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <div class="small text-muted" style="font-size: 0.75rem;">Price</div>
+              <div class="fw-bold text-dark fs-5">{{ (p.effectivePrice ?? p.packagePrice) | bosCurrency }}</div>
+            </div>
+            <div>
+              <div class="small text-muted text-end" style="font-size: 0.75rem;">Quota Limit</div>
+              <div class="text-dark small fw-semibold text-end">
+                <i class="bi bi-ticket-perforated me-1"></i>{{ p.requestQuota || 'Unlimited' }} Requests
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin Actions -->
+          <div class="d-flex gap-1 pt-2 border-top border-light-subtle">
+            <button class="btn btn-outline-secondary btn-xs flex-grow-1" (click)="toggle(p)">
+              {{ p.active ? 'Disable' : 'Enable' }}
+            </button>
+            <button class="btn btn-outline-secondary btn-xs" (click)="openEdit(p)">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-outline-danger btn-xs" (click)="deleteTarget = p">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    }
+  </div>
+  <div class="d-flex justify-content-end mt-3">
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+  }
+  @if (tab === 'packages' && !loading && !packages.length && !showForm) { <app-empty-state icon="bi-box-seam" message="No packages yet. Bundle services into a package to offer them together." /> }
+
+  @if (tab === 'subscriptions' && !loading && subscriptions.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Client</th><th>Package</th><th>Status</th><th>Start</th><th>End</th><th>Next Billing</th><th class="text-end">Paid</th><th class="text-center">Quota</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (s of subscriptions; track s.id) {
+          <tr>
+            <td class="fw-medium">{{ s.clientName || '-' }}</td>
+            <td>{{ s.packageName || '-' }}</td>
+            <td><span class="badge {{ subscriptionStatusClass(s.status) }}">{{ s.status | titlecase }}</span></td>
+            <td class="text-muted small">{{ s.startDate ? (s.startDate | date:'mediumDate') : '-' }}</td>
+            <td class="text-muted small">{{ s.endDate ? (s.endDate | date:'mediumDate') : '-' }}</td>
+            <td class="text-muted small">{{ s.nextBillingDate ? (s.nextBillingDate | date:'mediumDate') : '-' }}</td>
+            <td class="text-end">{{ s.pricePaid | bosCurrency }}</td>
+            <td class="text-center">{{ s.requestsUsed }} / {{ s.requestQuota || '∞' }}</td>
+            <td class="text-end text-nowrap">
+              @if (s.status === 'PENDING_PAYMENT') {
+              <button class="btn btn-success btn-sm me-1" (click)="payOnline(s)" title="Pay via SSLCommerz">
+                <i class="bi bi-credit-card me-1"></i>Pay Online
+              </button>
+              <button class="btn btn-outline-success btn-sm me-1" (click)="activateSubscription(s)">Activate</button>
+              }
+              @if (s.status === 'ACTIVE') {
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="suspendSubscription(s)">Suspend</button>
+              }
+              @if (s.status === 'SUSPENDED') {
+              <button class="btn btn-outline-primary btn-sm me-1" (click)="reactivateSubscription(s)">Reactivate</button>
+              }
+              @if (s.status !== 'CANCELLED') {
+              <button class="btn btn-outline-danger btn-sm" (click)="openCancel(s)">Cancel</button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (tab === 'subscriptions' && !loading && !subscriptions.length) { <app-empty-state icon="bi-arrow-repeat" message="No subscriptions yet." /> }
+
+  @if (cancelTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Cancel Subscription</h5>
+          <button class="btn-close" (click)="cancelTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-muted small mb-2">{{ cancelTarget.clientName }} · {{ cancelTarget.packageName }}</div>
+          <textarea class="form-control form-control-sm" rows="3" placeholder="Cancellation reason (optional)" [(ngModel)]="cancelReason"></textarea>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="cancelTarget = null">Keep</button>
+          <button class="btn btn-danger btn-sm" (click)="doCancel()">Cancel Subscription</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Package" message="Delete this package? Active subscriptions will not be affected." (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

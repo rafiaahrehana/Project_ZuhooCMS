@@ -1,0 +1,262 @@
+<div class="workspace-page">
+
+  <!-- Topbar -->
+  <div class="page-topbar">
+    <div class="page-topbar-left">
+      <button class="page-topbar-back" (click)="goBack()" title="Back"><i class="bi bi-arrow-left"></i></button>
+      <h1 class="page-topbar-title">Journal Entries</h1>
+    </div>
+    <button *appHasPermission="'JOURNAL_ENTRY_CREATE'" class="btn btn-primary-bos" (click)="openCreate()">
+      <i class="bi bi-plus-lg me-1"></i> New Journal
+    </button>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  <!-- Compact metric strip: counts read at a glance instead of eating a
+       quarter-screen of vertical space; the amount cell is visually set
+       apart since it's a sum, not a count. -->
+  <div class="je-stats-strip mb-3">
+    <div class="je-stat-chip">
+      <span class="je-stat-icon variant-dark"><i class="bi bi-file-earmark"></i></span>
+      <div>
+        <div class="je-stat-value">{{ draftCount }}</div>
+        <div class="je-stat-label">Draft</div>
+      </div>
+    </div>
+    <div class="je-stat-chip">
+      <span class="je-stat-icon variant-success"><i class="bi bi-check-circle"></i></span>
+      <div>
+        <div class="je-stat-value">{{ postedCount }}</div>
+        <div class="je-stat-label">Posted</div>
+      </div>
+    </div>
+    <div class="je-stat-chip">
+      <span class="je-stat-icon variant-info"><i class="bi bi-hourglass-split"></i></span>
+      <div>
+        <div class="je-stat-value">{{ approvedCount }}</div>
+        <div class="je-stat-label">Approved</div>
+      </div>
+    </div>
+    <div class="je-stat-chip je-stat-chip-amount">
+      <span class="je-stat-icon variant-purple"><i class="bi bi-cash-stack"></i></span>
+      <div>
+        <div class="je-stat-value">{{ visibleAmount | bosCurrency:'BDT':'symbol-narrow':'1.0-0' }}</div>
+        <div class="je-stat-label">Visible Amount</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create form (multi-line) -->
+  <!-- New entry modal. modal-xl + scrollable: the lines table is the point of
+       this form, and it needs the width to stay readable. -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">New Journal Entry</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+      <div class="row g-2 mb-2">
+        <div class="col-md-3">
+          <label class="form-label small text-secondary mb-1">Entry Date <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm" type="date" [(ngModel)]="form.entryDate" />
+        </div>
+        <div class="col-md-9">
+          <label class="form-label small text-secondary mb-1">Description</label>
+          <input class="form-control form-control-sm" placeholder="Description" [(ngModel)]="form.description" />
+        </div>
+      </div>
+
+      <label class="form-label small fw-semibold mb-1">Lines</label>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-1">
+          <thead class="table-light">
+            <tr>
+              <th>Account</th>
+              <th style="width:140px" class="text-end">Debit</th>
+              <th style="width:140px" class="text-end">Credit</th>
+              <th style="width:200px">Line note</th>
+              <th style="width:40px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of form.lines; track $index; let i = $index) {
+            <tr>
+              <td>
+                <select class="form-select form-select-sm" [(ngModel)]="line.accountId">
+                  <option [ngValue]="null">— Select account —</option>
+                  @for (a of accounts; track a.id) { <option [ngValue]="a.id">{{ a.accountCode }} · {{ a.accountName }}</option> }
+                </select>
+              </td>
+              <td><input type="number" min="0" step="0.01" class="form-control form-control-sm text-end" [(ngModel)]="line.debitAmount" (ngModelChange)="onDebitChanged(line)" /></td>
+              <td><input type="number" min="0" step="0.01" class="form-control form-control-sm text-end" [(ngModel)]="line.creditAmount" (ngModelChange)="onCreditChanged(line)" /></td>
+              <td><input class="form-control form-control-sm" placeholder="Optional" [(ngModel)]="line.lineDescription" /></td>
+              <td>
+                @if (form.lines.length > 2) {
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeLine(i)"><i class="bi bi-x"></i></button>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="fw-semibold">
+              <td class="text-end">Totals</td>
+              <td class="text-end" [class.text-danger]="!isBalanced" [class.text-success]="isBalanced">{{ totalDebits | bosCurrency }}</td>
+              <td class="text-end" [class.text-danger]="!isBalanced" [class.text-success]="isBalanced">{{ totalCredits | bosCurrency }}</td>
+              <td colspan="2">
+                @if (isBalanced) { <span class="badge text-bg-success">Balanced</span> }
+                @else { <span class="badge text-bg-danger">Out of balance by {{ (totalDebits - totalCredits) | bosCurrency }}</span> }
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-secondary mb-3" (click)="addLine()"><i class="bi bi-plus-lg me-1"></i>Add Line</button>
+
+      <div class="row g-2">
+        <div class="col-12">
+          <label class="form-label small text-secondary mb-1">Notes</label>
+          <input class="form-control form-control-sm" placeholder="Notes" [(ngModel)]="form.notes" />
+        </div>
+      </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!canSave || saving" (click)="save()">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Search + status filter, one row: search grows to fill the space, pills
+       stay right-aligned so both are reachable without scrolling past them. -->
+  <div class="je-toolbar">
+    <div class="search-bar">
+      <i class="bi bi-search"></i>
+      <input class="form-control" placeholder="Search journal number or description" [(ngModel)]="searchTerm" />
+    </div>
+
+    <div class="filter-pills">
+      <button class="filter-pill" [class.active]="statusFilter === ''" (click)="statusFilter = ''">All Status</button>
+      <button class="filter-pill" [class.active]="statusFilter === 'DRAFT'" (click)="statusFilter = 'DRAFT'">Draft</button>
+      <button class="filter-pill" [class.active]="statusFilter === 'APPROVED'" (click)="statusFilter = 'APPROVED'">Approved</button>
+      <button class="filter-pill" [class.active]="statusFilter === 'POSTED'" (click)="statusFilter = 'POSTED'">Posted</button>
+    </div>
+  </div>
+
+  @if (loading) { <app-loader /> }
+
+  <!-- Register -->
+  @if (!loading && filteredEntries.length) {
+  <div class="section-bar">
+    <p class="section-bar-title text-uppercase" style="letter-spacing:.06em;font-size:.78rem;color:var(--bos-muted);">Journal Register</p>
+    <span class="section-bar-count">{{ filteredEntries.length }} entries</span>
+  </div>
+
+  @for (e of filteredEntries; track e.id) {
+  <div class="je-card">
+    <div class="je-card-head">
+      <div class="je-code">
+        {{ e.journalEntryNumber }}
+        <span class="badge {{ statusSoftClass(e) }}">{{ statusLabel(e) }}</span>
+      </div>
+      <div class="je-head-right">
+        <div class="je-meta">
+          <span><i class="bi bi-calendar3"></i> {{ e.entryDate | date:'mediumDate' }}</span>
+          <span><i class="bi bi-list-ol"></i> {{ e.lines?.length || 2 }} lines</span>
+        </div>
+        @if (!e.posted) {
+        <div class="dropdown">
+          <button class="btn-kebab" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots-vertical"></i></button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            @if (!e.approved) {
+            <li *appHasPermission="'JOURNAL_ENTRY_APPROVE'"><button class="dropdown-item" (click)="approveTarget = e">Approve</button></li>
+            }
+            @if (e.approved && !e.posted) {
+            <li *appHasPermission="'JOURNAL_ENTRY_POST'"><button class="dropdown-item" (click)="postTarget = e">Post to ledger</button></li>
+            }
+            <li *appHasPermission="'JOURNAL_ENTRY_DELETE'"><button class="dropdown-item text-danger" (click)="deleteTarget = e">Delete</button></li>
+          </ul>
+        </div>
+        }
+      </div>
+    </div>
+
+    <p class="je-title">{{ e.description || 'No description' }}</p>
+
+    @if (e.lines?.length) {
+    <div class="table-responsive mt-2">
+      <table class="table table-sm mb-0" style="font-size: 0.8rem;">
+        <tbody>
+          @for (line of e.lines; track $index) {
+          <tr>
+            <td class="text-muted">
+              {{ line.accountCode }} · {{ line.accountName }}
+              @if (line.lineDescription) { <div style="font-size: 0.7rem">{{ line.lineDescription }}</div> }
+            </td>
+            <td class="text-end text-nowrap" style="width:170px">
+              @if (line.debitAmount) { <span class="text-success">Dr {{ line.debitAmount | bosCurrency:'BDT':'symbol-narrow':'1.2-2' }}</span> }
+            </td>
+            <td class="text-end text-nowrap" style="width:170px">
+              @if (line.creditAmount) { <span class="text-danger">Cr {{ line.creditAmount | bosCurrency:'BDT':'symbol-narrow':'1.2-2' }}</span> }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    @if (e.notes) { <div class="text-muted small mt-1"><i class="bi bi-sticky me-1"></i>{{ e.notes }}</div> }
+
+    <!-- Audit trail: the backend fills every one of these; a register that
+         can't answer "who approved this and when" isn't a register. -->
+    <div class="je-meta mt-1" style="font-size: 0.72rem">
+      @if (e.createdBy) { <span><i class="bi bi-person"></i> Created by {{ e.createdBy }}@if (e.createdDate) { · {{ e.createdDate | date:'mediumDate' }} }</span> }
+      @if (e.approvedBy) { <span><i class="bi bi-check2-circle"></i> Approved by {{ e.approvedBy }}@if (e.approvedDate) { · {{ e.approvedDate | date:'mediumDate' }} }</span> }
+      @if (e.postedDate) { <span><i class="bi bi-send-check"></i> Posted {{ e.postedDate | date:'mediumDate' }}</span> }
+      @if (e.reversed && e.reversedDate) { <span><i class="bi bi-arrow-counterclockwise"></i> Reversed {{ e.reversedDate | date:'mediumDate' }}@if (e.reversalEntryId) { · by entry #{{ e.reversalEntryId }} }</span> }
+      @if (e.reversedFromEntryId) { <span><i class="bi bi-arrow-return-left"></i> Reversal of entry #{{ e.reversedFromEntryId }}</span> }
+    </div>
+
+    <hr class="je-divider" />
+
+    <div class="je-foot">
+      <div>
+        <div class="je-amount-label">Total Amount</div>
+        <div class="je-amount">{{ e.amount | bosCurrency:'BDT':'symbol-narrow':'1.2-2' }}</div>
+      </div>
+      @if (e.reversed) {
+      <span class="badge badge-soft-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i>Reversed</span>
+      } @else if (!e.approved) {
+      <button *appHasPermission="'JOURNAL_ENTRY_APPROVE'" class="btn-soft-success" (click)="approveTarget = e"><i class="bi bi-check2 me-1"></i>Approve</button>
+      } @else if (e.approved && !e.posted) {
+      <button *appHasPermission="'JOURNAL_ENTRY_POST'" class="btn-soft-warning" (click)="postTarget = e"><i class="bi bi-send me-1"></i>Post</button>
+      } @else {
+      <button *appHasPermission="'JOURNAL_ENTRY_POST'" class="btn-soft-warning" (click)="reverseTarget = e"><i class="bi bi-arrow-counterclockwise me-1"></i>Reverse</button>
+      }
+    </div>
+  </div>
+  }
+
+  <div class="d-flex justify-content-end mt-3">
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+  }
+
+  @if (!loading && !filteredEntries.length && !showForm) { <app-empty-state icon="bi-journal-plus" message="No journal entries found." /> }
+
+  <app-confirm-dialog [visible]="!!approveTarget" title="Approve Entry" message="Approve this journal entry?" (confirmed)="doApprove()" (cancelled)="approveTarget = null" />
+  <app-confirm-dialog [visible]="!!postTarget" title="Post Entry" message="Post this journal entry to the ledger? This cannot be undone." (confirmed)="doPost()" (cancelled)="postTarget = null" />
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Entry" message="Delete this journal entry?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+  <app-confirm-dialog [visible]="!!reverseTarget" title="Reverse Entry" message="This creates an offsetting journal entry that cancels this one in the ledger. Continue?" (confirmed)="doReverse()" (cancelled)="reverseTarget = null" />
+</div>

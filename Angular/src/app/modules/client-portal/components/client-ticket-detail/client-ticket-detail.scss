@@ -1,0 +1,73 @@
+.ticket-detail-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.ticket-card {
+  overflow: hidden;
+}
+
+.ticket-card__header {
+  padding: 1.1rem 1.25rem 0.9rem;
+  background: #0F172A;
+  color: #fff;
+}
+
+.ticket-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.ticket-card__ticket-no {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #E2E8F0;
+}
+
+.ticket-card__title {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ticket-card__description {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #CBD5E1;
+}
+
+.ticket-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  font-size: 0.76rem;
+  color: #E2E8F0;
+
+  i {
+    margin-right: 0.25rem;
+    color: #E2E8F0;
+  }
+}
+
+.ticket-card__attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: #E2E8F0;
+  text-decoration: underline;
+  margin-bottom: 0.4rem;
+}
+
+.ticket-card__body {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+app-chat-thread {
+  display: block;
+  height: 480px;
+}

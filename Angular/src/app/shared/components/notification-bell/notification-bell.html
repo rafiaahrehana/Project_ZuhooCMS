@@ -1,0 +1,41 @@
+<div class="notification-bell position-relative">
+  <a class="btn-nav-action text-decoration-none position-relative" role="button" (click)="toggle()" aria-label="Notifications">
+    <i class="bi bi-bell fs-5"></i>
+    @if (unread > 0) {
+    <span class="notif-badge">{{ unread > 99 ? '99+' : unread }}</span>
+    }
+  </a>
+  @if (open) {
+  <div class="notification-panel shadow border rounded bg-white text-dark position-absolute end-0 mt-2" style="width: 360px; z-index: 1050;">
+    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+      <span class="fw-semibold small">Notifications</span>
+      @if (unread > 0) {
+      <button class="btn btn-link btn-sm p-0 text-decoration-none" (click)="markAllRead()">Mark all read</button>
+      }
+    </div>
+    <div class="notification-list" style="max-height: 400px; overflow-y: auto;">
+      @if (loading) { <div class="text-center py-4 text-muted small">Loading...</div> }
+      @if (!loading && !recent.length) { <div class="text-center py-4 text-muted small">No notifications</div> }
+      @for (n of recent; track n.id) {
+      <a class="d-block px-3 py-2 border-bottom text-decoration-none text-dark notification-item"
+         role="button"
+         [class.bg-light]="!n.read"
+         (click)="openNotification(n)">
+        <div class="d-flex align-items-start gap-2">
+          @if (!n.read) { <span class="badge bg-primary rounded-circle p-1 mt-1" style="width: 8px; height: 8px;"></span> }
+          <div class="flex-grow-1 small">
+            <div class="fw-medium">{{ n.title }}</div>
+            <div class="text-muted text-truncate" style="max-width: 280px">{{ n.message }}</div>
+            <div class="text-muted" style="font-size: 0.7rem">{{ n.createdAt | date:'short' }}</div>
+          </div>
+        </div>
+      </a>
+      }
+    </div>
+    <div class="px-3 py-2 border-top text-center">
+      <a class="text-decoration-none small" routerLink="/notifications" (click)="close()">View all</a>
+    </div>
+  </div>
+  <div class="notification-backdrop position-fixed top-0 start-0 w-100 h-100" style="z-index: 1040;" (click)="close()"></div>
+  }
+</div>

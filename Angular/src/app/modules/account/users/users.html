@@ -1,0 +1,89 @@
+<div class="container-fluid py-3">
+  <div class="page-header-bar d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h4 class="mb-0"><i class="bi bi-people me-2"></i>Users</h4>
+      <p class="mb-0 small">Everyone with a login in this company.</p>
+    </div>
+    <input type="text" class="form-control form-control-sm" style="width: 240px"
+           placeholder="Search name, email or phone..."
+           [(ngModel)]="keyword" (keyup.enter)="search()" />
+  </div>
+
+  <!-- Membership filter. A user belongs to the company by owning it, by having an
+       employee record, or by having a client record - so this filters by how they
+       are attached, not by their role. -->
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    @for (f of membershipFilters; track f.value) {
+    <button type="button" class="btn btn-sm"
+            [class.btn-primary]="membership === f.value"
+            [class.btn-outline-secondary]="membership !== f.value"
+            (click)="filterBy(f.value)">{{ f.label }}</button>
+    }
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && users.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Membership</th>
+            <th>Status</th>
+            <th>Email verified</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of users; track u.id) {
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                @if (u.image) {
+                <img [src]="u.image" alt="" class="rounded-circle"
+                     style="width: 34px; height: 34px; object-fit: cover;" />
+                } @else {
+                <span class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                      style="width: 34px; height: 34px; font-size: 0.85rem; background: var(--bos-brand-soft); color: var(--bos-brand);">
+                  {{ initial(u) }}
+                </span>
+                }
+                <div class="lh-sm">
+                  <div class="fw-semibold">{{ fullName(u) }}</div>
+                  <div class="text-muted small">{{ u.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td>{{ roleLabel(u) }}</td>
+            <td><span class="status-badge {{ membershipClass(u.membership) }}">{{ membershipLabel(u.membership) }}</span></td>
+            <td>
+              <span class="status-badge" [class.is-done]="u.active" [class.is-muted]="!u.active">
+                {{ u.active ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              @if (u.emailVerified) {
+              <i class="bi bi-check-circle-fill text-success" title="Verified"></i>
+              } @else {
+              <i class="bi bi-dash-circle text-muted" title="Not verified"></i>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <span class="text-muted small">{{ totalElements }} user{{ totalElements === 1 ? '' : 's' }}</span>
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+
+  @if (!loading && !users.length) {
+  <app-empty-state icon="bi-people" message="No users found." />
+  }
+</div>

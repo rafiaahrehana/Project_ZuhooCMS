@@ -1,0 +1,200 @@
+<div class="container-fluid py-4">
+  <!-- Greeting Header -->
+  <div class="page-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold text-dark-contrast mb-1">Welcome{{ firstName ? ', ' + firstName : '' }}!</h3>
+      <div class="text-secondary-contrast">
+        Here's an overview of your account
+        @if (profile?.accountManagerName) { — your account manager is <strong>{{ profile?.accountManagerName }}</strong>. }
+      </div>
+    </div>
+
+    <a routerLink="/client/requests" [queryParams]="{create: 'true'}" class="btn btn-primary rounded-pill fw-semibold px-4">
+      <i class="bi bi-plus-lg me-1"></i>New Request
+    </a>
+  </div>
+
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && summary) {
+  <!-- Top Stat Cards (Pastels) -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card stat-card border-0 shadow-sm rounded-4 position-relative overflow-hidden h-100"
+           style="background-color: #fef3c7; border-top: 3px solid #f59e0b !important;">
+        <div class="card-body p-3 d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-amber-contrast fw-bold small text-uppercase">Pending Requests</span>
+            <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+              <i class="bi bi-hourglass-split text-amber fs-5"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <h2 class="fw-extrabold text-amber-dark mb-1" style="font-size: 1.4rem;">{{ fmt(summary.pendingRequests) }}</h2>
+            <div class="text-amber-contrast small fw-semibold">Awaiting review</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card stat-card border-0 shadow-sm rounded-4 position-relative overflow-hidden h-100"
+           style="background-color: #dbeafe; border-top: 3px solid #2563eb !important;">
+        <div class="card-body p-3 d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-blue-contrast fw-bold small text-uppercase">In Progress</span>
+            <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+              <i class="bi bi-arrow-repeat text-blue fs-5"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <h2 class="fw-extrabold text-blue-dark mb-1" style="font-size: 1.4rem;">{{ fmt(summary.inProgressRequests) }}</h2>
+            <div class="text-blue-contrast small fw-semibold">Being worked on</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card stat-card border-0 shadow-sm rounded-4 position-relative overflow-hidden h-100"
+           style="background-color: #ccfbf1; border-top: 3px solid #0d9488 !important;">
+        <div class="card-body p-3 d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-teal-contrast fw-bold small text-uppercase">Completed</span>
+            <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+              <i class="bi bi-check2-circle text-teal fs-5"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <h2 class="fw-extrabold text-teal-dark mb-1" style="font-size: 1.4rem;">{{ fmt(summary.completedRequests) }}</h2>
+            <div class="text-teal-contrast small fw-semibold">Delivered to you</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card stat-card border-0 shadow-sm rounded-4 position-relative overflow-hidden h-100"
+           style="background-color: #ffe4e6; border-top: 3px solid #e11d48 !important;">
+        <div class="card-body p-3 d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-danger-contrast fw-bold small text-uppercase">Unpaid Invoices</span>
+            <div class="bg-white bg-opacity-75 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+              <i class="bi bi-receipt text-rose fs-5"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <h2 class="fw-extrabold text-danger-dark mb-1" style="font-size: 1.4rem;">{{ fmt(summary.unpaidInvoices) }}</h2>
+            @if (summary.outstandingInvoiceAmount) {
+              <div class="text-danger-contrast small fw-semibold">{{ summary.outstandingInvoiceAmount | bosCurrency }} due</div>
+            } @else {
+              <div class="text-danger-contrast small fw-semibold">Nothing outstanding</div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Quick Actions -->
+  <h6 class="text-uppercase text-muted small mb-2">Quick Actions</h6>
+  <div class="row g-3">
+    <div class="col-6 col-lg-3">
+      <a routerLink="/client/requests" class="quick-action-card d-block h-100 text-decoration-none p-3">
+        <div class="qa-icon mb-3"><i class="bi bi-clipboard-check"></i></div>
+        <div class="qa-title">My Requests</div>
+        <div class="text-muted small">Track &amp; raise service requests</div>
+      </a>
+    </div>
+    <div class="col-6 col-lg-3">
+      <a routerLink="/client/categories" class="quick-action-card qa-teal d-block h-100 text-decoration-none p-3">
+        <div class="qa-icon mb-3"><i class="bi bi-grid-3x3-gap"></i></div>
+        <div class="qa-title">Service Catalog</div>
+        <div class="text-muted small">Browse what we offer</div>
+      </a>
+    </div>
+    <div class="col-6 col-lg-3">
+      <a routerLink="/client/payments" class="quick-action-card qa-blue d-block h-100 text-decoration-none p-3">
+        <div class="qa-icon mb-3"><i class="bi bi-credit-card"></i></div>
+        <div class="qa-title">Payment</div>
+        <div class="text-muted small">Invoices &amp; payment history</div>
+      </a>
+    </div>
+    <div class="col-6 col-lg-3">
+      <a routerLink="/client/profile" class="quick-action-card qa-indigo d-block h-100 text-decoration-none p-3">
+        <div class="qa-icon mb-3"><i class="bi bi-person-gear"></i></div>
+        <div class="qa-title">Profile Settings</div>
+        <div class="text-muted small">Update your details</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Recent Service Requests -->
+  <div class="row g-4 mt-1">
+    <div class="col-12">
+      <div class="card dashboard-card border-0">
+        <div class="card-header border-0 d-flex justify-content-between align-items-center pt-4 px-4 pb-3">
+          <h5 class="fw-bold text-dark-contrast mb-0">Recent Service Requests</h5>
+          <div class="d-flex align-items-center gap-3">
+            <a routerLink="/client/requests" [queryParams]="{create: 'true'}" class="btn btn-primary btn-sm rounded-pill fw-semibold px-3 py-1" style="font-size: 11px;">
+              <i class="bi bi-plus-lg me-1"></i>New Request
+            </a>
+            <a routerLink="/client/requests" class="view-all-link">View All</a>
+          </div>
+        </div>
+        <div class="card-body p-4">
+          @if (recentRequests && recentRequests.length > 0) {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr class="text-muted small" style="font-size: 11px;">
+                    <th scope="col" class="border-0">Request</th>
+                    <th scope="col" class="border-0 text-center">Status</th>
+                    <th scope="col" class="border-0 text-center">Priority</th>
+                    <th scope="col" class="border-0 text-end">Updated At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (req of recentRequests; track req.id) {
+                    <tr style="cursor: pointer;" [routerLink]="['/client/requests', req.id]">
+                      <td class="py-2.5">
+                        <div class="fw-bold text-dark mb-0.5" style="font-size: 13px;">#SR-{{ req.id }} — {{ req.title }}</div>
+                        <div class="text-muted small" style="font-size: 11px;">{{ req.hubServiceName || 'General Request' }}</div>
+                      </td>
+                      <td class="py-2.5 text-center">
+                        <span class="badge" [class]="
+                          req.status === 'PENDING' ? 'bg-warning-subtle text-warning' :
+                          req.status === 'IN_PROGRESS' ? 'bg-info-subtle text-info' :
+                          req.status === 'RESOLVED' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'
+                        " style="font-size: 10px; font-weight: 600;">
+                          {{ req.status }}
+                        </span>
+                      </td>
+                      <td class="py-2.5 text-center">
+                        <span class="badge" [class]="
+                          req.priority === 'HIGH' || req.priority === 'CRITICAL' ? 'bg-danger-subtle text-danger' :
+                          req.priority === 'MEDIUM' ? 'bg-warning-subtle text-warning' : 'bg-primary-subtle text-primary'
+                        " style="font-size: 10px; font-weight: 600;">
+                          {{ req.priority }}
+                        </span>
+                      </td>
+                      <td class="py-2.5 text-end text-muted small" style="font-size: 11px;">
+                        {{ (req.updatedAt || req.createdAt) | date:'MMM d, y, h:mm a' }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-chat-left-text fs-2 text-muted mb-2 d-block"></i>
+              <span>You haven't submitted any service requests yet.</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

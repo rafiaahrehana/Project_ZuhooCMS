@@ -1,0 +1,79 @@
+<div class="container-fluid py-3">
+  <!-- Header with Breadcrumb -->
+  <div class="d-flex align-items-center mb-4 gap-3">
+    <a routerLink="/client/categories" class="btn btn-light btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h4 class="mb-0 fw-bold">{{ category?.name || 'Services' }}</h4>
+      <div class="text-muted small">Select a service to request</div>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && services.length) {
+    <div class="d-flex flex-wrap gap-3 mb-4 align-items-center">
+      <div class="input-group" style="max-width: 300px;">
+        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+        <input class="form-control border-start-0 ps-0" placeholder="Search services..." [(ngModel)]="searchTerm" />
+      </div>
+    </div>
+
+    @if (!filteredServices.length) {
+      <app-empty-state icon="bi-search" [message]="'No services match \'' + searchTerm + '\'.'" />
+    }
+
+    <div class="d-flex flex-column gap-3">
+      @for (service of filteredServices; track service.id) {
+        <div class="card shadow-sm border-0 w-100" style="border-radius: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+          <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            
+            <div class="d-flex align-items-start gap-4 flex-grow-1">
+              <div class="icon-wrapper d-flex align-items-center justify-content-center text-primary" style="width: 64px; height: 64px; border-radius: 16px; background-color: rgba(var(--bs-primary-rgb), 0.1); flex-shrink: 0;">
+                <i class="bi bi-gear" style="font-size: 1.8rem;"></i>
+              </div>
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <h5 class="fw-bold text-dark mb-0">{{ service.name }}</h5>
+                  @if (service.featured) {
+                    <span class="badge bg-warning text-dark"><i class="bi bi-star-fill me-1"></i>Featured</span>
+                  }
+                </div>
+                @if (service.description) {
+                  <p class="text-muted small mb-2" style="max-width: 500px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    {{ service.description }}
+                  </p>
+                }
+                
+                <div class="d-flex flex-wrap gap-4 text-muted small mt-2">
+                  <span class="d-flex align-items-center gap-1"><i class="bi bi-clock"></i> {{ service.estimatedDays || 0 }} Days</span>
+                  <span class="d-flex align-items-center gap-1"><i class="bi bi-people"></i> 24+ Clients Served</span>
+                  <span class="d-flex align-items-center gap-1"><i class="bi bi-star-fill text-warning"></i> 4.9 (120 Reviews)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex flex-column align-items-md-end justify-content-center border-start ps-md-4 mt-3 mt-md-0" style="min-width: 200px;">
+              <div class="text-muted small mb-1">Starting from</div>
+              @if (service.price) {
+                <h4 class="fw-bold text-dark mb-3">BDT {{ service.price | number:'1.0-2' }}</h4>
+              } @else {
+                <h4 class="fw-bold text-info mb-3">Custom</h4>
+              }
+              <button class="btn btn-primary rounded-pill px-4 py-2" (click)="requestService(service)">
+                Request Service
+              </button>
+            </div>
+            
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!loading && !services.length) {
+    <app-empty-state icon="bi-box-seam" message="No services available in this category." />
+  }
+</div>

@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Bengali (bn) translations.
+
+    Selected in-app from Account -> Language, which calls AppCompatDelegate.setApplicationLocales.
+    That picker existed long before this file did and silently did nothing without it.
+
+    Notes for whoever maintains this:
+      - app_name is the brand and stays "Zuhoo".
+      - %1$s / %1$d placeholders and their order must match values/strings.xml exactly.
+      - Status strings mirror backend enum constants; the constant itself always stays English on
+        the wire, only the label here changes.
+      - Loanwords (ইমেইল, পাসওয়ার্ড, ইনভয়েস) are used where that is what Bangladeshi users
+        actually see in other apps; forcing a Sanskritised equivalent would read as stilted.
+-->
+<resources>
+    <string name="app_name">Zuhoo</string>
+
+    <string name="state_error_title">কিছু ভুল হয়েছে</string>
+    <string name="state_action_try_again">আবার চেষ্টা করুন</string>
+
+    <string name="hint_email">ইমেইল</string>
+    <string name="hint_password">পাসওয়ার্ড</string>
+    <string name="action_login">লগ ইন</string>
+
+    <string name="error_email_required">ইমেইল দিন</string>
+    <string name="error_password_required">পাসওয়ার্ড দিন</string>
+    <string name="error_login_failed">ইমেইল বা পাসওয়ার্ড সঠিক নয়</string>
+    <string name="error_unsupported_role">এই অ্যাপটি কোম্পানির কর্মী ও ক্লায়েন্টদের জন্য — ওয়েব অ্যাডমিন কনসোল ব্যবহার করুন</string>
+    <string name="error_session_expired">আপনার সেশনের মেয়াদ শেষ হয়েছে। আবার সাইন ইন করুন।</string>
+
+    <!-- Password recovery -->
+    <string name="title_forgot_password">পাসওয়ার্ড রিসেট করুন</string>
+    <string name="forgot_password_explainer">যে ইমেইল দিয়ে সাইন ইন করেন সেটি দিন। অ্যাকাউন্ট থাকলে সেখানে একটি রিসেট কোড পাঠানো হবে।</string>
+    <string name="action_forgot_password">পাসওয়ার্ড ভুলে গেছেন?</string>
+    <string name="action_send_reset_link">রিসেট কোড পাঠান</string>
+    <string name="action_have_reset_code">আমার কাছে কোড আছে</string>
+    <string name="reset_link_sent">ওই ইমেইলে অ্যাকাউন্ট থাকলে একটি রিসেট কোড পাঠানো হয়েছে।</string>
+    <string name="error_reset_link_failed">রিসেট কোড পাঠানো যায়নি</string>
+    <string name="error_email_invalid">একটি সঠিক ইমেইল ঠিকানা দিন</string>
+
+    <string name="title_reset_password">নতুন পাসওয়ার্ড দিন</string>
+    <string name="reset_password_explainer">রিসেট ইমেইলে পাওয়া কোডটি বসান, তারপর নতুন পাসওয়ার্ড দিন।</string>
+    <string name="hint_reset_code">রিসেট কোড</string>
+    <string name="action_reset_password">পাসওয়ার্ড রিসেট করুন</string>
+    <string name="reset_password_success">পাসওয়ার্ড রিসেট হয়েছে। নতুন পাসওয়ার্ড দিয়ে সাইন ইন করুন।</string>
+    <string name="error_reset_code_required">রিসেট কোড দিন</string>
+    <string name="error_reset_password_failed">পাসওয়ার্ড রিসেট করা যায়নি। কোডটির মেয়াদ শেষ হয়ে থাকতে পারে।</string>
+    <string name="error_password_policy">পাসওয়ার্ডে অন্তত ৮টি অক্ষর, বড় ও ছোট হাতের অক্ষর, একটি সংখ্যা এবং একটি বিশেষ চিহ্ন থাকতে হবে</string>
+    <string name="error_passwords_do_not_match">পাসওয়ার্ড দুটি মিলছে না</string>
+
+    <!-- Google sign-in -->
+    <string name="label_or">অথবা</string>
+    <string name="action_google_sign_in">Google দিয়ে চালিয়ে যান</string>
+    <string name="error_google_signin_failed">Google সাইন-ইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।</string>
+    <string name="error_google_not_configured">Google সাইন-ইন এখনও প্রস্তুত নয়। আপাতত ইমেইল ও পাসওয়ার্ড ব্যবহার করুন।</string>
+    <string name="title_complete_signup">প্রায় শেষ</string>
+    <string name="complete_signup_explainer">%1$s দিয়ে এখনও কোনো অ্যাকাউন্ট নেই। সাইন আপ সম্পূর্ণ করতে আপনি যে কোম্পানির গ্রাহক তা বেছে নিন।</string>
+    <string name="action_finish_signup">সাইন আপ সম্পূর্ণ করুন</string>
+    <string name="error_google_register_failed">আপনার সাইন আপ সম্পূর্ণ করা যায়নি</string>
+
+    <string name="title_verify_email">ইমেইল যাচাই করুন</string>
+    <string name="verify_email_explainer">যাচাইকরণ ইমেইলে পাওয়া কোডটি বসান, অথবা নতুন একটি চান।</string>
+    <string name="hint_verification_code">যাচাইকরণ কোড</string>
+    <string name="action_verify_email">যাচাই করুন</string>
+    <string name="action_resend_verification">যাচাইকরণ ইমেইল আবার পাঠান</string>
+    <string name="verify_email_success">ইমেইল যাচাই হয়েছে। এখন সাইন ইন করতে পারেন।</string>
+    <string name="resend_verification_sent">যাচাইকরণ ইমেইল পাঠানো হয়েছে</string>
+    <string name="error_verify_email_failed">কোডটি যাচাই করা যায়নি। মেয়াদ শেষ হয়ে থাকতে পারে।</string>
+    <string name="error_resend_verification_failed">যাচাইকরণ ইমেইল আবার পাঠানো যায়নি</string>
+    <string name="error_verification_code_required">যাচাইকরণ কোড দিন</string>
+    <string name="error_subscription_expired_title">অ্যাকাউন্ট এখন শুধু পড়ার জন্য</string>
+
+    <string name="dashboard_welcome">স্বাগতম, %1$s</string>
+    <string name="dashboard_role_badge">%1$s • কোম্পানি #%2$d</string>
+    <string name="action_logout">লগ আউট</string>
+
+    <string name="content_desc_notifications">নোটিফিকেশন</string>
+    <string name="content_desc_account">অ্যাকাউন্ট</string>
+
+    <string name="section_requests">রিকোয়েস্ট</string>
+    <string name="section_my_work">আমার কাজ</string>
+    <string name="section_approvals">অনুমোদন</string>
+    <string name="section_manage">ব্যবস্থাপনা</string>
+    <string name="section_quick_actions">দ্রুত অ্যাকশন</string>
+
+    <string name="stat_open_requests">চলমান অনুরোধ</string>
+    <string name="stat_awaiting_action">অপেক্ষমাণ</string>
+    <string name="stat_requests_in_progress">চলমান</string>
+    <string name="stat_unpaid_invoices">অপরিশোধিত ইনভয়েস</string>
+    <string name="stat_active_subscriptions">সক্রিয় সাবস্ক্রিপশন</string>
+    <string name="stat_placeholder">—</string>
+    <string name="error_dashboard_stats_failed">কিছু ড্যাশবোর্ড তথ্য লোড করা যায়নি — সংযোগ দেখে নিন</string>
+
+    <string name="stat_assigned_to_me">আমাকে দেওয়া</string>
+    <string name="stat_open_tickets">চলমান টিকিট</string>
+    <string name="action_all_requests">সব অনুরোধ</string>
+    <string name="action_assigned_requests">আমাকে দেওয়া</string>
+    <string name="action_support_tickets">সাপোর্ট টিকিট</string>
+
+    <string name="action_link_join_company">নতুন ক্লায়েন্ট? একটি কোম্পানিতে যুক্ত হোন</string>
+    <string name="action_link_create_company">ব্যবসা শুরু করছেন? কোম্পানি অ্যাকাউন্ট খুলুন</string>
+
+    <string name="hint_first_name">নামের প্রথম অংশ</string>
+    <string name="hint_last_name">নামের শেষ অংশ</string>
+    <string name="hint_phone_optional">ফোন (ঐচ্ছিক)</string>
+    <string name="hint_company_picker">আপনার কোম্পানি বাছুন</string>
+    <string name="hint_client_company_name_optional">আপনার কোম্পানির নাম (ঐচ্ছিক)</string>
+    <string name="hint_industry_optional">খাত (ঐচ্ছিক)</string>
+    <string name="hint_website_optional">ওয়েবসাইট (ঐচ্ছিক)</string>
+    <string name="hint_company_name">কোম্পানির নাম</string>
+    <string name="hint_subdomain">সাবডোমেইন</string>
+    <string name="helper_subdomain">শুধু ছোট হাতের অক্ষর, সংখ্যা ও হাইফেন</string>
+    <string name="hint_company_email_optional">কোম্পানির ইমেইল (ঐচ্ছিক)</string>
+    <string name="hint_company_phone_optional">কোম্পানির ফোন (ঐচ্ছিক)</string>
+    <string name="helper_password_policy">অন্তত ৮টি অক্ষর, সঙ্গে বড় হাতের, ছোট হাতের, সংখ্যা ও বিশেষ চিহ্ন</string>
+
+    <string name="title_register_client">কোম্পানিতে যুক্ত হোন</string>
+    <string name="title_register_company">কোম্পানি অ্যাকাউন্ট খুলুন</string>
+    <string name="action_create_account">অ্যাকাউন্ট খুলুন</string>
+
+    <string name="section_personal_info">ব্যক্তিগত তথ্য</string>
+    <string name="section_company_info">কোম্পানির তথ্য</string>
+
+    <string name="error_first_name_required">নামের প্রথম অংশ দিন</string>
+    <string name="error_last_name_required">নামের শেষ অংশ দিন</string>
+    <string name="error_password_weak">পাসওয়ার্ডটি উপরের শর্তগুলো পূরণ করছে না</string>
+    <string name="error_company_required">একটি কোম্পানি বাছুন</string>
+    <string name="error_company_name_required">কোম্পানির নাম দিন</string>
+    <string name="error_subdomain_required">সাবডোমেইন দিন</string>
+    <string name="error_subdomain_invalid">শুধু ছোট হাতের অক্ষর, সংখ্যা ও হাইফেন</string>
+    <string name="error_companies_load_failed">কোম্পানির তালিকা লোড করা যায়নি — সংযোগ দেখে আবার চেষ্টা করুন</string>
+
+    <string name="registration_success_client">অ্যাকাউন্ট তৈরি হয়েছে — এখন লগ ইন করতে পারেন</string>
+    <string name="registration_success_company">অ্যাকাউন্ট তৈরি হয়েছে — ইমেইল যাচাই করে লগ ইন করুন</string>
+
+    <string name="action_view_requests">আমার অনুরোধ দেখুন</string>
+    <string name="title_my_requests">আমার অনুরোধ</string>
+    <string name="action_new_request">নতুন অনুরোধ</string>
+    <string name="empty_requests">এখনও কোনো সেবা অনুরোধ নেই</string>
+    <string name="empty_requests_subtitle">অনুরোধ জমা দেওয়া হলে সেগুলো এখানে দেখাবে।</string>
+    <string name="error_requests_load_failed">আপনার অনুরোধগুলো লোড করা যায়নি — সংযোগ দেখে নিন</string>
+
+    <string name="title_create_request">নতুন সেবা অনুরোধ</string>
+    <string name="hint_title">শিরোনাম</string>
+    <string name="hint_description_optional">বিবরণ (ঐচ্ছিক)</string>
+    <string name="hint_service_picker">একটি সেবা বাছুন</string>
+    <string name="hint_priority">অগ্রাধিকার</string>
+    <string name="hint_agreed_price_optional">সম্মত মূল্য (ঐচ্ছিক)</string>
+    <string name="error_title_required">শিরোনাম দিন</string>
+    <string name="error_service_required">একটি সেবা বাছুন</string>
+    <string name="error_price_invalid">সঠিক মূল্য দিন</string>
+    <string name="error_services_load_failed">সেবার তালিকা লোড করা যায়নি — সংযোগ দেখে নিন</string>
+    <string name="error_request_create_failed">অনুরোধটি তৈরি করা যায়নি</string>
+    <string name="request_created">অনুরোধ জমা হয়েছে</string>
+    <string name="action_submit_request">অনুরোধ জমা দিন</string>
+
+    <string name="error_request_load_failed">এই অনুরোধটি লোড করা যায়নি</string>
+    <string name="label_agreed_price">সম্মত মূল্য</string>
+    <string name="detail_no_description">কোনো বিবরণ দেওয়া হয়নি</string>
+    <string name="detail_assigned_to">দায়িত্বে: %1$s</string>
+    <string name="detail_unassigned">দায়িত্ব দেওয়া হয়নি</string>
+    <string name="detail_quotation_amount">কোটেশন: %1$s %2$s</string>
+    <string name="action_cancel_request">অনুরোধ বাতিল করুন</string>
+    <string name="dialog_cancel_title">অনুরোধটি বাতিল করবেন?</string>
+    <string name="dialog_cancel_message">এটি আর ফেরানো যাবে না।</string>
+    <string name="action_yes_cancel">হ্যাঁ, বাতিল করুন</string>
+    <string name="action_no">না</string>
+    <string name="error_cancel_failed">অনুরোধটি বাতিল করা যায়নি</string>
+    <string name="request_cancelled">অনুরোধ বাতিল হয়েছে</string>
+
+    <string name="section_comments">মন্তব্য</string>
+    <string name="hint_comment">একটি মন্তব্য লিখুন…</string>
+    <string name="action_send">পাঠান</string>
+    <string name="error_comment_failed">আপনার মন্তব্য পাঠানো যায়নি</string>
+
+    <string name="action_accept_quotation">গ্রহণ করুন</string>
+    <string name="action_reject_quotation">প্রত্যাখ্যান করুন</string>
+    <string name="dialog_reject_reason_title">কোটেশন প্রত্যাখ্যান</string>
+    <string name="hint_reject_reason_optional">কারণ (ঐচ্ছিক)</string>
+    <string name="error_quotation_action_failed">এই কোটেশনটি প্রক্রিয়া করা যায়নি</string>
+    <string name="quotation_accepted">কোটেশন গৃহীত হয়েছে</string>
+    <string name="quotation_rejected">কোটেশন প্রত্যাখ্যান করা হয়েছে</string>
+
+    <string name="action_assign_request">দায়িত্ব দিন</string>
+    <string name="dialog_assign_title">কর্মীকে দায়িত্ব দিন</string>
+    <string name="error_employees_load_failed">কর্মীদের তালিকা লোড করা যায়নি — সংযোগ দেখে নিন</string>
+    <string name="error_assign_failed">এই অনুরোধের দায়িত্ব দেওয়া যায়নি</string>
+    <string name="request_assigned">দায়িত্ব দেওয়া হয়েছে</string>
+
+    <string name="action_change_status">স্ট্যাটাস বদলান</string>
+    <string name="dialog_change_status_title">স্ট্যাটাস বদলান</string>
+    <string name="hint_status_reason_optional">কারণ (ঐচ্ছিক)</string>
+    <string name="error_status_change_failed">স্ট্যাটাস বদলানো যায়নি</string>
+    <string name="status_changed">স্ট্যাটাস হালনাগাদ হয়েছে</string>
+
+    <string name="action_submit_quotation">কোটেশন দিন</string>
+    <string name="dialog_submit_quotation_title">কোটেশন জমা দিন</string>
+    <string name="hint_quotation_amount">পরিমাণ</string>
+    <string name="hint_quotation_currency">মুদ্রা (যেমন BDT)</string>
+    <string name="hint_quotation_notes_optional">নোট (ঐচ্ছিক)</string>
+    <string name="error_quotation_amount_required">পরিমাণ দিন</string>
+    <string name="error_quotation_submit_failed">কোটেশন জমা দেওয়া যায়নি</string>
+    <string name="quotation_submitted">কোটেশন জমা হয়েছে</string>
+
+    <string name="action_view_invoices">আমার ইনভয়েস দেখুন</string>
+    <string name="title_my_invoices">আমার ইনভয়েস</string>
+    <string name="empty_invoices">এখনও কোনো ইনভয়েস নেই</string>
+    <string name="empty_invoices_subtitle">আপনাকে ইস্যু করা ইনভয়েসগুলো এখানে দেখা যাবে।</string>
+    <string name="error_invoices_load_failed">আপনার ইনভয়েস লোড করা যায়নি — সংযোগ দেখে নিন</string>
+    <string name="action_view_receipts">পেমেন্ট রসিদ</string>
+
+    <string name="error_invoice_load_failed">এই ইনভয়েসটি লোড করা যায়নি</string>
+    <string name="label_subtotal">উপমোট</string>
+    <string name="label_tax">কর</string>
+    <string name="label_total">সর্বমোট</string>
+    <string name="label_paid">পরিশোধিত</string>
+    <string name="label_balance">বকেয়া</string>
+    <string name="action_pay_now">এখন পরিশোধ করুন</string>
+    <string name="action_download_pdf">PDF ডাউনলোড করুন</string>
+    <string name="error_pdf_download_failed">PDF ডাউনলোড করা যায়নি</string>
+    <string name="error_pdf_no_viewer">PDF খোলার মতো কোনো অ্যাপ ইনস্টল করা নেই</string>
+    <string name="pdf_downloaded">PDF ডাউনলোড হয়েছে</string>
+
+    <string name="title_my_receipts">পেমেন্ট রসিদ</string>
+    <string name="empty_receipts">এখনও কোনো পেমেন্ট রসিদ নেই</string>
+    <string name="empty_receipts_subtitle">আপনার পেমেন্টের রসিদ এখানে দেখা যাবে।</string>
+    <string name="error_receipts_load_failed">আপনার রসিদ লোড করা যায়নি — সংযোগ দেখে নিন</string>
+
+    <string name="title_payment">পেমেন্ট</string>
+    <string name="payment_confirming">পেমেন্ট নিশ্চিত করা হচ্ছে…</string>
+    <string name="payment_success">পেমেন্ট সফল হয়েছে</string>
+    <string name="payment_failed">পেমেন্ট সম্পন্ন হয়নি</string>
+    <string name="payment_not_yet_confirmed">পেমেন্ট গেটওয়ের সঙ্গে নিশ্চিত করা হচ্ছে। কিছুক্ষণ পর ইনভয়েসটি আবার খুলে দেখুন।</string>
+    <string name="payment_failed_with_status">পেমেন্ট সম্পন্ন হয়নি (%1$s)</string>
+
+    <string name="detail_timeline_heading">স্ট্যাটাসের ধারাবাহিকতা</string>
+
+    <!-- Per-service custom fields -->
+    <string name="form_field_required_label">%1$s *</string>
+    <string name="form_field_no_selection">— কিছু নয় —</string>
+    <string name="form_field_pick_date">তারিখ বাছতে চাপ দিন</string>
+    <string name="error_form_field_required">\'%1$s\' দিতে হবে</string>
+
+    <!-- Attachments -->
+    <string name="action_attach">সংযুক্ত করুন</string>
+    <string name="attachment_uploading">আপলোড হচ্ছে…</string>
+    <string name="attachment_attached">📎 %1$s — সরাতে চাপ দিন</string>
+    <string name="error_attachment_failed">ফাইলটি আপলোড করা যায়নি</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">হোম</string>
+    <string name="nav_requests">অনুরোধ</string>
+    <string name="nav_catalog">সেবাসমূহ</string>
+    <string name="nav_billing">বিলিং</string>
+    <string name="nav_support">সাপোর্ট</string>
+    <string name="nav_account">অ্যাকাউন্ট</string>
+
+    <!-- Notification channels — shown in Android's own settings -->
+    <string name="channel_requests">সেবা অনুরোধ</string>
+    <string name="channel_billing">ইনভয়েস ও পেমেন্ট</string>
+    <string name="channel_general">সাধারণ</string>
+    <string name="cache_last_updated">%1$s আগের সংরক্ষিত তথ্য দেখানো হচ্ছে — রিফ্রেশ করতে আবার খুলুন</string>
+
+    <!-- ServiceRequestStatus -->
+    <string name="status_pending">অপেক্ষমাণ</string>
+    <string name="status_quotation_pending">কোটেশনের অপেক্ষায়</string>
+    <string name="status_assigned">দায়িত্ব দেওয়া হয়েছে</string>
+    <string name="status_in_progress">চলমান</string>
+    <string name="status_waiting_client">আপনার জবাবের অপেক্ষায়</string>
+    <string name="status_under_review">পর্যালোচনাধীন</string>
+    <string name="status_completed">সম্পন্ন</string>
+    <string name="status_rejected">প্রত্যাখ্যাত</string>
+    <string name="status_cancelled">বাতিল</string>
+    <string name="status_resubmitted">পুনরায় জমা</string>
+
+    <!-- InvoiceStatus -->
+    <string name="invoice_status_draft">খসড়া</string>
+    <string name="invoice_status_issued">ইস্যু করা</string>
+    <string name="invoice_status_partially_paid">আংশিক পরিশোধিত</string>
+    <string name="invoice_status_paid">পরিশোধিত</string>
+    <string name="invoice_status_overdue">মেয়াদোত্তীর্ণ</string>
+    <string name="invoice_status_cancelled">বাতিল</string>
+    <string name="invoice_status_voided">বাতিলকৃত</string>
+    <string name="invoice_status_refunded">ফেরত দেওয়া</string>
+
+    <!-- SubscriptionStatus -->
+    <string name="subscription_status_active">সক্রিয়</string>
+    <string name="subscription_status_pending_payment">পেমেন্ট বাকি</string>
+    <string name="subscription_status_expired">মেয়াদ শেষ</string>
+    <string name="subscription_status_suspended">স্থগিত</string>
+    <string name="subscription_status_cancelled">বাতিল</string>
+
+    <!-- TicketStatus -->
+    <string name="ticket_status_new">নতুন</string>
+    <string name="ticket_status_open">চলমান</string>
+    <string name="ticket_status_in_progress">কাজ চলছে</string>
+    <string name="ticket_status_waiting">অপেক্ষমাণ</string>
+    <string name="ticket_status_on_hold">স্থগিত</string>
+    <string name="ticket_status_resolved">সমাধান হয়েছে</string>
+    <string name="ticket_status_closed">বন্ধ</string>
+    <string name="ticket_status_reopened">পুনরায় চালু</string>
+
+    <!-- ServiceRequestPriority -->
+    <string name="priority_default">সেবার নির্ধারিত মান</string>
+    <string name="priority_low">নিম্ন</string>
+    <string name="priority_normal">সাধারণ</string>
+    <string name="priority_high">উচ্চ</string>
+    <string name="priority_urgent">জরুরি</string>
+
+    <string name="payment_cancelled">পেমেন্ট বাতিল হয়েছে</string>
+    <string name="error_payment_initiate_failed">পেমেন্ট শুরু করা যায়নি</string>
+
+    <string name="title_catalog">সেবার তালিকা</string>
+    <string name="empty_catalog">এখনও কোনো সেবা নেই</string>
+    <string name="empty_catalog_subtitle">আপনার প্রতিষ্ঠানের সেবাগুলো এখানে দেখাবে।</string>
+    <string name="error_catalog_load_failed">সেবার তালিকা লোড করা যায়নি — সংযোগ দেখে নিন</string>
+    <string name="catalog_other_category">অন্যান্য</string>
+    <string name="action_request_this_service">এই সেবাটির জন্য অনুরোধ করুন</string>
+
+    <string name="title_packages">প্যাকেজ</string>
+    <string name="empty_packages">এখনও কোনো প্যাকেজ নেই</string>
+    <string name="empty_packages_subtitle">সাবস্ক্রিপশন প্যাকেজ পাওয়া গেলে এখানে দেখাবে।</string>
+    <string name="error_packages_load_failed">প্যাকেজ লোড করা যায়নি — সংযোগ দেখে নিন</string>
+    <string name="action_subscribe">সাবস্ক্রাইব করুন</string>
+    <string name="action_view_subscriptions">আমার সাবস্ক্রিপশন</string>
+    <string name="dialog_subscribe_title">প্যাকেজে সাবস্ক্রাইব করবেন?</string>
+    <string name="dialog_subscribe_message">%1$s-এ সাবস্ক্রাইব করবেন? সক্রিয় করতে এরপর পেমেন্ট করতে হবে।</string>
+    <string name="error_subscribe_failed">এই প্যাকেজে সাবস্ক্রাইব করা যায়নি</string>
+    <string name="subscribed_pending_payment">সাবস্ক্রাইব হয়েছে — সক্রিয় করতে এখন পরিশোধ করুন</string>
+
+    <string name="title_my_subscriptions">আমার সাবস্ক্রিপশন</string>
+    <string name="empty_subscriptions">এখনও কোনো সাবস্ক্রিপশন নেই</string>
+    <string name="empty_subscriptions_subtitle">আপনার সাবস্ক্রাইব করা প্যাকেজগুলো এখানে দেখা যাবে।</string>
+    <string name="error_subscriptions_load_failed">আপনার সাবস্ক্রিপশন লোড করা যায়নি — সংযোগ দেখে নিন</string>
+    <string name="action_cancel_subscription">বাতিল করুন</string>
+    <string name="dialog_cancel_subscription_title">এই সাবস্ক্রিপশনটি বাতিল করবেন?</string>
+    <string name="error_cancel_subscription_failed">এই সাবস্ক্রিপশনটি বাতিল করা যায়নি</string>
+    <string name="subscription_cancelled">সাবস্ক্রিপশন বাতিল হয়েছে</string>
+
+    <string name="action_leave_review">রিভিউ দিন</string>
+    <string name="dialog_review_title">এই সেবাটির মূল্যায়ন করুন</string>
+    <string name="hint_review_comment_optional">মন্তব্য (ঐচ্ছিক)</string>
+    <string name="action_submit_review">জমা দিন</string>
+    <string name="error_review_failed">আপনার রিভিউ জমা দেওয়া যায়নি</string>
+    <string name="review_submitted">রিভিউ জমা হয়েছে</string>
+
+    <string name="action_browse_catalog">সেবা দেখুন</string>
+    <string name="action_view_packages">প্যাকেজ</string>
+
+    <string name="chat_status_connecting">সংযোগ করা হচ্ছে…</string>
+    <string name="chat_status_live">● সরাসরি</string>
+
+    <string name="title_support_tickets">সাপোর্ট টিকিট</string>
+    <string name="action_new_ticket">+ নতুন</string>
+    <string name="empty_tickets">এখনও কোনো সাপোর্ট টিকিট নেই</string>
+    <string name="empty_tickets_subtitle">আপনার তৈরি করা টিকিটগুলো এখানে দেখাবে।</string>
+    <string name="error_tickets_load_failed">টিকিট লোড করা যায়নি — সংযোগ দেখে নিন</string>
+
+    <string name="title_create_ticket">নতুন সাপোর্ট টিকিট</string>
+    <string name="hint_ticket_title">শিরোনাম</string>
+    <string name="hint_ticket_description">বিবরণ</string>
+    <string name="hint_ticket_category">শ্রেণি (ঐচ্ছিক)</string>
+    <string name="hint_ticket_priority">অগ্রাধিকার</string>
+    <string name="error_ticket_title_required">শিরোনাম দিন</string>
+    <string name="error_ticket_description_required">বিবরণ দিন</string>
+    <string name="error_ticket_create_failed">টিকিটটি তৈরি করা যায়নি</string>
+    <string name="ticket_created">টিকিট জমা হয়েছে</string>
+    <string name="action_submit_ticket">টিকিট জমা দিন</string>
+
+    <string name="error_ticket_load_failed">এই টিকিটটি লোড করা যায়নি</string>
+    <string name="section_ticket_messages">বার্তা</string>
+    <string name="hint_ticket_message">একটি বার্তা লিখুন…</string>
+
+    <string name="action_submit_satisfaction">সাপোর্টের মূল্যায়ন</string>
+    <string name="dialog_satisfaction_title">সাপোর্টের অভিজ্ঞতা মূল্যায়ন করুন</string>
+    <string name="hint_satisfaction_feedback_optional">মতামত (ঐচ্ছিক)</string>
+    <string name="satisfaction_submitted">মতামতের জন্য ধন্যবাদ</string>
+    <string name="error_satisfaction_failed">আপনার মূল্যায়ন জমা দেওয়া যায়নি</string>
+
+    <string name="action_account">অ্যাকাউন্ট</string>
+    <string name="title_account">অ্যাকাউন্ট</string>
+    <string name="action_edit_profile">প্রোফাইল সম্পাদনা</string>
+    <string name="action_company_profile">কোম্পানি প্রোফাইল</string>
+    <string name="action_notification_preferences">নোটিফিকেশন পছন্দ</string>
+    <string name="action_notifications">নোটিফিকেশন</string>
+    <string name="action_help_center">সহায়তা কেন্দ্র</string>
+
+    <string name="title_edit_profile">প্রোফাইল সম্পাদনা</string>
+    <string name="hint_current_password">বর্তমান পাসওয়ার্ড (ইমেইল বদলাতে লাগবে)</string>
+    <string name="action_save">সংরক্ষণ করুন</string>
+    <string name="error_profile_load_failed">আপনার প্রোফাইল লোড করা যায়নি</string>
+    <string name="error_profile_update_failed">আপনার প্রোফাইল হালনাগাদ করা যায়নি</string>
+    <string name="profile_updated">প্রোফাইল হালনাগাদ হয়েছে</string>
+
+    <string name="section_change_password">পাসওয়ার্ড বদলান</string>
+    <string name="hint_current_password_required">বর্তমান পাসওয়ার্ড</string>
+    <string name="hint_new_password">নতুন পাসওয়ার্ড</string>
+    <string name="helper_password_min_length">অন্তত ৮টি অক্ষর</string>
+    <string name="hint_confirm_password">নতুন পাসওয়ার্ড আবার দিন</string>
+    <string name="action_change_password">পাসওয়ার্ড বদলান</string>
+    <string name="error_password_mismatch">নতুন পাসওয়ার্ড ও নিশ্চিতকরণ মিলছে না</string>
+    <string name="error_change_password_failed">আপনার পাসওয়ার্ড বদলানো যায়নি</string>
+    <string name="password_changed">পাসওয়ার্ড বদলানো হয়েছে</string>
+
+    <string name="title_company_profile">কোম্পানি প্রোফাইল</string>
+    <string name="label_status">স্ট্যাটাস</string>
+    <string name="label_onboarded_at">ক্লায়েন্ট হয়েছেন</string>
+    <string name="label_account_manager">অ্যাকাউন্ট ম্যানেজার</string>
+    <string name="hint_billing_address_optional">বিলিং ঠিকানা (ঐচ্ছিক)</string>
+    <string name="hint_shipping_address_optional">শিপিং ঠিকানা (ঐচ্ছিক)</string>
+    <string name="error_company_profile_load_failed">আপনার কোম্পানি প্রোফাইল লোড করা যায়নি</string>
+    <string name="error_company_profile_update_failed">আপনার কোম্পানি প্রোফাইল হালনাগাদ করা যায়নি</string>
+    <string name="company_profile_updated">কোম্পানি প্রোফাইল হালনাগাদ হয়েছে</string>
+
+    <string name="title_notification_preferences">নোটিফিকেশন পছন্দ</string>
+    <string name="section_email_notifications">ইমেইল নোটিফিকেশন</string>
+    <string name="section_in_app_notifications">অ্যাপের ভেতরের নোটিফিকেশন</string>
+    <string name="pref_email_service_request">নতুন সেবা অনুরোধের ইমেইল পাঠান</string>
+    <string name="pref_email_status_change">স্ট্যাটাস বদলের ইমেইল পাঠান</string>
+    <string name="pref_email_invoice">ইনভয়েসের ইমেইল পাঠান</string>
+    <string name="pref_email_payment">পেমেন্টের ইমেইল পাঠান</string>
+    <string name="pref_email_task_assigned">কাজ বণ্টনের ইমেইল পাঠান</string>
+    <string name="pref_email_leave_update">ছুটি সংক্রান্ত ইমেইল পাঠান</string>
+    <string name="pref_in_app_service_request">নতুন সেবা অনুরোধ অ্যাপে জানান</string>
+    <string name="pref_in_app_status_change">স্ট্যাটাস বদল অ্যাপে জানান</string>
+    <string name="pref_email_marketing">প্রচারমূলক ইমেইল পাঠান</string>
+    <string name="error_preferences_load_failed">আপনার পছন্দগুলো লোড করা যায়নি</string>
+    <string name="error_preferences_update_failed">আপনার পছন্দগুলো সংরক্ষণ করা যায়নি</string>
+    <string name="preferences_updated">পছন্দ সংরক্ষিত হয়েছে</string>
+
+    <string name="title_notifications">নোটিফিকেশন</string>
+    <string name="action_mark_all_read">সব পঠিত করুন</string>
+    <string name="empty_notifications">এখনও কোনো নোটিফিকেশন নেই</string>
+    <string name="empty_notifications_subtitle">আপডেট ও সতর্কবার্তা এখানে দেখাবে।</string>
+    <string name="error_notifications_load_failed">নোটিফিকেশন লোড করা যায়নি</string>
+
+    <string name="title_help_center">সহায়তা কেন্দ্র</string>
+    <string name="hint_search_articles">নিবন্ধ খুঁজুন…</string>
+    <string name="empty_articles">কোনো নিবন্ধ পাওয়া যায়নি</string>
+    <string name="empty_articles_subtitle">অন্য কিছু খুঁজে দেখুন অথবা পরে আবার চেষ্টা করুন।</string>
+    <string name="error_articles_load_failed">নিবন্ধ লোড করা যায়নি</string>
+    <string name="action_mark_helpful">এটি কাজে লেগেছে</string>
+    <string name="marked_helpful">মতামতের জন্য ধন্যবাদ</string>
+
+    <string name="action_use_biometric">আঙুলের ছাপ দিয়ে খুলুন</string>
+    <string name="biometric_prompt_title">Zuhoo আনলক করুন</string>
+    <string name="biometric_prompt_subtitle">লগ ইন করতে আঙুলের ছাপ ব্যবহার করুন</string>
+    <string name="error_biometric_failed">আঙুলের ছাপ চেনা যায়নি</string>
+
+    <string name="action_change_language">ভাষা</string>
+    <string name="dialog_language_title">ভাষা বাছুন</string>
+
+    <string name="title_attendance">উপস্থিতি</string>
+    <string name="action_check_in_out">চেক ইন / আউট</string>
+    <string name="action_check_in">চেক ইন</string>
+    <string name="action_check_out">চেক আউট</string>
+    <string name="label_selfie">সেলফি</string>
+    <string name="action_take_selfie">সেলফি তুলুন</string>
+    <string name="status_location_pending">আপনার অবস্থান বের করা হচ্ছে…</string>
+    <string name="status_location_captured">অবস্থান পাওয়া গেছে</string>
+    <string name="status_location_unavailable">আপনার অবস্থান পাওয়া যায়নি — GPS সেটিংস পরীক্ষা করুন</string>
+    <string name="status_not_checked_in">আজ এখনও চেক ইন করেননি</string>
+    <string name="status_checked_in_at">%1$s সময়ে চেক ইন করা হয়েছে</string>
+    <string name="status_checked_out">চেক ইন %1$s, চেক আউট %2$s</string>
+    <string name="status_location_flagged">পর্যালোচনার জন্য চিহ্নিত: %1$s</string>
+    <string name="error_attendance_load_failed">আজকের উপস্থিতি লোড করা যায়নি</string>
+    <string name="error_check_in_failed">চেক-ইন ব্যর্থ হয়েছে</string>
+    <string name="error_check_out_failed">চেক-আউট ব্যর্থ হয়েছে</string>
+    <string name="check_in_success">চেক ইন সম্পন্ন</string>
+    <string name="check_out_success">চেক আউট সম্পন্ন</string>
+    <string name="error_selfie_failed">সেলফি আপলোড করা যায়নি</string>
+    <string name="error_camera_permission_required">চেক-ইন সেলফি তোলার জন্য ক্যামেরা অনুমতি প্রয়োজন</string>
+
+    <string name="action_attendance_location_settings">উপস্থিতির অবস্থান</string>
+    <string name="title_attendance_location_settings">উপস্থিতির অবস্থান</string>
+    <string name="attendance_location_settings_explainer">এই সীমার বাইরে থেকে চেক ইন করা কর্মীদের আটকানো হবে না, বরং আপনার পর্যালোচনার জন্য চিহ্নিত করা হবে।</string>
+    <string name="action_enforce_gps">চেক ইন করতে কর্মীদের অফিসের কাছে থাকা আবশ্যক করুন</string>
+    <string name="action_use_current_location">আমার বর্তমান অবস্থান ব্যবহার করুন</string>
+    <string name="hint_office_latitude">অফিসের অক্ষাংশ (latitude)</string>
+    <string name="hint_office_longitude">অফিসের দ্রাঘিমাংশ (longitude)</string>
+    <string name="hint_radius_meters">অনুমোদিত সীমা (মিটার)</string>
+    <string name="error_settings_load_failed">সেটিংস লোড করা যায়নি</string>
+    <string name="error_settings_save_failed">সেটিংস সংরক্ষণ করা যায়নি</string>
+    <string name="error_office_location_required">প্রথমে অফিসের অবস্থান সেট করুন, অথবা এনফোর্সমেন্ট বন্ধ রাখুন</string>
+    <string name="error_invalid_location_input">অবস্থান ও সীমার জন্য সঠিক সংখ্যা লিখুন</string>
+    <string name="settings_saved">সেটিংস সংরক্ষিত হয়েছে</string>
+
+    <string name="title_my_leave">আমার ছুটি</string>
+    <string name="action_leave_requests">আমার ছুটি</string>
+    <string name="action_request_leave">ছুটির আবেদন</string>
+    <string name="empty_leave_requests">এখনও কোনো ছুটির আবেদন নেই</string>
+    <string name="empty_leave_requests_subtitle">আপনার জমা দেওয়া আবেদনগুলো এখানে দেখাবে।</string>
+    <string name="error_leave_requests_load_failed">ছুটির আবেদন লোড করা যায়নি</string>
+    <string name="leave_date_range_format">%1$s থেকে %2$s (%3$d দিন)</string>
+    <string name="leave_balance_format">%1$d / %2$d দিন বাকি</string>
+    <string name="label_rejection_reason">কারণ</string>
+    <string name="action_cancel_leave">বাতিল করুন</string>
+    <string name="dialog_cancel_leave_title">ছুটির আবেদন বাতিল করবেন?</string>
+    <string name="dialog_cancel_leave_message">এই ছুটির আবেদন বাতিল হয়ে যাবে।</string>
+    <string name="leave_request_cancelled">ছুটির আবেদন বাতিল হয়েছে</string>
+    <string name="error_leave_cancel_failed">ছুটির আবেদন বাতিল করা যায়নি</string>
+
+    <string name="title_create_leave_request">ছুটির আবেদন</string>
+    <string name="hint_leave_type">ছুটির ধরন</string>
+    <string name="hint_start_date">শুরুর তারিখ</string>
+    <string name="hint_end_date">শেষের তারিখ</string>
+    <string name="hint_reason_optional">কারণ (ঐচ্ছিক)</string>
+    <string name="action_submit_leave_request">আবেদন জমা দিন</string>
+    <string name="leave_request_submitted">ছুটির আবেদন জমা হয়েছে</string>
+    <string name="error_leave_request_failed">ছুটির আবেদন জমা দেওয়া যায়নি</string>
+    <string name="error_start_date_required">শুরুর তারিখ বাছুন</string>
+    <string name="error_end_date_required">শেষের তারিখ বাছুন</string>
+    <string name="error_end_date_before_start">শেষের তারিখ শুরুর তারিখের আগে হতে পারবে না</string>
+
+    <string name="title_leave_approvals">ছুটি অনুমোদন</string>
+    <string name="action_leave_approvals">ছুটি অনুমোদন</string>
+    <string name="empty_leave_approvals">পর্যালোচনার জন্য কোনো ছুটির আবেদন নেই</string>
+    <string name="empty_leave_approvals_subtitle">সব সম্পন্ন — নতুন আবেদন এলে এখানে দেখাবে।</string>
+    <string name="error_leave_approvals_load_failed">ছুটির আবেদন লোড করা যায়নি</string>
+    <string name="action_approve">অনুমোদন</string>
+    <string name="action_reject">প্রত্যাখ্যান</string>
+    <string name="dialog_reject_leave_title">প্রত্যাখ্যানের কারণ</string>
+    <string name="hint_rejection_reason">কারণ</string>
+    <string name="error_rejection_reason_required">ছুটি প্রত্যাখ্যান করতে একটি কারণ লেখা আবশ্যক</string>
+    <string name="error_leave_review_failed">সিদ্ধান্ত সংরক্ষণ করা যায়নি</string>
+    <string name="leave_approved">ছুটির আবেদন অনুমোদিত হয়েছে</string>
+    <string name="leave_rejected">ছুটির আবেদন প্রত্যাখ্যাত হয়েছে</string>
+
+    <string name="status_approved">অনুমোদিত</string>
+
+    <string name="leave_type_annual">বার্ষিক</string>
+    <string name="leave_type_sick">অসুস্থতাজনিত</string>
+    <string name="leave_type_casual">নৈমিত্তিক</string>
+    <string name="leave_type_maternity">মাতৃত্বকালীন</string>
+    <string name="leave_type_paternity">পিতৃত্বকালীন</string>
+    <string name="leave_type_unpaid">বেতনহীন</string>
+    <string name="leave_type_compensatory">ক্ষতিপূরণমূলক</string>
+    <string name="leave_type_emergency">জরুরি</string>
+    <string name="leave_type_other">অন্যান্য</string>
+
+    <string name="title_my_payslips">আমার পে-স্লিপ</string>
+    <string name="action_payslips">আমার পে-স্লিপ</string>
+    <string name="empty_payslips">এখনও কোনো পে-স্লিপ নেই</string>
+    <string name="empty_payslips_subtitle">আপনাকে ইস্যু করা পে-স্লিপগুলো এখানে দেখাবে।</string>
+    <string name="error_payslips_load_failed">পে-স্লিপ লোড করা যায়নি</string>
+    <string name="payslip_net_salary_format">নিট বেতন: %1$s</string>
+    <string name="downloading_pdf">ডাউনলোড হচ্ছে…</string>
+    <string name="payroll_status_draft">খসড়া</string>
+    <string name="payroll_status_approved">অনুমোদিত</string>
+    <string name="payroll_status_paid">পরিশোধিত</string>
+
+    <string name="title_notice_board">নোটিশ বোর্ড</string>
+    <string name="action_notice_board">নোটিশ বোর্ড</string>
+    <string name="label_upcoming_holidays">আসন্ন ছুটি</string>
+    <string name="label_announcements">ঘোষণা</string>
+    <string name="empty_announcements">এখন কোনো ঘোষণা নেই</string>
+    <string name="empty_announcements_subtitle">নতুন কোম্পানির ঘোষণা এখানে দেখাবে।</string>
+    <string name="error_announcements_load_failed">ঘোষণা লোড করা যায়নি</string>
+
+    <string name="title_my_expenses">আমার খরচ</string>
+    <string name="action_expenses">আমার খরচ</string>
+    <string name="action_new_expense">নতুন খরচ</string>
+    <string name="empty_expenses">এখনও কোনো খরচের দাবি নেই</string>
+    <string name="empty_expenses_subtitle">আপনার জমা দেওয়া খরচের দাবিগুলো এখানে দেখাবে।</string>
+    <string name="error_expenses_load_failed">খরচের তথ্য লোড করা যায়নি</string>
+    <string name="label_approval_notes">মন্তব্য</string>
+    <string name="expense_status_paid">পরিশোধিত</string>
+
+    <string name="title_create_expense">নতুন খরচ</string>
+    <string name="hint_expense_description">বিবরণ</string>
+    <string name="hint_expense_amount">পরিমাণ</string>
+    <string name="hint_expense_category">ক্যাটাগরি</string>
+    <string name="hint_vendor_optional">কাকে পরিশোধ করা হয়েছে (ঐচ্ছিক)</string>
+    <string name="hint_expense_date">খরচের তারিখ</string>
+    <string name="action_attach_receipt">রসিদ সংযুক্ত করুন</string>
+    <string name="action_submit_expense">দাবি জমা দিন</string>
+    <string name="expense_submitted">খরচের দাবি জমা হয়েছে</string>
+    <string name="error_expense_submit_failed">খরচের দাবি জমা দেওয়া যায়নি</string>
+    <string name="error_description_required">বিবরণ লিখুন</string>
+    <string name="error_amount_required">পরিমাণ লিখুন</string>
+    <string name="error_expense_date_required">খরচের তারিখ বাছুন</string>
+
+    <string name="expense_category_travel">ভ্রমণ</string>
+    <string name="expense_category_meals">খাবার</string>
+    <string name="expense_category_office_supplies">অফিস সরঞ্জাম</string>
+    <string name="expense_category_transport">যাতায়াত</string>
+    <string name="expense_category_accommodation">থাকার ব্যবস্থা</string>
+    <string name="expense_category_licensing">লাইসেন্স</string>
+    <string name="expense_category_other">অন্যান্য</string>
+
+    <string name="title_expense_approvals">খরচ অনুমোদন</string>
+    <string name="action_expense_approvals">খরচ অনুমোদন</string>
+    <string name="empty_expense_approvals">পর্যালোচনার জন্য কোনো খরচের দাবি নেই</string>
+    <string name="empty_expense_approvals_subtitle">কর্মীদের জমা দেওয়া দাবিগুলো এখানে দেখাবে।</string>
+    <string name="error_expense_approvals_load_failed">খরচের তথ্য লোড করা যায়নি</string>
+    <string name="dialog_reject_expense_title">প্রত্যাখ্যানের কারণ</string>
+    <string name="error_expense_review_failed">সিদ্ধান্ত সংরক্ষণ করা যায়নি</string>
+    <string name="expense_approved">খরচ অনুমোদিত হয়েছে</string>
+    <string name="expense_rejected">খরচ প্রত্যাখ্যাত হয়েছে</string>
+
+    <string name="title_company_overview">কোম্পানির সারসংক্ষেপ</string>
+    <string name="action_company_overview">কোম্পানির সারসংক্ষেপ</string>
+    <string name="label_finance_this_month">অর্থনৈতিক — এই মাস</string>
+    <string name="label_hr_today">এইচআর — আজ</string>
+    <string name="stat_revenue">আয়</string>
+    <string name="stat_expenses">খরচ</string>
+    <string name="stat_net_profit">নিট মুনাফা</string>
+    <string name="stat_cash_collected">আদায়কৃত অর্থ</string>
+    <string name="stat_outstanding">বকেয়া</string>
+    <string name="stat_overdue">মেয়াদোত্তীর্ণ বকেয়া</string>
+    <string name="stat_total_employees">মোট কর্মী</string>
+    <string name="stat_present_today">আজ উপস্থিত</string>
+    <string name="stat_on_leave_today">আজ ছুটিতে</string>
+    <string name="stat_absent_today">আজ অনুপস্থিত</string>
+    <string name="stat_open_positions">খালি পদ</string>
+    <string name="stat_pending_leave_approvals">অপেক্ষমাণ ছুটি অনুমোদন</string>
+    <string name="error_finance_dashboard_unavailable">আর্থিক তথ্য পাওয়া যায়নি (অনুমতি নেই)</string>
+    <string name="error_hr_dashboard_unavailable">এইচআর তথ্য পাওয়া যায়নি (অনুমতি নেই)</string>
+
+    <string name="title_my_leads">আমার লিড</string>
+    <string name="action_my_leads">আমার লিড</string>
+    <string name="empty_leads">আপনাকে কোনো লিড দেওয়া হয়নি</string>
+    <string name="empty_leads_subtitle">আপনাকে দেওয়া লিডগুলো এখানে দেখাবে।</string>
+    <string name="error_leads_load_failed">লিড লোড করা যায়নি</string>
+    <string name="label_estimated_value">আনুমানিক মূল্য</string>
+    <string name="lead_status_new">নতুন</string>
+    <string name="lead_status_contacted">যোগাযোগ করা হয়েছে</string>
+    <string name="lead_status_qualified">উপযুক্ত</string>
+    <string name="lead_status_disqualified">অনুপযুক্ত</string>
+    <string name="lead_status_updated">স্ট্যাটাস আপডেট হয়েছে</string>
+    <string name="error_lead_status_update_failed">লিডের স্ট্যাটাস আপডেট করা যায়নি</string>
+
+    <string name="title_search">খুঁজুন</string>
+    <string name="action_search">খুঁজুন</string>
+    <string name="hint_search_query">লিড, ক্লায়েন্ট, ইনভয়েস, রিকোয়েস্ট খুঁজুন…</string>
+    <string name="empty_search_prompt_title">যেকোনো কিছু খুঁজুন</string>
+    <string name="empty_search_prompt_subtitle">লিড, ক্লায়েন্ট, ইনভয়েস, টিকেট এবং আরও অনেক কিছু খুঁজুন।</string>
+    <string name="empty_search_results">কোনো ফলাফল পাওয়া যায়নি</string>
+    <string name="empty_search_results_subtitle">ভিন্ন কোনো শব্দ দিয়ে চেষ্টা করুন।</string>
+    <string name="error_search_failed">খোঁজা যায়নি</string>
+    <string name="search_type_lead">লিড</string>
+    <string name="search_type_client">ক্লায়েন্ট</string>
+    <string name="search_type_opportunity">সুযোগ</string>
+    <string name="search_type_service_request">সার্ভিস রিকোয়েস্ট</string>
+    <string name="search_type_ticket">টিকেট</string>
+    <string name="search_type_invoice">ইনভয়েস</string>
+
+    <string name="title_wallet">ওয়ালেট</string>
+    <string name="action_wallet">ওয়ালেট</string>
+    <string name="label_total_available">মোট ব্যবহারযোগ্য</string>
+    <string name="label_credit_balance">ক্রেডিট ব্যালেন্স</string>
+    <string name="label_recent_transactions">সাম্প্রতিক লেনদেন</string>
+    <string name="empty_wallet_transactions">এখনও কোনো লেনদেন নেই</string>
+    <string name="empty_wallet_transactions_subtitle">আপনার পেমেন্ট ও লেনদেন এখানে দেখাবে।</string>
+    <string name="error_wallet_load_failed">ওয়ালেট লোড করা যায়নি</string>
+
+    <string name="title_company_directory">কোম্পানি ডিরেক্টরি</string>
+    <string name="action_directory">ডিরেক্টরি</string>
+    <string name="empty_directory">কোনো কর্মী পাওয়া যায়নি</string>
+    <string name="empty_directory_subtitle">কর্মী যোগ করা হলে তারা এখানে দেখাবে।</string>
+    <string name="error_directory_load_failed">ডিরেক্টরি লোড করা যায়নি</string>
+
+    <string name="title_my_timesheet">আমার টাইমশিট</string>
+    <string name="action_my_timesheet">আমার টাইমশিট</string>
+    <string name="action_log_time">সময় লগ করুন</string>
+    <string name="title_log_time">সময় লগ করুন</string>
+    <string name="empty_timesheet">এখনও কোনো সময় লগ করা হয়নি</string>
+    <string name="empty_timesheet_subtitle">আপনার কাজের সময় লগ করুন, তা এখানে দেখাবে।</string>
+    <string name="error_timesheet_load_failed">টাইমশিট লোড করা যায়নি</string>
+    <string name="error_timesheet_log_failed">এই এন্ট্রি লগ করা যায়নি</string>
+    <string name="timesheet_logged">সময় লগ হয়েছে</string>
+    <string name="hint_hours_worked">কাজের সময় (ঘণ্টা)</string>
+    <string name="hint_project_name_optional">প্রজেক্ট (ঐচ্ছিক)</string>
+</resources>

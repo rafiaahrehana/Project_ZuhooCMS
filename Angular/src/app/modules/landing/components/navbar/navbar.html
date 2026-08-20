@@ -1,0 +1,55 @@
+<!--
+  The mobile menu no longer flips the whole bar to bg-white. Opening it over
+  the navy hero used to flash the entire navbar white; the panel is dark glass
+  instead, which also lets every [ngClass] below key off isScrolled() alone.
+-->
+<!-- The whole page is charcoal now, so the bar never flips light: it goes
+     from transparent to dark glass on scroll and text stays white. -->
+<nav class="navbar navbar-expand-lg fixed-top transition-all" [ngClass]="{'scrolled': isScrolled(), 'bg-transparent': !isScrolled()}">
+  <div class="container-fluid px-4 px-lg-5">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="#">
+      <img src="/brand/logo-icon.png" alt="ZuhooCMS" class="logo-icon rounded-3" />
+      <span class="fs-4 tracking-tight fw-bold text-white">Zuhoo<span class="brand-accent">CMS</span></span>
+    </a>
+
+    <button class="navbar-toggler border-0 shadow-none" type="button"
+            (click)="toggleMobileMenu()"
+            aria-label="Toggle navigation"
+            aria-controls="landingNav"
+            [attr.aria-expanded]="isMobileMenuOpen()">
+      <i class="bi fs-2 text-white" [ngClass]="isMobileMenuOpen() ? 'bi-x' : 'bi-list'"></i>
+    </button>
+
+    <div id="landingNav" class="collapse navbar-collapse" [ngClass]="{'show': isMobileMenuOpen()}">
+      <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-4 fw-medium">
+        <li class="nav-item">
+          <a class="nav-link text-white-50 text-white-hover" href="javascript:void(0)" (click)="scrollTo('features', $event)">Features</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white-50 text-white-hover" href="javascript:void(0)" (click)="scrollTo('product', $event)">Product</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white-50 text-white-hover" href="javascript:void(0)" (click)="scrollTo('modules', $event)">Modules</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white-50 text-white-hover" href="javascript:void(0)" (click)="scrollTo('pricing', $event)">Pricing</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white-50 text-white-hover" href="javascript:void(0)" (click)="scrollTo('faq', $event)">FAQ</a>
+        </li>
+      </ul>
+      <div class="d-flex align-items-center gap-3 flex-column flex-lg-row mt-3 mt-lg-0">
+        <a routerLink="/auth/login" class="nav-login text-decoration-none fw-medium text-white">Login</a>
+        <div class="dropdown">
+          <a class="btn-accent-solid text-decoration-none dropdown-toggle" href="javascript:void(0)" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Get Started
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-bos">
+            <li><a class="dropdown-item" routerLink="/auth/register"><i class="bi bi-building me-2"></i>Company Registration</a></li>
+            <li><a class="dropdown-item" routerLink="/auth/register-client"><i class="bi bi-person-badge me-2"></i>Client Registration</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

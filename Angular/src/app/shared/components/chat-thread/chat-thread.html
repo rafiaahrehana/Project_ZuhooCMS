@@ -1,0 +1,84 @@
+<div class="chat-thread">
+  <div class="chat-thread__status">
+    <span class="chat-thread__dot" [class.chat-thread__dot--live]="connected"></span>
+    {{ connected ? 'Live' : 'Connecting…' }}
+  </div>
+
+  <div class="chat-thread__scroll">
+    @if (!messages.length) {
+      <div class="chat-thread__empty">
+        <i class="bi bi-chat-square-text"></i>
+        <p>{{ emptyMessage }}</p>
+      </div>
+    }
+    @for (m of messages; track m.id) {
+      <div class="chat-thread__row" [class.chat-thread__row--own]="isOwn(m)">
+        @if (!isOwn(m)) {
+          <div class="chat-thread__avatar">{{ initials(m.authorName) }}</div>
+        }
+        <div class="chat-thread__bubble-wrap">
+          @if (!isOwn(m)) {
+            <div class="chat-thread__author">{{ m.authorName }}</div>
+          }
+          <div
+            class="chat-thread__bubble"
+            [class.chat-thread__bubble--own]="isOwn(m)"
+            [class.chat-thread__bubble--internal]="m.internal"
+          >
+            @if (m.internal) {
+              <span class="chat-thread__internal-tag"><i class="bi bi-eye-slash-fill"></i> Internal note</span>
+            }
+            @if (m.content) { <div class="chat-thread__text">{{ m.content }}</div> }
+            @if (m.attachmentUrl) {
+              <a class="chat-thread__attachment" [href]="m.attachmentUrl" target="_blank" rel="noopener">
+                @if (isImageAttachment(m)) {
+                  <img [src]="m.attachmentUrl" [alt]="m.attachmentFileName || 'Attachment'" class="chat-thread__attachment-img" />
+                } @else {
+                  <span class="chat-thread__attachment-file"><i class="bi bi-paperclip"></i>{{ m.attachmentFileName || 'Attachment' }}</span>
+                }
+              </a>
+            }
+          </div>
+          <div class="chat-thread__time">{{ m.createdAt | date: 'MMM d, h:mm a' }}</div>
+        </div>
+      </div>
+    }
+    <div #scrollAnchor></div>
+  </div>
+
+  @if (pendingAttachmentName || attachmentError) {
+    <div class="chat-thread__pending-attachment">
+      @if (pendingAttachmentName) {
+        <span class="chat-thread__pending-chip">
+          <i class="bi bi-paperclip"></i>
+          <span class="text-truncate">{{ pendingAttachmentName }}</span>
+          <button type="button" (click)="clearAttachment()" aria-label="Remove attachment"><i class="bi bi-x-lg"></i></button>
+        </span>
+      }
+      @if (attachmentError) { <span class="chat-thread__pending-error">{{ attachmentError }}</span> }
+    </div>
+  }
+
+  <div class="chat-thread__composer">
+    @if (allowAttachments) {
+      <input #fileInput type="file" accept="image/*" class="chat-thread__file-input" (change)="onFileSelected($event)" />
+      <button class="chat-thread__attach" type="button" [disabled]="disabled" (click)="openFilePicker()" aria-label="Attach a screenshot">
+        <i class="bi bi-paperclip"></i>
+      </button>
+    }
+    <input
+      class="chat-thread__input"
+      [(ngModel)]="draft"
+      [placeholder]="placeholder"
+      [disabled]="disabled"
+      (keyup.enter)="submit()"
+    />
+    <button class="chat-thread__send" [disabled]="!draft.trim() || disabled" (click)="submit()" type="button">
+      @if (sending) {
+        <span class="spinner-border spinner-border-sm"></span>
+      } @else {
+        <i class="bi bi-send-fill"></i>
+      }
+    </button>
+  </div>
+</div>

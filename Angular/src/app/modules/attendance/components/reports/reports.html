@@ -1,0 +1,69 @@
+<div class="container-fluid py-3">
+  <div class="mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0">Attendance Reports</h4>
+  </div>
+  @if (error) { <div class="alert alert-warning py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#daily">Daily</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#monthly" (click)="loadMonthly()">Monthly</a></li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="daily">
+      <div class="d-flex gap-2 mb-3 align-items-center">
+        <input type="date" class="form-control form-control-sm" style="width:180px" [(ngModel)]="selectedDate" />
+        <button class="btn btn-primary btn-sm" (click)="loadDaily()">Load</button>
+      </div>
+      @if (dailyReport) {
+      <div class="text-muted small mb-2">{{ dailyReport.reportDate }}</div>
+      <div class="row g-3">
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Total Employees" [value]="dailyReport.totalEmployees" icon="bi-people" variant="primary" />
+        </div>
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Present" [value]="dailyReport.presentCount" icon="bi-check-circle" variant="success" />
+        </div>
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Late" [value]="dailyReport.lateCount" icon="bi-clock-history" variant="info" />
+        </div>
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Absent" [value]="dailyReport.absentCount" icon="bi-x-circle" variant="danger" />
+        </div>
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="On Leave" [value]="dailyReport.onLeaveCount" icon="bi-calendar-x" variant="purple" />
+        </div>
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Attendance %" [value]="dailyReport.attendancePercentage + '%'" icon="bi-graph-up" variant="dark" />
+        </div>
+      </div>
+      }
+    </div>
+    <div class="tab-pane fade" id="monthly">
+      <div class="d-flex gap-2 mb-3 align-items-center">
+        <input type="month" class="form-control form-control-sm" style="width:180px" [(ngModel)]="selectedMonth" />
+        <button class="btn btn-primary btn-sm" (click)="loadMonthly()">Load</button>
+      </div>
+      @if (monthlyReport) {
+      <div class="text-muted small mb-2">{{ monthlyReport.month }}/{{ monthlyReport.year }}</div>
+      <div class="row g-3">
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Working Days" [value]="monthlyReport.totalWorkingDays" icon="bi-calendar3" variant="primary" />
+        </div>
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Present" [value]="monthlyReport.presentCount" icon="bi-check-circle" variant="success" />
+        </div>
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Late" [value]="monthlyReport.lateCount" icon="bi-clock-history" variant="info" />
+        </div>
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Absent" [value]="monthlyReport.absentCount" icon="bi-x-circle" variant="danger" />
+        </div>
+        <div class="col-6 col-lg-3">
+          <app-stat-card label="Attendance %" [value]="monthlyReport.attendancePercentage + '%'" icon="bi-graph-up" variant="dark" />
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+</div>

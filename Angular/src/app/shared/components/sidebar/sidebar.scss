@@ -1,0 +1,324 @@
+// Light rail. Every colour is a token so the whole sidebar follows the palette
+// (and, later, a dark-mode token swap) without touching this file.
+
+:host {
+  width: 240px;
+  flex-shrink: 0;
+  height: 100%;
+  background-color: var(--bos-sidebar-bg);
+  display: block;
+}
+
+.sidebar-wrapper {
+  transition: all 0.3s ease;
+  font-family: var(--bs-body-font-family);
+  user-select: none;
+  background-color: var(--bos-sidebar-bg);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.sidebar-scroll {
+  // Was Bootstrap's .overflow-y-auto/.overflow-x-hidden utility classes -
+  // moved here (not !important) so the collapsed-rail tooltip override in
+  // global.scss can actually beat it. Bootstrap's utilities compile with
+  // !important, which silently defeated that override.
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+
+  // Thin and out of the way by default; only darkens under the cursor,
+  // rather than sitting as a visible bar the whole time.
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 20px;
+  }
+  &:hover::-webkit-scrollbar-thumb { background: #94A3B8; }
+}
+
+// ── Search ──────────────────────────────────────────────────
+// Only shown to owners/admins (the grouped, ~70-item menu) - the
+// permission-filtered flat view an employee sees rarely needs it.
+.sidebar-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.2rem 0.75rem 0.6rem;
+  padding: 0 0.65rem;
+  height: 36px;
+  background: var(--bos-sidebar-hover);
+  border: 1px solid var(--bos-border);
+  border-radius: 9px;
+  transition: border-color var(--bos-transition);
+
+  &:focus-within {
+    border-color: var(--bos-brand);
+  }
+
+  i {
+    color: var(--bos-muted);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.83rem;
+    color: var(--bos-text);
+
+    &::placeholder { color: var(--bos-muted); }
+  }
+}
+
+.sidebar-search-clear {
+  border: none;
+  background: transparent;
+  color: var(--bos-muted);
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+
+  &:hover { color: var(--bos-text); }
+
+  i { font-size: 0.7rem; }
+}
+
+.sidebar-search-empty {
+  padding: 0.75rem 1.1rem;
+  font-size: 0.83rem;
+  color: var(--bos-muted);
+}
+
+// ── Top-level row (both plain links and group parents) ──────
+.sidebar-link {
+  color: var(--bos-sidebar-text);
+  transition: background-color var(--bos-transition), color var(--bos-transition);
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  // Min-height, not height: a label that wraps grows the row instead of
+  // spilling out of it. 44px matches the density of Linear/Atlassian/Zoho -
+  // tight enough that a 12-group menu doesn't need excess scrolling, tall
+  // enough for a comfortable click target.
+  min-height: 44px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 10px;
+  margin: 0.1rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+
+  i {
+    // 20px - Bootstrap Icons are already one consistent outline weight
+    // across the set, so sizing them up (from 1.05rem/16.8px) is what was
+    // actually missing for them to read at enterprise-app scale.
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    transition: color var(--bos-transition);
+  }
+
+  // Scoped so it simply does not apply on a filled row, rather than being
+  // out-shouted by an !important override there. One rule owning the grey state
+  // is easier to reason about than two rules fighting.
+  &:not(.active):not(.is-open) i {
+    color: var(--bos-muted);
+  }
+
+  &:hover {
+    background-color: var(--bos-sidebar-hover);
+    color: var(--bos-brand);
+    i { color: var(--bos-brand); }
+  }
+
+  &.active {
+    background: var(--bos-gradient-accent);
+    font-weight: 600;
+    // Glow tinted with the accent, not black - a neutral shadow under a
+    // saturated pill reads as dirt.
+    box-shadow: 0 14px 26px -18px rgb(var(--bos-brand-rgb) / 0.9);
+  }
+}
+
+// Group parent: same row treatment, plus a chevron that rotates when open.
+.sidebar-parent {
+  text-align: left;
+
+  // The template's w-100 is 100% of the rail, but .sidebar-link also carries
+  // 0.5rem side margins - together the row ran 1rem wider than the rail and
+  // the label/chevron clipped on longer names ("Company Services").
+  width: calc(100% - 1rem) !important;
+
+  // Tighter than the base row so the longest group names ("Company Services",
+  // "Human Resources") stay on ONE line inside the narrower width; anything
+  // longer ellipsizes rather than wrapping the pill to two lines.
+  gap: 0.55rem;
+  padding-left: 0.7rem;
+  padding-right: 0.7rem;
+
+  > span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .sidebar-chevron {
+    font-size: 0.75rem;
+    margin-left: auto;
+    transition: transform var(--bos-transition);
+  }
+
+  // An open group is the section you are in, so it carries the same filled pill
+  // as an active leaf. The child below it still marks itself with the blue dash,
+  // which is a different enough signal to read as "within this section".
+  &.is-open {
+    background: var(--bos-gradient-accent);
+    color: var(--bos-sidebar-active-fg) !important;
+    font-weight: 600;
+    box-shadow: 0 14px 26px -18px rgb(var(--bos-brand-rgb) / 0.9);
+
+    i { color: var(--bos-sidebar-active-fg) !important; }
+    .sidebar-chevron { transform: rotate(180deg); }
+
+    &:hover {
+      color: var(--bos-sidebar-active-fg) !important;
+      i { color: var(--bos-sidebar-active-fg) !important; }
+    }
+  }
+}
+
+// ── Children ────────────────────────────────────────────────
+// A guide rail runs down the left of the group so the indent reads as
+// containment rather than as arbitrary padding.
+.sidebar-submenu {
+  position: relative;
+  margin: 0.1rem 0.5rem 0.25rem 1.6rem;
+  padding-left: 0.9rem;
+  border-left: 1px solid var(--bos-border);
+}
+
+// Sub-section caption inside an open group (Company Services: Catalog /
+// Operations / Automation...). A caption, not a control - smaller, uppercase,
+// muted, not clickable. Tight 6-8px gap to its first item so the caption
+// reads as that item's heading, and a faint divider above every section
+// after the first so the boundary doesn't rely on whitespace alone.
+.sidebar-section-label {
+  padding: 0.45rem 0.5rem 0.3rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #7B8794;
+  user-select: none;
+
+  &:not(:first-child) {
+    border-top: 1px solid var(--bos-border-light, #F1F5F9);
+    margin-top: 0.4rem;
+  }
+}
+
+.sidebar-sublink {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 30px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748B;
+  text-decoration: none;
+  transition: color var(--bos-transition), background-color var(--bos-transition);
+
+  // Each child carries its own icon rather than a generic dash. A dash told you
+  // only "this is a child"; the icon says which child, which is what you are
+  // actually scanning for in a list of twelve.
+  .sublink-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    color: #94A3B8;
+    transition: color var(--bos-transition);
+  }
+
+  &:hover {
+    color: var(--bos-brand);
+    .sublink-icon { color: var(--bos-brand); }
+  }
+
+  // Enterprise-pattern active state: soft brand wash + brand ink + a left
+  // accent bar, not just a text-color flip.
+  &.active {
+    color: var(--bos-brand);
+    font-weight: 700;
+    background: var(--bos-brand-soft);
+    border-left: 3px solid var(--bos-brand);
+    border-radius: 0 8px 8px 0;
+    padding-left: calc(0.5rem - 3px);
+
+    .sublink-icon { color: var(--bos-brand); }
+  }
+}
+
+// ── Section caption (e.g. APPS) ─────────────────────────────
+// Trailing rule so the caption reads as a divider with a label on it.
+.sidebar-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--bos-sidebar-muted);
+  padding: 0.9rem 0.9rem 0.3rem;
+
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--bos-border);
+  }
+}
+
+// Upgrade card. Was white-on-translucent for the old dark rail; on a light
+// surface it needs its own tinted background to stay visible.
+.upgrade-divider {
+  border-top: 1px solid var(--bos-sidebar-border);
+}
+
+.upgrade-card {
+  background: var(--bos-sidebar-hover);
+  border: 1px solid var(--bos-border);
+  color: var(--bos-text);
+  cursor: pointer;
+  transition: border-color var(--bos-transition), background-color var(--bos-transition);
+
+  &:hover {
+    border-color: var(--bos-brand);
+    color: var(--bos-text);
+  }
+
+  // Just the "Upgrade Now" / "Upgrade" button, not the whole card - it was
+  // inheriting the global .btn-primary brand green.
+  .btn {
+    background: #4b5563;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+}
+
+.upgrade-gem {
+  width: 22px;
+  height: 22px;
+  background: var(--bos-brand-soft);
+  color: var(--bos-brand);
+  flex-shrink: 0;
+}

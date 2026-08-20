@@ -1,0 +1,194 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-clock me-2"></i>Timesheets</h4>
+      <p class="text-muted small mb-0">
+        {{ isReviewer ? 'Log your hours and review the team\'s submitted time' : 'Track work hours and billable time' }}
+      </p>
+    </div>
+    <button class="btn btn-primary-bos btn-sm px-3 fw-semibold" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i> Log Hours</button>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2 mt-3">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2 mt-3">{{ success }}</div> }
+
+  <div class="row g-3 mt-1 mb-1">
+    <div class="col-6 col-lg-3">
+      <app-stat-card label="Today's Hours" [value]="todayHours + ' hrs'" icon="bi-sun" variant="purple" sub="of work logged" />
+    </div>
+    <div class="col-6 col-lg-3">
+      <app-stat-card label="This Week" [value]="weekHours + ' hrs'" icon="bi-calendar-week" variant="success" sub="of work logged" />
+    </div>
+    <div class="col-6 col-lg-3">
+      <app-stat-card label="Billable Hours" [value]="weekBillableHours + ' hrs'" icon="bi-cash-coin" variant="info" sub="this week" />
+    </div>
+    <div class="col-6 col-lg-3">
+      <app-stat-card label="Overtime" [value]="weekOvertimeHours + ' hrs'" icon="bi-hourglass-split" variant="danger" [sub]="pendingCount + ' pending entries'" />
+    </div>
+  </div>
+
+  <!-- Log / Edit modal -->
+  @if (showForm) {
+  <div #formSection class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">
+            <i class="bi bi-clock-history me-2 text-primary"></i>{{ editingId ? 'Edit Timesheet' : "Log Today's Work" }}
+          </h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Work Date *</label>
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="form.workDate" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Total Hours *</label>
+          <input type="number" step="0.5" min="0" class="form-control form-control-sm" [(ngModel)]="form.hoursWorked" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Billable Hours</label>
+          <input type="number" step="0.5" min="0" class="form-control form-control-sm" [(ngModel)]="form.billableHours" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Project / Client</label>
+          <input class="form-control form-control-sm" [(ngModel)]="form.projectName" placeholder="e.g. BusinessOS" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted mb-1">Task / Activity</label>
+          <input class="form-control form-control-sm" [(ngModel)]="form.taskDescription" placeholder="e.g. UI Design" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted mb-1">Notes</label>
+          <input class="form-control form-control-sm" [(ngModel)]="form.description" />
+        </div>
+        <div class="col-12">
+          <div class="border rounded-3 p-2 bg-light-subtle">
+            <label class="form-label small text-muted mb-1"><i class="bi bi-stars me-1 text-primary"></i>Not sure how to word it? Jot rough notes, AI will draft it</label>
+            <div class="d-flex gap-2">
+              <input class="form-control form-control-sm" [(ngModel)]="composeNotes"
+                     placeholder="e.g. worked on the login page, fixed a couple of bugs, ~3 hours"
+                     (keydown.enter)="$event.preventDefault(); composeWithAi()" />
+              @if (voiceSupported) {
+              <button type="button" class="btn btn-sm" [class.btn-outline-danger]="listening" [class.btn-outline-secondary]="!listening"
+                      title="Speak instead of typing" (click)="toggleVoiceInput()">
+                <i class="bi" [class.bi-mic-fill]="listening" [class.bi-mic]="!listening"></i>
+              </button>
+              }
+              <button type="button" class="btn btn-outline-primary btn-sm text-nowrap" [disabled]="!composeNotes.trim() || composing" (click)="composeWithAi()">
+                @if (composing) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-stars"></i> Compose }
+              </button>
+            </div>
+            @if (composeError) { <div class="text-danger small mt-1">{{ composeError }}</div> }
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.workDate || !form.hoursWorked" (click)="save()">Save Timesheet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (loading) { <app-loader /> }
+  @if (!loading && myTimesheets.length) {
+  <div class="card mt-3 shadow-sm border-0 rounded-4">
+    <div class="card-header bg-light border-bottom py-3 px-4 d-flex justify-content-between align-items-center rounded-top-4">
+      <span class="fw-bold text-dark"><i class="bi bi-list-ul me-2 text-primary"></i>{{ isReviewer ? 'Your Recent Entries' : 'My Recent Timesheets' }}</span>
+      <button class="btn btn-link btn-sm text-decoration-none fw-semibold p-0" [disabled]="!draftCount || submitting" (click)="submitForReview()">
+        @if (submitting) { Submitting&hellip; } @else { <i class="bi bi-send me-1"></i>Submit for Review @if (draftCount) { ({{ draftCount }}) } }
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Date</th><th>Project / Client</th><th>Task / Activity</th><th class="text-end">Hours</th><th class="text-end">Billable</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          @for (t of myTimesheets; track t.id) {
+          <tr>
+            <td class="small">
+              <div>{{ t.workDate | date:'MMM d, y' }}</div>
+              <div class="text-muted" style="font-size:11px;">{{ t.workDate | date:'EEEE' }}</div>
+            </td>
+            <td>{{ t.projectName || '-' }}</td>
+            <td class="small">{{ t.taskDescription || t.taskTitle || '-' }}</td>
+            <td class="text-end">{{ t.hoursWorked }}</td>
+            <td class="text-end">{{ t.billableHours }}</td>
+            <td><span class="badge {{ statusBadgeClass(t) }}">{{ statusLabel(t) }}</span></td>
+            <td class="text-end text-nowrap">
+              @if (t.status === 'NOT_SUBMITTED') {
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(t)"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-outline-danger btn-sm" (click)="deleteTarget = t"><i class="bi bi-trash"></i></button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end bg-white"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+  </div>
+  }
+  @if (!loading && !myTimesheets.length && !showForm) { <app-empty-state icon="bi-clock-history" message="No timesheet entries yet." /> }
+
+  <div class="card mt-4 shadow-sm border-0 rounded-4">
+    <div class="card-header bg-white border-bottom py-3 px-4 fw-bold text-dark rounded-top-4">
+      <i class="bi bi-people me-2 text-primary"></i>Manager Review
+    </div>
+    <div class="card-body p-4">
+      <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+        <div>
+          <label class="form-label small text-muted mb-1">Employee</label>
+          <select class="form-select form-select-sm" style="min-width:220px" [(ngModel)]="employeeIdFilter">
+            <option [ngValue]="undefined">Select employee</option>
+            @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option> }
+          </select>
+        </div>
+        <div>
+          <label class="form-label small text-muted mb-1">Week <span class="text-muted">(optional)</span></label>
+          <input type="week" class="form-control form-control-sm" [(ngModel)]="weekFilter" />
+        </div>
+        <button class="btn btn-primary-bos btn-sm px-3 fw-semibold" [disabled]="!employeeIdFilter" (click)="employeePage = 0; loadEmployeeTimesheets()">
+          <i class="bi bi-search me-1"></i>Load
+        </button>
+      </div>
+      @if (employeeLoading) { <app-loader /> }
+      @if (!employeeLoading && employeeTimesheets.length) {
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr><th>Date</th><th>Employee</th><th>Project / Client</th><th class="text-end">Hours</th><th class="text-end">Billable</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            @for (t of employeeTimesheets; track t.id) {
+            <tr>
+              <td class="small text-muted">{{ t.workDate | date:'mediumDate' }}</td>
+              <td>{{ t.employeeName || ('#' + t.employeeId) }}</td>
+              <td>{{ t.projectName || '-' }}</td>
+              <td class="text-end">{{ t.hoursWorked }}</td>
+              <td class="text-end">{{ t.billableHours }}</td>
+              <td><span class="badge {{ statusBadgeClass(t) }}">{{ managerStatusLabel(t) }}</span></td>
+              <td class="text-end">
+                @if (t.status === 'SUBMITTED') {
+                  <button *appHasPermission="'TIMESHEET_APPROVE'" class="btn btn-outline-success btn-sm" (click)="approve(t)">Approve</button>
+                } @else if (t.status === 'NOT_SUBMITTED') {
+                  <span class="text-muted small">Awaiting submission</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (!weekFilter) {
+      <div class="d-flex justify-content-end mt-2"><app-pagination [page]="employeePage" [totalPages]="employeeTotalPages" (pageChange)="goToEmployeePage($event)" /></div>
+      }
+      }
+      @if (!employeeLoading && !employeeTimesheets.length && employeeIdFilter) { <app-empty-state icon="bi-clock-history" message="No timesheets for this employee." /> }
+    </div>
+  </div>
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Timesheet" message="Delete this timesheet entry?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

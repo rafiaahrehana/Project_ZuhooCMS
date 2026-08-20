@@ -1,0 +1,236 @@
+<div class="container-fluid py-3">
+  <div class="ss-shell">
+
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <div class="ss-head">
+      <span class="ss-head-icon"><i class="bi bi-file-earmark-spreadsheet"></i></span>
+      <div class="ss-head-text">
+        <h4>Salary Sheet</h4>
+        <p>Overview of employee salary, allowances, deductions and net pay.</p>
+      </div>
+      <div class="ss-head-actions">
+        <div class="ss-select">
+          <i class="bi bi-calendar3"></i>
+          <select [(ngModel)]="month" (change)="load()" aria-label="Month">
+            @for (m of months; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+          </select>
+        </div>
+        <div class="ss-select">
+          <i class="bi bi-calendar3"></i>
+          <select [(ngModel)]="year" (change)="load()" aria-label="Year">
+            @for (y of years; track y) { <option [value]="y">{{ y }}</option> }
+          </select>
+        </div>
+        <button class="ss-export" [disabled]="exporting || loading || !sheet" (click)="exportPdf()"
+                title="Download the whole month as a PDF">
+          @if (exporting) {
+            <span class="spinner-border spinner-border-sm"></span>
+          } @else {
+            <i class="bi bi-file-earmark-pdf"></i>
+          }
+          PDF
+        </button>
+        <button class="ss-export" [disabled]="loading || !sheet" (click)="exportCsv()"
+                title="Download the whole month as an Excel-compatible CSV">
+          <i class="bi bi-file-earmark-excel"></i>
+          Excel
+        </button>
+      </div>
+    </div>
+
+    @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+    @if (loading) { <app-loader /> }
+
+    @if (!loading && sheet) {
+      <div class="ss-note ss-note-info">
+        <i class="bi bi-info-circle"></i>
+        <span>
+          All amounts are in BDT (&#2547;). Summary for {{ months[month - 1].label }} {{ year }},
+          calculated on {{ basisLabel }}.
+        </span>
+      </div>
+
+      @if (unconfiguredCount) {
+      <div class="ss-note ss-note-warn">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span>
+          {{ unconfiguredCount }} employee{{ unconfiguredCount === 1 ? ' has' : 's have' }} no salary structure for
+          this month, so they show as zero. They are listed rather than hidden.
+        </span>
+      </div>
+      }
+
+      <!-- ── Summary strip ────────────────────────────────── -->
+      <div class="ss-summary">
+        <div class="ss-summary-badge">
+          <span class="ss-summary-avatar"><i class="bi bi-people-fill"></i></span>
+          <div>
+            <div class="ss-summary-title">Total Summary</div>
+            <div class="ss-summary-sub">{{ sheet.rows.length }} employee{{ sheet.rows.length === 1 ? '' : 's' }}</div>
+          </div>
+        </div>
+
+        <div class="ss-summary-figures">
+          <div class="ss-fig"><span class="ss-fig-label">Paid</span><span class="ss-fig-value c-green">{{ paidCount }}</span></div>
+          <div class="ss-fig"><span class="ss-fig-label">Pending</span><span class="ss-fig-value c-amber">{{ pendingCount }}</span></div>
+          <div class="ss-fig"><span class="ss-fig-label">Basic Salary</span><span class="ss-fig-value c-blue">&#2547; {{ sheet.totalBasic | number:'1.0-0' }}</span></div>
+          <div class="ss-fig"><span class="ss-fig-label">House Rent</span><span class="ss-fig-value c-indigo">&#2547; {{ sheet.totalHouseRent | number:'1.0-0' }}</span></div>
+          <div class="ss-fig"><span class="ss-fig-label">Medical</span><span class="ss-fig-value c-teal">&#2547; {{ sheet.totalMedical | number:'1.0-0' }}</span></div>
+          <div class="ss-fig"><span class="ss-fig-label">Transport</span><span class="ss-fig-value c-amber">&#2547; {{ sheet.totalTransport | number:'1.0-0' }}</span></div>
+          <div class="ss-fig"><span class="ss-fig-label">Others</span><span class="ss-fig-value c-violet">&#2547; {{ sheet.totalFood + sheet.totalSpecial + sheet.totalOvertimePayment | number:'1.0-0' }}</span></div>
+          <div class="ss-fig"><span class="ss-fig-label">Gross Pay</span><span class="ss-fig-value c-blue">&#2547; {{ sheet.totalGrossEarnings | number:'1.0-0' }}</span></div>
+          <div class="ss-fig"><span class="ss-fig-label">Deductions</span><span class="ss-fig-value c-rose">&#2547; {{ sheet.totalDeductions | number:'1.0-0' }}</span></div>
+          <div class="ss-fig"><span class="ss-fig-label">Net Payable</span><span class="ss-fig-value c-green">&#2547; {{ sheet.totalNetPayable | number:'1.0-0' }}</span></div>
+        </div>
+      </div>
+
+      <!-- ── Search & filters ─────────────────────────────── -->
+      <div class="ss-toolbar">
+        <div class="ss-search">
+          <i class="bi bi-search"></i>
+          <input [(ngModel)]="search" placeholder="Search employee, ID or designation..." aria-label="Search employees" />
+          @if (search) {
+            <button class="ss-search-clear" (click)="search = ''" aria-label="Clear search"><i class="bi bi-x-lg"></i></button>
+          }
+        </div>
+        @if (departments.length) {
+          <select class="form-select form-select-sm" style="max-width: 190px" [(ngModel)]="filterDepartment" aria-label="Department filter">
+            <option value="">All departments</option>
+            @for (d of departments; track d) { <option [value]="d">{{ d }}</option> }
+          </select>
+        }
+        <select class="form-select form-select-sm" style="max-width: 170px" [(ngModel)]="filterStatus" aria-label="Payment status filter">
+          <option value="">All statuses</option>
+          <option value="PAID">Paid</option>
+          <option value="PENDING">Pending</option>
+        </select>
+        @if (filtering) {
+          <span class="ss-filter-count">{{ visibleRows.length }} of {{ sheet.rows.length }}</span>
+        }
+      </div>
+
+      <!-- ── Sheet ────────────────────────────────────────── -->
+      @if (visibleRows.length) {
+      <div class="ss-table-wrap">
+        <table class="ss-table">
+          <thead>
+            <!-- Group row: the real register's Earnings / Deductions bands. -->
+            <tr class="ss-group-row">
+              <th class="ss-col-emp"></th>
+              <th colspan="10" class="ss-group ss-group-earn"><i class="bi bi-plus-circle me-1"></i>Earnings</th>
+              <th colspan="5" class="ss-group ss-group-ded"><i class="bi bi-dash-circle me-1"></i>Deductions</th>
+              <th colspan="2" class="ss-group"></th>
+            </tr>
+            <tr>
+              <th class="ss-col-emp"><i class="bi bi-person"></i>Employee</th>
+              <th>Basic</th>
+              <th>House Rent</th>
+              <th>Medical</th>
+              <th>Transport</th>
+              <th>Food</th>
+              <th>Special</th>
+              <th>Overtime</th>
+              <th>Bonus</th>
+              <th>Other Allow.</th>
+              <th class="ss-col-strong">Gross</th>
+              <th>Absence</th>
+              <th>Tax</th>
+              <th>PF</th>
+              <th>Other Ded.</th>
+              <th class="ss-col-strong">Total Ded.</th>
+              <th class="ss-col-strong"><i class="bi bi-cash-stack"></i>Net</th>
+              <th><i class="bi bi-credit-card"></i>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of visibleRows; track trackRow($index, row)) {
+            <tr [class.ss-row-unconfigured]="row.note">
+              <td class="ss-col-emp">
+                <div class="ss-emp">
+                  <span class="ss-emp-avatar" [style.background]="accentFor(row)">{{ initials(row) }}</span>
+                  <div class="ss-emp-text">
+                    <div class="ss-emp-name">{{ row.employeeName }}</div>
+                    <div class="ss-emp-meta">
+                      {{ row.employeeNumber || 'No ID' }}
+                      @if (row.position) { <span>&bull; {{ row.position }}</span> }
+                    </div>
+                    @if (row.note) { <div class="ss-emp-note">{{ row.note }}</div> }
+                  </div>
+                </div>
+              </td>
+              <td>&#2547; {{ row.basic | number:'1.0-0' }}</td>
+              <td>&#2547; {{ row.houseRent | number:'1.0-0' }}</td>
+              <td>&#2547; {{ row.medical | number:'1.0-0' }}</td>
+              <td>&#2547; {{ row.transport | number:'1.0-0' }}</td>
+              <td>&#2547; {{ row.food | number:'1.0-0' }}</td>
+              <td>&#2547; {{ row.special | number:'1.0-0' }}</td>
+              <td>
+                &#2547; {{ row.overtimePayment | number:'1.0-0' }}
+                @if (row.overtimePayment) { <div class="ss-sub">{{ row.overtimeHours | number:'1.0-1' }}h</div> }
+              </td>
+              <td>&#2547; {{ (row.bonus || 0) | number:'1.0-0' }}</td>
+              <td>&#2547; {{ (row.otherEarnings || 0) | number:'1.0-0' }}</td>
+              <td class="fw-semibold ss-col-strong">&#2547; {{ row.grossEarnings | number:'1.0-0' }}</td>
+              <td class="c-rose">
+                &#2547; {{ row.absentDeduction | number:'1.0-0' }}
+                @if (row.absentDays) { <div class="ss-sub">{{ row.absentDays }}d</div> }
+              </td>
+              <td class="c-rose">&#2547; {{ row.tax | number:'1.0-0' }}</td>
+              <td class="c-rose">&#2547; {{ row.providentFund | number:'1.0-0' }}</td>
+              <td class="c-rose">&#2547; {{ (row.otherDeductions || 0) | number:'1.0-0' }}</td>
+              <td class="c-rose fw-semibold ss-col-strong">&#2547; {{ row.totalDeductions | number:'1.0-0' }}</td>
+              <td class="c-green fw-bold ss-col-strong">&#2547; {{ row.netPayable | number:'1.0-0' }}</td>
+              <td>
+                <span class="badge" [ngClass]="statusBadge(row.paymentStatus)">{{ row.paymentStatus || 'NOT GENERATED' }}</span>
+                @if (row.paymentMethod) { <div class="ss-sub">{{ row.paymentMethod.replaceAll('_', ' ') }}</div> }
+              </td>
+            </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="ss-col-emp">TOTAL<span class="ss-total-scope">{{ filtering ? ' (filtered)' : '' }}</span></td>
+              <td>&#2547; {{ totals['basic'] | number:'1.0-0' }}</td>
+              <td>&#2547; {{ totals['houseRent'] | number:'1.0-0' }}</td>
+              <td>&#2547; {{ totals['medical'] | number:'1.0-0' }}</td>
+              <td>&#2547; {{ totals['transport'] | number:'1.0-0' }}</td>
+              <td>&#2547; {{ totals['food'] | number:'1.0-0' }}</td>
+              <td>&#2547; {{ totals['special'] | number:'1.0-0' }}</td>
+              <td>&#2547; {{ totals['overtime'] | number:'1.0-0' }}</td>
+              <td>&#2547; {{ totals['bonus'] | number:'1.0-0' }}</td>
+              <td>&#2547; {{ totals['otherEarnings'] | number:'1.0-0' }}</td>
+              <td class="ss-col-strong">&#2547; {{ totals['gross'] | number:'1.0-0' }}</td>
+              <td class="c-rose">&#2547; {{ totals['absentDeduction'] | number:'1.0-0' }}</td>
+              <td class="c-rose">&#2547; {{ totals['tax'] | number:'1.0-0' }}</td>
+              <td class="c-rose">&#2547; {{ totals['providentFund'] | number:'1.0-0' }}</td>
+              <td class="c-rose">&#2547; {{ totals['otherDeductions'] | number:'1.0-0' }}</td>
+              <td class="c-rose ss-col-strong">&#2547; {{ totals['deductions'] | number:'1.0-0' }}</td>
+              <td class="c-green ss-col-strong">&#2547; {{ totals['net'] | number:'1.0-0' }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      } @else {
+        <app-empty-state icon="bi-search" [message]="'No employees match \'' + search + '\'.'" />
+      }
+
+      <div class="ss-foot-note">
+        <i class="bi bi-info-circle"></i>
+        @if (actualsCount) {
+          {{ actualsCount }} of {{ sheet.rows.length }} rows restate the payroll register (actuals — frozen
+          overtime, bonus and deductions); the rest are live projections from structures and attendance.
+        } @else {
+          Live projection from attendance and salary structures — rows become payroll actuals once payroll
+          is generated for the month.
+        }
+        @if (!sheet.overtimeEnabled) { Overtime is switched off for this company, so projected overtime is zero. }
+        Export downloads the full month regardless of any search.
+      </div>
+    }
+
+    @if (!loading && !sheet) {
+      <app-empty-state icon="bi-table" message="No salary sheet for this period." />
+    }
+  </div>
+</div>

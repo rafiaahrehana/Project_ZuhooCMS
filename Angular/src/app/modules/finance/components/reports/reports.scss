@@ -1,0 +1,204 @@
+// Report catalog: browse-first, ERP-style. Tokens throughout so it works in
+// both themes without a dark-mode branch.
+
+.report-search {
+  position: relative;
+  max-width: 420px;
+
+  i {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--bos-muted);
+    font-size: 0.9rem;
+  }
+
+  input {
+    padding-left: 2.3rem;
+    border-radius: 999px;
+    border: 1px solid var(--bos-border);
+    background: var(--bos-bg-subtle);
+    color: var(--bos-text);
+
+    &::placeholder { color: var(--bos-muted); }
+    &:focus {
+      background: var(--bos-bg-card);
+      border-color: var(--bos-brand);
+      box-shadow: var(--bos-focus-ring);
+      outline: none;
+    }
+  }
+}
+
+// One horizontal card per group - a labeled icon rail on the left, the
+// group's reports listed as rows on the right. Same soft-tint-square icon
+// language as app-stat-card (--c/--c-rgb + variant-*), so this reads like
+// the rest of the app's KPI cards rather than inventing a new pattern.
+.report-group-card {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--bos-border);
+  border-radius: 16px;
+  background: var(--bos-bg-card);
+  box-shadow: var(--bos-shadow-card);
+  overflow: hidden;
+
+  @media (max-width: 767.98px) {
+    flex-direction: column;
+  }
+}
+
+.report-group-side {
+  flex: 0 0 240px;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border-right: 1px solid var(--bos-border-light);
+  background: var(--bos-bg-subtle);
+
+  @media (max-width: 767.98px) {
+    flex: 0 0 auto;
+    border-right: none;
+    border-bottom: 1px solid var(--bos-border-light);
+  }
+}
+
+.report-group-icon {
+  --c: #3B82F6;
+  --c-rgb: 59, 130, 246;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--c-rgb), 0.14);
+  color: var(--c);
+  font-size: 1.3rem;
+
+  &.variant-primary { --c: #3B82F6; --c-rgb: 59, 130, 246; }
+  &.variant-purple  { --c: #6B46FF; --c-rgb: 107, 70, 255; }
+  &.variant-success { --c: #16A34A; --c-rgb: 22, 163, 74; }
+  &.variant-info    { --c: #0284C7; --c-rgb: 2, 132, 199; }
+}
+
+.report-group-name {
+  font-weight: 800;
+  color: var(--bos-text);
+  font-size: 0.95rem;
+}
+
+.report-group-count {
+  font-size: 0.76rem;
+  color: var(--bos-muted);
+  margin-top: 0.1rem;
+}
+
+.report-group-list {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// One shared row look for both the generated-in-place reports (button) and
+// the external-page reports (anchor).
+.report-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.85rem 1.25rem;
+  border: none;
+  border-bottom: 1px solid var(--bos-border-light);
+  background: transparent;
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--bos-transition), box-shadow var(--bos-transition);
+
+  &:last-child { border-bottom: none; }
+
+  &:hover {
+    background: var(--bos-bg-subtle);
+    color: inherit;
+    // Lifts the row above its neighbors so hover reads as "elevation," not
+    // just a color swap - a soft inset-free shadow keeps row edges aligned.
+    box-shadow: 0 1px 0 var(--bos-bg-subtle), 0 6px 14px -10px rgba(0, 0, 0, 0.25);
+    z-index: 1;
+
+    .report-row-arrow { transform: translateX(3px); color: var(--bos-brand); }
+    .report-row-label { color: var(--bos-brand); }
+    .report-row-fav { opacity: 1; }
+  }
+}
+
+.report-row-fav {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--bos-muted);
+  font-size: 0.95rem;
+  border-radius: 7px;
+  // Visible but quiet until the row is hovered, so the list doesn't read as
+  // "everything has a button" - already-favorited stars stay visible always.
+  opacity: 0.45;
+  transition: opacity var(--bos-transition), color var(--bos-transition), background var(--bos-transition);
+
+  &:hover { background: var(--bos-bg-hover); color: #D97706; }
+
+  &.is-fav {
+    opacity: 1;
+    color: #D97706;
+  }
+}
+
+.report-row-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bos-brand-soft);
+  color: var(--bos-brand);
+  font-size: 1rem;
+}
+
+.report-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.report-row-label {
+  font-weight: 700;
+  color: var(--bos-text);
+  font-size: 0.88rem;
+  transition: color var(--bos-transition);
+}
+
+.report-row-desc {
+  font-size: 0.76rem;
+  color: var(--bos-muted);
+  line-height: 1.3;
+}
+
+.report-row-arrow {
+  flex-shrink: 0;
+  color: var(--bos-muted);
+  font-size: 0.85rem;
+  transition: transform var(--bos-transition), color var(--bos-transition);
+}

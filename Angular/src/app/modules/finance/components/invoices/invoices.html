@@ -1,0 +1,327 @@
+<div class="container-fluid py-3">
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">Invoices</h4>
+      <div class="page-subtitle mt-1">Bill clients and track payments</div>
+    </div>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm shadow-sm border-0 rounded-3" style="width:180px" [(ngModel)]="statusFilter" (change)="page=0;load()">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+      <button *appHasPermission="'INVOICE_CREATE'" class="btn btn-primary-bos btn-sm px-3 fw-semibold" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i>New Invoice</button>
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <div class="row g-3">
+    <div [class]="selected ? 'col-lg-7' : 'col-12'">
+      @if (!loading && invoices.length) {
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle mb-0 table-dark-header">
+            <thead>
+              <tr><th>Invoice #</th><th>Client</th><th class="text-end">Total</th><th class="text-end">Balance</th><th>Due</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              @for (inv of invoices; track inv.id) {
+              <tr [class.table-warning]="inv.status === 'OVERDUE'" role="button" (click)="view(inv)">
+                <td class="small"><span class="invoice-number-badge">{{ inv.invoiceNumber }}</span></td>
+                <td class="client-col text-truncate" [title]="inv.clientName || ''">{{ inv.clientName }}</td>
+                <td class="text-end amount-col amount-total">{{ inv.totalAmount | bosCurrency: (inv.currency || 'BDT') }}</td>
+                <td class="text-end amount-col">{{ inv.balanceAmount | bosCurrency: (inv.currency || 'BDT') }}</td>
+                <td class="small text-nowrap due-date">{{ inv.dueDate | date:'mediumDate' }}</td>
+                <td><span class="badge {{ statusClass(inv.status) }}">{{ inv.status }}</span></td>
+                <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
+                  <button class="btn btn-outline-secondary btn-sm py-1 px-2" (click)="downloadPdf(inv)" title="Download PDF"><i class="bi bi-download"></i></button>
+                  @if (inv.status === 'DRAFT') {
+                    <button *appHasPermission="'INVOICE_UPDATE'" class="btn btn-outline-secondary btn-sm py-1 px-2" (click)="openEdit(inv)" title="Edit"><i class="bi bi-pencil"></i></button>
+                    <button *appHasPermission="'INVOICE_SEND'" class="btn btn-outline-primary btn-sm py-1 px-2" (click)="send(inv)">Send</button>
+                    <button *appHasPermission="'INVOICE_DELETE'" class="btn btn-outline-danger btn-sm py-1 px-2" (click)="deleteTarget = inv" title="Delete"><i class="bi bi-trash"></i></button>
+                  }
+                  @if (inv.status === 'ISSUED' || inv.status === 'OVERDUE') { <button *appHasPermission="'INVOICE_PAYMENT'" class="btn btn-outline-success btn-sm py-1 px-2" (click)="markPaid(inv)">Mark Paid</button> }
+                  @if (inv.status === 'ISSUED' || inv.status === 'PARTIALLY_PAID' || inv.status === 'OVERDUE') {
+                    <button *appHasPermission="'INVOICE_CANCEL'" class="btn btn-outline-danger btn-sm py-1 px-2" (click)="cancelTarget = inv" title="Cancel invoice (reverses ledger entries)"><i class="bi bi-x-circle"></i></button>
+                  }
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer d-flex justify-content-end">
+          <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+        </div>
+      </div>
+      }
+      @if (!loading && !invoices.length) { <app-empty-state icon="bi-receipt" message="No invoices found." /> }
+    </div>
+
+    @if (selected) {
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn-close" style="font-size: 0.75rem;" (click)="selected = null" aria-label="Close"></button>
+            <span class="fw-semibold">{{ selected.invoiceNumber }}</span>
+          </div>
+          <span class="badge {{ statusClass(selected.status) }}">{{ selected.status }}</span>
+        </div>
+        @if (selected.items?.length) {
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>Item</th><th class="text-end">Qty</th><th class="text-end">Price</th><th class="text-end">Total</th></tr></thead>
+            <tbody>
+              @for (item of selected.items; track $index) {
+              <tr>
+                <td class="small">{{ item.description }}</td>
+                <td class="text-end">{{ item.quantity }}</td>
+                <td class="text-end">{{ item.unitPrice | bosCurrency: (selected.currency || 'BDT') }}</td>
+                <td class="text-end">{{ item.lineTotal | bosCurrency: (selected.currency || 'BDT') }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        }
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <tbody>
+              <tr><td class="text-muted">Client</td><td>{{ selected.clientName }}</td></tr>
+              <tr><td class="text-muted">Subtotal</td><td>{{ selected.subtotal | bosCurrency: (selected.currency || 'BDT') }}</td></tr>
+              @if (selected.discountAmount) {
+                <tr><td class="text-muted">Discount</td><td>-{{ selected.discountAmount | bosCurrency: (selected.currency || 'BDT') }}</td></tr>
+              }
+              <tr>
+                <td class="text-muted">Tax{{ selected.taxRatePercent != null ? ' (' + selected.taxRatePercent + '%)' : '' }}</td>
+                <td>{{ selected.taxAmount | bosCurrency: (selected.currency || 'BDT') }}</td>
+              </tr>
+              <tr><td class="text-muted">Total</td><td class="fw-bold">{{ selected.totalAmount | bosCurrency: (selected.currency || 'BDT') }}</td></tr>
+              <tr><td class="text-muted">Paid</td><td class="text-success">{{ selected.paidAmount | bosCurrency: (selected.currency || 'BDT') }}</td></tr>
+              @if (selected.creditedAmount) {
+                <tr><td class="text-muted">Credited</td><td class="text-info">-{{ selected.creditedAmount | bosCurrency: (selected.currency || 'BDT') }}</td></tr>
+              }
+              <tr><td class="text-muted">Balance</td><td class="fw-bold">{{ selected.balanceAmount | bosCurrency: (selected.currency || 'BDT') }}</td></tr>
+              <tr><td class="text-muted">Due Date</td><td>{{ selected.dueDate | date:'mediumDate' }}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        @if (creditNotes.length) {
+        <div class="card-body border-top pt-2 pb-2">
+          <div class="small fw-semibold text-muted mb-1">Credit Notes</div>
+          @for (cn of creditNotes; track cn.id) {
+          <div class="d-flex justify-content-between small mb-1">
+            <span>{{ cn.creditNoteNumber }} <span class="text-muted">{{ cn.reason }}</span></span>
+            <span class="text-info fw-semibold">-{{ cn.amount | bosCurrency: (selected.currency || 'BDT') }}</span>
+          </div>
+          }
+        </div>
+        }
+
+        @if (selected.status !== 'DRAFT' && selected.status !== 'CANCELLED' && selected.status !== 'VOIDED' && selected.balanceAmount > 0) {
+        <div class="card-body border-top pt-2 pb-2">
+          <button *appHasPermission="'INVOICE_CREDIT_NOTE'" class="btn btn-outline-info btn-sm" (click)="openCreditNote(selected)">
+            <i class="bi bi-file-earmark-minus me-1"></i>Issue Credit Note
+          </button>
+        </div>
+        }
+
+        @if (selected.status === 'ISSUED' || selected.status === 'PARTIALLY_PAID' || selected.status === 'OVERDUE') {
+        <div class="card-footer">
+          <div class="input-group input-group-sm">
+            <input type="number" class="form-control" placeholder="Amount" [(ngModel)]="paymentAmount" />
+            <button *appHasPermission="'INVOICE_PAYMENT'" class="btn btn-primary" (click)="recordPayment()">Record Payment</button>
+            <button *appHasPermission="'INVOICE_PAYMENT'" class="btn btn-success" (click)="payOnline()" title="Pay via SSLCommerz">
+              <i class="bi bi-credit-card me-1"></i>Pay Online
+            </button>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</div>
+
+@if (showForm) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editing ? 'Edit Invoice' : 'New Invoice' }}</h5>
+        <button type="button" class="btn-close" (click)="showForm = false"></button>
+      </div>
+      <form #f="ngForm" (ngSubmit)="save()">
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Client</label>
+              <select class="form-select form-select-sm" name="clientId" [(ngModel)]="form.clientId" required [disabled]="editing">
+                <option [ngValue]="0" disabled>Select a client</option>
+                @for (c of clients; track c.id) { <option [ngValue]="c.id">{{ c.clientCompanyName || (c.firstName + ' ' + c.lastName) }}</option> }
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Invoice Date</label>
+              <input type="date" class="form-control form-control-sm" name="invoiceDate" [(ngModel)]="form.invoiceDate" (change)="onPaymentTermsOrDateChange()" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Due Date</label>
+              <input type="date" class="form-control form-control-sm" name="dueDate" [(ngModel)]="form.dueDate" required>
+              <div class="form-text">Auto-filled from payment terms; edit freely if needed.</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Payment Terms</label>
+              <select class="form-select form-select-sm" name="paymentTerms" [(ngModel)]="form.paymentTerms" (change)="onPaymentTermsOrDateChange()">
+                @for (t of paymentTerms; track t) { <option [value]="t">{{ t }}</option> }
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Currency</label>
+              <select class="form-select form-select-sm" name="currency" [(ngModel)]="form.currency">
+                @for (c of currencies; track c) { <option [value]="c">{{ c }}</option> }
+              </select>
+            </div>
+            @if (needsExchangeRate) {
+            <div class="col-md-3">
+              <label class="form-label">Exchange Rate to {{ baseCurrency }} *</label>
+              <input type="number" min="0.000001" step="0.0001" class="form-control form-control-sm" name="exchangeRate" [(ngModel)]="form.exchangeRate" required placeholder="e.g. 110.5">
+              <div class="form-text">1 {{ form.currency }} = ? {{ baseCurrency }} — the ledger posts in {{ baseCurrency }}.</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Description</label>
+              <input class="form-control form-control-sm" name="description" [(ngModel)]="form.description" maxlength="255">
+            </div>
+            } @else {
+            <div class="col-md-7">
+              <label class="form-label">Description</label>
+              <input class="form-control form-control-sm" name="description" [(ngModel)]="form.description" maxlength="255">
+            </div>
+            }
+
+            <div class="col-12">
+              <label class="form-label fw-bold">Line Items</label>
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-1">
+                  <thead class="table-light"><tr><th>Description</th><th style="width:100px">Qty</th><th style="width:130px">Unit Price</th><th style="width:110px" class="text-end">Total</th><th style="width:40px"></th></tr></thead>
+                  <tbody>
+                    @for (item of form.items; track $index; let i = $index) {
+                    <tr>
+                      <td><input class="form-control form-control-sm" name="itemDesc{{i}}" [(ngModel)]="item.description" required placeholder="Item description"></td>
+                      <td><input type="number" min="0.01" step="0.01" class="form-control form-control-sm" name="itemQty{{i}}" [(ngModel)]="item.quantity" required></td>
+                      <td><input type="number" min="0" step="0.01" class="form-control form-control-sm" name="itemPrice{{i}}" [(ngModel)]="item.unitPrice" required></td>
+                      <td class="text-end small">{{ (item.quantity || 0) * (item.unitPrice || 0) | bosCurrency }}</td>
+                      <td>
+                        @if (form.items.length > 1) {
+                        <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeItem(i)"><i class="bi bi-x"></i></button>
+                        }
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addItem()"><i class="bi bi-plus-lg me-1"></i>Add Item</button>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Discount</label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" name="discountAmount" [(ngModel)]="form.discountAmount">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Tax Rate (%)</label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" name="taxRatePercent" [(ngModel)]="form.taxRatePercent" placeholder="e.g. 15">
+              <div class="form-text">Overrides Tax Amount when set.</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Tax Amount</label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" name="taxAmount" [(ngModel)]="form.taxAmount" [disabled]="form.taxRatePercent != null">
+            </div>
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center">
+                <label class="form-label mb-0">Notes</label>
+                @if (editingId) {
+                <button type="button" class="btn btn-outline-primary btn-sm py-0" [disabled]="draftingSummary" (click)="draftSummaryWithAi()">
+                  @if (draftingSummary) { <span class="spinner-border spinner-border-sm me-1"></span> } @else { <i class="bi bi-stars me-1"></i> }
+                  Draft with AI
+                </button>
+                }
+              </div>
+              @if (draftSummaryError) { <div class="text-danger small mb-1">{{ draftSummaryError }}</div> }
+              <input class="form-control form-control-sm" name="notes" [(ngModel)]="form.notes" maxlength="500">
+            </div>
+
+            <div class="col-12 text-end">
+              <div class="small text-muted">
+                Subtotal: {{ itemsSubtotal() | bosCurrency: (form.currency || 'BDT') }}
+                @if (form.discountAmount) { &nbsp;&minus;&nbsp; Discount: {{ form.discountAmount | bosCurrency: (form.currency || 'BDT') }} }
+                &nbsp;+&nbsp; Tax: {{ formTaxAmount() | bosCurrency: (form.currency || 'BDT') }}
+              </div>
+              <div class="fw-bold">Total: {{ formTotal() | bosCurrency: (form.currency || 'BDT') }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving || !form.clientId">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            {{ editing ? 'Save Changes' : 'Create Invoice' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+}
+
+<app-confirm-dialog
+  [visible]="!!deleteTarget"
+  title="Delete Invoice"
+  [message]="'Delete invoice ' + (deleteTarget?.invoiceNumber || '') + '? This cannot be undone.'"
+  confirmLabel="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="deleteTarget = null"
+/>
+
+<app-confirm-dialog
+  [visible]="!!cancelTarget"
+  title="Cancel Invoice"
+  [message]="'Cancel invoice ' + (cancelTarget?.invoiceNumber || '') + '? This reverses any accounting entries already posted for it.'"
+  confirmLabel="Cancel Invoice"
+  (confirmed)="confirmCancel()"
+  (cancelled)="cancelTarget = null"
+/>
+
+@if (creditNoteTarget) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Issue Credit Note - {{ creditNoteTarget.invoiceNumber }}</h5>
+        <button type="button" class="btn-close" (click)="creditNoteTarget = null"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-2">
+          Outstanding balance: {{ creditNoteTarget.balanceAmount | bosCurrency: (creditNoteTarget.currency || 'BDT') }}
+        </p>
+        <label class="form-label small">Amount</label>
+        <input type="number" min="0.01" step="0.01" class="form-control form-control-sm mb-2"
+               [max]="creditNoteTarget.balanceAmount" [(ngModel)]="creditNoteAmount" />
+        <label class="form-label small">Reason (optional)</label>
+        <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="creditNoteReason"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="creditNoteTarget = null">Cancel</button>
+        <button type="button" class="btn btn-info btn-sm" [disabled]="!creditNoteAmount || issuingCreditNote" (click)="confirmCreditNote()">
+          @if (issuingCreditNote) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Issue Credit Note
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

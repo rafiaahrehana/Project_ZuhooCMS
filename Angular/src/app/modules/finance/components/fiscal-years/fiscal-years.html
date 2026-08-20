@@ -1,0 +1,113 @@
+<div class="container-fluid py-3">
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">Fiscal Years</h4>
+      <div class="page-subtitle mt-1">Manage financial years and generate their monthly accounting periods</div>
+    </div>
+    <div class="d-flex gap-2">
+      <button *appHasPermission="'ACCOUNTING_PERIOD_CLOSE'" class="btn btn-primary-bos btn-sm px-3 fw-semibold" (click)="openCreate()">
+        <i class="bi bi-plus-lg me-1"></i>New Fiscal Year
+      </button>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  <!-- Stat row -->
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-3">
+      <app-stat-card label="Total Years" [value]="totalYears" icon="bi-calendar3" variant="primary" />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <app-stat-card label="Active" [value]="activeCount" icon="bi-play-circle" variant="success" />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <app-stat-card label="Draft" [value]="draftCount" icon="bi-pencil-square" variant="info" />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <app-stat-card label="Closed" [value]="closedCount" icon="bi-lock" variant="dark" />
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <i class="bi bi-search"></i>
+    <input class="form-control" placeholder="Search fiscal years by name" [(ngModel)]="searchTerm" />
+  </div>
+
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && filteredYears.length) {
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0 table-dark-header">
+        <thead>
+          <tr><th>Name</th><th>Date Range</th><th>Periods</th><th>Status</th><th>Created</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody>
+          @for (y of filteredYears; track y.fiscalYear) {
+          <tr>
+            <td>
+              <div class="fw-bold">{{ y.name }}</div>
+              @if (y.current) { <div class="small text-muted">Current fiscal year</div> }
+            </td>
+            <td class="small text-muted text-nowrap">{{ y.startDate | date:'dd MMM yyyy' }} &rarr; {{ y.endDate | date:'dd MMM yyyy' }}</td>
+            <td class="small">
+              {{ y.closedPeriods }}/{{ y.totalPeriods }} closed
+              @if (y.openPeriods) { <div class="text-muted" style="font-size: 0.7rem">{{ y.openPeriods }} open</div> }
+            </td>
+            <td>
+              <span class="badge {{ statusBadge(y.status) }}">{{ y.status }}</span>
+              @if (y.yearEndPosted) {
+                <div class="small text-success" style="font-size: 0.7rem" title="The year-end closing entry has been posted to Retained Earnings">
+                  <i class="bi bi-check2-circle"></i> Year-end posted
+                </div>
+              }
+            </td>
+            <td class="small text-muted text-nowrap">{{ y.createdAt | date:'mediumDate' }}</td>
+            <td class="text-end">
+              <a class="btn btn-outline-primary btn-sm" routerLink="/finance/accounting-periods" [queryParams]="{ year: y.fiscalYear }">
+                <i class="bi bi-calendar-check me-1"></i>Periods
+              </a>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (!loading && !years.length) {
+  <app-empty-state icon="bi-calendar3" message="No fiscal years yet — create one to generate its accounting periods." />
+  }
+  @if (!loading && years.length && !filteredYears.length) {
+  <div class="text-muted small py-3 text-center">No fiscal years match your search.</div>
+  }
+</div>
+
+@if (showCreate) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">New Fiscal Year</h5>
+        <button type="button" class="btn-close" (click)="showCreate = false"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Year</label>
+        <input type="number" class="form-control form-control-sm" [(ngModel)]="newYear" min="1900" max="2200" />
+        <div class="form-text">Its 12 monthly accounting periods will be generated automatically.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showCreate = false">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="creating || !newYear" (click)="createYear()">
+          @if (creating) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

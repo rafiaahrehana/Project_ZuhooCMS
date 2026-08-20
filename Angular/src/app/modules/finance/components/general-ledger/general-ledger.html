@@ -1,0 +1,114 @@
+<div class="container-fluid py-3">
+  <!-- Page Header -->
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">General Ledger</h4>
+      <div class="page-subtitle mt-1">Financial records and accounting</div>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-light bg-white border shadow-sm btn-sm px-3 fw-semibold text-dark" [disabled]="!entries.length" (click)="exportCsv()"><i class="bi bi-download me-2"></i>Export CSV</button>
+      <a routerLink="/finance/journal-entries" class="btn btn-primary-bos btn-sm px-3 fw-semibold text-decoration-none"><i class="bi bi-plus-lg me-2"></i>Post via Journal Entry</a>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  <!-- Toolbar / Filters: one horizontal row - account, both dates and the
+       actions all fit on one line instead of each stacking full-width. -->
+  <div class="gl-toolbar mb-3">
+    <select class="form-select form-select-sm shadow-sm border-0 rounded-3 text-muted gl-account-select" [(ngModel)]="accountFilter">
+      <option [value]="undefined">All accounts</option>
+      @for (a of accounts; track a.id) { <option [value]="a.id">{{ a.accountName }}</option> }
+    </select>
+    <div class="gl-date-field">
+      <span class="gl-date-label">From</span>
+      <input type="date" class="form-control form-control-sm shadow-sm border-0 rounded-3 text-muted" [(ngModel)]="startDate" />
+    </div>
+    <div class="gl-date-field">
+      <span class="gl-date-label">To</span>
+      <input type="date" class="form-control form-control-sm shadow-sm border-0 rounded-3 text-muted" [(ngModel)]="endDate" />
+    </div>
+    <button class="btn btn-light bg-white border shadow-sm btn-sm px-3 text-dark fw-semibold" (click)="applyFilters()">Filter</button>
+    <button class="btn btn-link btn-sm text-muted" (click)="clearFilters()">Clear</button>
+    @if (accountBalance !== null) {
+      <span class="badge text-bg-light border ms-auto">Current balance: {{ accountBalance | bosCurrency }}</span>
+    }
+  </div>
+
+  @if (loading) { <app-loader /> }
+  @if (!loading && entries.length) {
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden"><div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 table-dark-header">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Account</th>
+          <th>Nature</th>
+          <th>Description</th>
+          <th>Reference</th>
+          <th class="text-end">Debit</th>
+          <th class="text-end">Credit</th>
+          <th>Reconciled</th>
+          <th class="text-end pe-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of entries; track e.id) {
+        <tr>
+          <td class="text-muted small"
+              [title]="(e.postedBy || e.postedDate) ? ('Posted' + (e.postedBy ? ' by ' + e.postedBy : '') + (e.postedDate ? ' on ' + e.postedDate : '')) : ''">
+            {{ e.transactionDate | date:'mediumDate' }}
+          </td>
+          <td class="fw-semibold text-dark py-3 ps-3">
+            {{ e.accountName }}
+            @if (e.accountCode) { <div class="text-muted fw-normal" style="font-size: 0.7rem">{{ e.accountCode }}</div> }
+          </td>
+          <td class="text-muted small">{{ e.accountType || '-' }}</td>
+          <td class="text-muted">{{ e.description || '-' }}</td>
+          <td class="small">
+            @if (e.referenceType) {
+              <span class="badge badge-soft-secondary">{{ e.referenceType.replaceAll('_', ' ') }}</span>
+              @if (e.referenceNumber) { <div class="text-muted" style="font-size: 0.7rem">{{ e.referenceNumber }}</div> }
+            } @else { <span class="text-muted">-</span> }
+          </td>
+          <td class="text-success fw-medium text-end text-nowrap">{{ e.debitAmount ? (e.debitAmount | bosCurrency) : '-' }}</td>
+          <td class="text-danger fw-medium text-end text-nowrap">{{ e.creditAmount ? (e.creditAmount | bosCurrency) : '-' }}</td>
+          <td>
+            <span class="badge" [class.text-bg-success]="e.isReconciled" [class.text-bg-light]="!e.isReconciled"
+                  [title]="e.reconciliationNotes || ''">{{ e.isReconciled ? 'Yes' : 'No' }}</span>
+            @if (e.isReconciled && e.reconciliationNotes) {
+              <div class="text-muted text-truncate" style="font-size: 0.68rem; max-width: 140px" [title]="e.reconciliationNotes">{{ e.reconciliationNotes }}</div>
+            }
+          </td>
+          <td class="text-end pe-3">
+            @if (!e.isReconciled) { <button *appHasPermission="'GENERAL_LEDGER_RECONCILE'" class="btn-action btn-action-primary" title="Reconcile" (click)="openReconcile(e)"><i class="bi bi-check2-square"></i></button> }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-3">
+    <div class="small text-muted fw-medium">Showing {{ entries.length }} entries</div>
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+  </div>
+  }
+  @if (!loading && !entries.length) { <app-empty-state icon="bi-journal-text" message="No ledger entries found." /> }
+
+  @if (reconcileTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Reconcile Entry</h5><button class="btn-close" (click)="reconcileTarget = null"></button></div>
+        <div class="modal-body"><input class="form-control" placeholder="Notes (optional)" [(ngModel)]="reconcileNotes" /></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="reconcileTarget = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="doReconcile()">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

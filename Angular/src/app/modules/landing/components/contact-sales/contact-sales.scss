@@ -1,0 +1,55 @@
+// Contact page in the landing's charcoal-emerald skin. This route renders
+// outside .landing-wrapper, so the accent machinery isn't inherited - the
+// emerald family is spelled out literally here.
+
+.contact-page {
+  background:
+    radial-gradient(ellipse 55% 45% at 85% 0%,  rgba(16, 185, 129, 0.12), transparent 70%),
+    linear-gradient(170deg, #0F1715 0%, #101720 55%, #0C1211 100%);
+}
+
+.contact-head {
+  .back-link { color: #94A8A0; &:hover { color: #fff; } }
+
+  // The base .section-title gradient starts near-black - invisible here.
+  .section-title {
+    background: linear-gradient(135deg, #FFFFFF 0%, #ECFDF5 45%, #10B981 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .lead { color: #94A8A0; }
+}
+
+.contact-info-panel {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(110, 231, 183, 0.25), transparent 60%),
+    linear-gradient(160deg, #065F46 0%, #0D9488 100%);
+}
+
+.text-lavender {
+  color: #A7F3D0;
+}
+
+.bg-light {
+  background-color: #f3f4f6 !important;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: #fff !important;
+  border: 1px solid #10B981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18) !important;
+}
+
+.btn-contact-solid {
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(135deg, #047857 0%, #10B981 100%);
+  box-shadow: 0 10px 26px rgba(16, 185, 129, 0.35);
+  transition: transform 0.25s ease, filter 0.25s ease;
+
+  &:hover:not(:disabled) { color: #fff; transform: translateY(-2px); filter: brightness(1.07); }
+  &:disabled { opacity: 0.6; }
+}

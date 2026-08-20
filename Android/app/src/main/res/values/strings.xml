@@ -1,0 +1,665 @@
+<resources>
+    <string name="app_name">Zuhoo</string>
+
+    <!-- Shared StateView strings (loading/empty/error) — reused by every list screen rather
+         than each writing its own generic "error" copy. -->
+    <string name="state_error_title">Something went wrong</string>
+    <string name="state_action_try_again">Try Again</string>
+
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="action_login">Log In</string>
+
+    <string name="error_email_required">Email is required</string>
+    <string name="error_password_required">Password is required</string>
+    <string name="error_login_failed">Invalid email or password</string>
+    <string name="error_unsupported_role">This app is for company staff and clients — use the web admin console</string>
+    <string name="error_session_expired">Your session has expired. Please sign in again.</string>
+
+    <!-- Password recovery -->
+    <string name="title_forgot_password">Reset your password</string>
+    <string name="forgot_password_explainer">Enter the email you sign in with. If an account exists, we\'ll send a reset code to it.</string>
+    <string name="action_forgot_password">Forgot password?</string>
+    <string name="action_send_reset_link">Send Reset Code</string>
+    <string name="action_have_reset_code">I already have a code</string>
+    <string name="reset_link_sent">If an account exists with that email, a reset code has been sent.</string>
+    <string name="error_reset_link_failed">Could not send the reset code</string>
+    <string name="error_email_invalid">Enter a valid email address</string>
+
+    <string name="title_reset_password">Set a new password</string>
+    <string name="reset_password_explainer">Paste the code from the reset email, then choose a new password.</string>
+    <string name="hint_reset_code">Reset code</string>
+    <string name="action_reset_password">Reset Password</string>
+    <string name="reset_password_success">Password reset. Sign in with your new password.</string>
+    <string name="error_reset_code_required">Reset code is required</string>
+    <string name="error_reset_password_failed">Could not reset your password. The code may have expired.</string>
+    <string name="error_password_policy">Password needs 8+ characters with upper and lower case, a number and a symbol</string>
+    <string name="error_passwords_do_not_match">Passwords do not match</string>
+
+    <string name="title_verify_email">Verify your email</string>
+    <string name="verify_email_explainer">Paste the code from your verification email, or ask for a new one.</string>
+    <string name="hint_verification_code">Verification code</string>
+    <string name="action_verify_email">Verify</string>
+    <string name="action_resend_verification">Resend verification email</string>
+    <string name="verify_email_success">Email verified. You can sign in now.</string>
+    <string name="resend_verification_sent">Verification email sent</string>
+    <string name="error_verify_email_failed">Could not verify that code. It may have expired.</string>
+    <string name="error_resend_verification_failed">Could not resend the verification email</string>
+    <string name="error_verification_code_required">Verification code is required</string>
+    <string name="error_subscription_expired_title">Account is read-only</string>
+
+    <!-- Google sign-in -->
+    <string name="label_or">or</string>
+    <string name="action_google_sign_in">Continue with Google</string>
+    <string name="error_google_signin_failed">Google sign-in failed. Please try again.</string>
+    <string name="error_google_not_configured">Google sign-in isn\'t set up yet. Use your email and password for now.</string>
+    <string name="title_complete_signup">Almost there</string>
+    <string name="complete_signup_explainer">No account uses %1$s yet. Choose the company you\'re a customer of to finish signing up.</string>
+    <string name="action_finish_signup">Finish Sign Up</string>
+    <string name="error_google_register_failed">Could not complete your sign up</string>
+
+    <string name="dashboard_welcome">Welcome, %1$s</string>
+    <string name="dashboard_role_badge">%1$s • Company #%2$d</string>
+    <string name="action_logout">Log Out</string>
+
+    <string name="content_desc_notifications">Notifications</string>
+    <string name="content_desc_account">Account</string>
+
+    <string name="section_requests">Requests</string>
+    <string name="section_my_work">My Work</string>
+    <string name="section_approvals">Approvals</string>
+    <string name="section_manage">Manage</string>
+    <string name="section_quick_actions">Quick Actions</string>
+
+    <string name="stat_open_requests">Open Requests</string>
+    <!-- Client cards are labelled for exactly what /api/dashboard/client-summary counts:
+         pendingRequests = PENDING + QUOTATION_PENDING, inProgressRequests = IN_PROGRESS +
+         ASSIGNED. Calling the first one "Pending Quotations" would overstate it. -->
+    <string name="stat_awaiting_action">Awaiting Action</string>
+    <string name="stat_requests_in_progress">In Progress</string>
+    <string name="stat_unpaid_invoices">Unpaid Invoices</string>
+    <string name="stat_active_subscriptions">Active Subscriptions</string>
+    <string name="stat_placeholder">—</string>
+    <string name="error_dashboard_stats_failed">Could not load some dashboard stats — check your connection</string>
+
+    <string name="stat_assigned_to_me">Assigned to Me</string>
+    <string name="stat_open_tickets">Open Tickets</string>
+    <string name="action_all_requests">All Requests</string>
+    <string name="action_assigned_requests">Assigned to Me</string>
+    <string name="action_support_tickets">Support Tickets</string>
+
+    <string name="action_link_join_company">New client? Join a company</string>
+    <string name="action_link_create_company">Starting a business? Create a company account</string>
+
+    <string name="hint_first_name">First Name</string>
+    <string name="hint_last_name">Last Name</string>
+    <string name="hint_phone_optional">Phone (optional)</string>
+    <string name="hint_company_picker">Select your company</string>
+    <string name="hint_client_company_name_optional">Your Company Name (optional)</string>
+    <string name="hint_industry_optional">Industry (optional)</string>
+    <string name="hint_website_optional">Website (optional)</string>
+    <string name="hint_company_name">Company Name</string>
+    <string name="hint_subdomain">Subdomain</string>
+    <string name="helper_subdomain">Lowercase letters, numbers and hyphens only</string>
+    <string name="hint_company_email_optional">Company Email (optional)</string>
+    <string name="hint_company_phone_optional">Company Phone (optional)</string>
+    <string name="helper_password_policy">At least 8 characters, with upper, lower, digit and special character</string>
+
+    <string name="title_register_client">Join a Company</string>
+    <string name="title_register_company">Create a Company Account</string>
+    <string name="action_create_account">Create Account</string>
+
+    <string name="section_personal_info">Personal Info</string>
+    <string name="section_company_info">Company Info</string>
+
+    <string name="error_first_name_required">First name is required</string>
+    <string name="error_last_name_required">Last name is required</string>
+    <string name="error_password_weak">Password does not meet the requirements above</string>
+    <string name="error_company_required">Please select a company</string>
+    <string name="error_company_name_required">Company name is required</string>
+    <string name="error_subdomain_required">Subdomain is required</string>
+    <string name="error_subdomain_invalid">Lowercase letters, numbers and hyphens only</string>
+    <string name="error_companies_load_failed">Could not load companies — check your connection and try again</string>
+
+    <string name="registration_success_client">Account created — you can now log in</string>
+    <string name="registration_success_company">Account created — check your email to verify, then log in</string>
+
+    <string name="action_view_requests">View My Requests</string>
+    <string name="title_my_requests">My Requests</string>
+    <string name="action_new_request">New Request</string>
+    <string name="empty_requests">No service requests yet</string>
+    <string name="empty_requests_subtitle">Requests will show up here once they\'re submitted.</string>
+    <string name="error_requests_load_failed">Could not load your requests — check your connection</string>
+
+    <string name="title_create_request">New Service Request</string>
+    <string name="hint_title">Title</string>
+    <string name="hint_description_optional">Description (optional)</string>
+    <string name="hint_service_picker">Select a service</string>
+    <string name="hint_priority">Priority</string>
+    <string name="hint_agreed_price_optional">Agreed Price (optional)</string>
+    <string name="error_title_required">Title is required</string>
+    <string name="error_service_required">Please select a service</string>
+    <string name="error_price_invalid">Enter a valid price</string>
+    <string name="error_services_load_failed">Could not load services — check your connection</string>
+    <string name="error_request_create_failed">Could not create the request</string>
+    <string name="request_created">Request submitted</string>
+    <string name="action_submit_request">Submit Request</string>
+
+    <string name="error_request_load_failed">Could not load this request</string>
+    <string name="label_agreed_price">Agreed Price</string>
+    <string name="detail_no_description">No description provided</string>
+    <string name="detail_assigned_to">Assigned to: %1$s</string>
+    <string name="detail_unassigned">Unassigned</string>
+    <string name="detail_quotation_amount">Quotation: %1$s %2$s</string>
+    <string name="action_cancel_request">Cancel Request</string>
+    <string name="dialog_cancel_title">Cancel this request?</string>
+    <string name="dialog_cancel_message">This cannot be undone.</string>
+    <string name="action_yes_cancel">Yes, cancel</string>
+    <string name="action_no">No</string>
+    <string name="error_cancel_failed">Could not cancel this request</string>
+    <string name="request_cancelled">Request cancelled</string>
+
+    <string name="section_comments">Comments</string>
+    <string name="hint_comment">Write a comment…</string>
+    <string name="action_send">Send</string>
+    <string name="error_comment_failed">Could not post your comment</string>
+
+    <string name="action_accept_quotation">Accept</string>
+    <string name="action_reject_quotation">Reject</string>
+    <string name="dialog_reject_reason_title">Reject quotation</string>
+    <string name="hint_reject_reason_optional">Reason (optional)</string>
+    <string name="error_quotation_action_failed">Could not process this quotation</string>
+    <string name="quotation_accepted">Quotation accepted</string>
+    <string name="quotation_rejected">Quotation rejected</string>
+
+    <string name="action_assign_request">Assign</string>
+    <string name="dialog_assign_title">Assign to employee</string>
+    <string name="error_employees_load_failed">Could not load employees — check your connection</string>
+    <string name="error_assign_failed">Could not assign this request</string>
+    <string name="request_assigned">Request assigned</string>
+
+    <string name="action_change_status">Change Status</string>
+    <string name="dialog_change_status_title">Change status</string>
+    <string name="hint_status_reason_optional">Reason (optional)</string>
+    <string name="error_status_change_failed">Could not change the status</string>
+    <string name="status_changed">Status updated</string>
+
+    <string name="action_submit_quotation">Submit Quotation</string>
+    <string name="dialog_submit_quotation_title">Submit quotation</string>
+    <string name="hint_quotation_amount">Amount</string>
+    <string name="hint_quotation_currency">Currency (e.g. USD)</string>
+    <string name="hint_quotation_notes_optional">Notes (optional)</string>
+    <string name="error_quotation_amount_required">Amount is required</string>
+    <string name="error_quotation_submit_failed">Could not submit the quotation</string>
+    <string name="quotation_submitted">Quotation submitted</string>
+
+    <string name="action_view_invoices">View My Invoices</string>
+    <string name="title_my_invoices">My Invoices</string>
+    <string name="empty_invoices">No invoices yet</string>
+    <string name="empty_invoices_subtitle">Invoices issued to you will show up here.</string>
+    <string name="error_invoices_load_failed">Could not load your invoices — check your connection</string>
+    <string name="action_view_receipts">Payment Receipts</string>
+
+    <string name="error_invoice_load_failed">Could not load this invoice</string>
+    <string name="label_subtotal">Subtotal</string>
+    <string name="label_tax">Tax</string>
+    <string name="label_total">Total</string>
+    <string name="label_paid">Paid</string>
+    <string name="label_balance">Balance Due</string>
+    <string name="action_pay_now">Pay Now</string>
+    <string name="action_download_pdf">Download PDF</string>
+    <string name="error_pdf_download_failed">Could not download the PDF</string>
+    <string name="error_pdf_no_viewer">No app installed that can open a PDF</string>
+    <string name="pdf_downloaded">PDF downloaded</string>
+
+    <string name="title_my_receipts">Payment Receipts</string>
+    <string name="empty_receipts">No payment receipts yet</string>
+    <string name="empty_receipts_subtitle">Receipts for your payments will show up here.</string>
+    <string name="error_receipts_load_failed">Could not load your receipts — check your connection</string>
+
+    <string name="title_payment">Payment</string>
+    <string name="payment_confirming">Confirming payment…</string>
+    <string name="payment_success">Payment successful</string>
+    <string name="payment_failed">Payment was not completed</string>
+    <string name="payment_not_yet_confirmed">Still confirming with the payment gateway. Reopen this invoice in a moment to check.</string>
+    <string name="payment_failed_with_status">Payment was not completed (%1$s)</string>
+
+    <string name="detail_timeline_heading">Status timeline</string>
+
+    <!-- Per-service custom fields, rendered at runtime by DynamicFormRenderer -->
+    <string name="form_field_required_label">%1$s *</string>
+    <string name="form_field_no_selection">— none —</string>
+    <string name="form_field_pick_date">Tap to pick a date</string>
+
+    <!-- Attachments -->
+    <string name="action_attach">Attach</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_requests">Requests</string>
+    <string name="nav_catalog">Catalog</string>
+    <string name="nav_billing">Billing</string>
+    <string name="nav_support">Support</string>
+    <string name="nav_account">Account</string>
+    <string name="attachment_uploading">Uploading…</string>
+    <string name="attachment_attached">📎 %1$s — tap to remove</string>
+    <string name="error_attachment_failed">Could not upload that file</string>
+    <string name="error_form_field_required">\'%1$s\' is required</string>
+
+    <!-- Notification channel names — these are what the user sees in Android's own settings. -->
+    <string name="channel_requests">Service requests</string>
+    <string name="channel_billing">Invoices &amp; payments</string>
+    <string name="channel_general">General</string>
+    <string name="cache_last_updated">Showing saved data from %1$s — pull down or reopen to refresh</string>
+
+    <!-- ServiceRequestStatus. These arrive over the wire as English constants; never render the
+         raw value, or it can't be localized. -->
+    <string name="status_pending">Pending</string>
+    <string name="status_quotation_pending">Awaiting quotation</string>
+    <string name="status_assigned">Assigned</string>
+    <string name="status_in_progress">In progress</string>
+    <string name="status_waiting_client">Waiting on you</string>
+    <string name="status_under_review">Under review</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_rejected">Rejected</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="status_resubmitted">Resubmitted</string>
+
+    <!-- InvoiceStatus -->
+    <string name="invoice_status_draft">Draft</string>
+    <string name="invoice_status_issued">Issued</string>
+    <string name="invoice_status_partially_paid">Partially paid</string>
+    <string name="invoice_status_paid">Paid</string>
+    <string name="invoice_status_overdue">Overdue</string>
+    <string name="invoice_status_cancelled">Cancelled</string>
+    <string name="invoice_status_voided">Voided</string>
+    <string name="invoice_status_refunded">Refunded</string>
+
+    <!-- SubscriptionStatus -->
+    <string name="subscription_status_active">Active</string>
+    <string name="subscription_status_pending_payment">Payment pending</string>
+    <string name="subscription_status_expired">Expired</string>
+    <string name="subscription_status_suspended">Suspended</string>
+    <string name="subscription_status_cancelled">Cancelled</string>
+
+    <!-- TicketStatus -->
+    <string name="ticket_status_new">New</string>
+    <string name="ticket_status_open">Open</string>
+    <string name="ticket_status_in_progress">In progress</string>
+    <string name="ticket_status_waiting">Waiting</string>
+    <string name="ticket_status_on_hold">On hold</string>
+    <string name="ticket_status_resolved">Resolved</string>
+    <string name="ticket_status_closed">Closed</string>
+    <string name="ticket_status_reopened">Reopened</string>
+
+    <!-- ServiceRequestPriority (NORMAL, not MEDIUM — see ServiceRequestPriority) -->
+    <string name="priority_default">Use service default</string>
+    <string name="priority_low">Low</string>
+    <string name="priority_normal">Normal</string>
+    <string name="priority_high">High</string>
+    <string name="priority_urgent">Urgent</string>
+    <string name="payment_cancelled">Payment cancelled</string>
+    <string name="error_payment_initiate_failed">Could not start the payment</string>
+
+    <string name="title_catalog">Service Catalog</string>
+    <string name="empty_catalog">No services available yet</string>
+    <string name="empty_catalog_subtitle">Services your company offers will appear here.</string>
+    <string name="error_catalog_load_failed">Could not load the catalog — check your connection</string>
+    <string name="catalog_other_category">Other</string>
+    <string name="action_request_this_service">Request This Service</string>
+
+    <string name="title_packages">Packages</string>
+    <string name="empty_packages">No packages available yet</string>
+    <string name="empty_packages_subtitle">Subscription packages will appear here once available.</string>
+    <string name="error_packages_load_failed">Could not load packages — check your connection</string>
+    <string name="action_subscribe">Subscribe</string>
+    <string name="action_view_subscriptions">My Subscriptions</string>
+    <string name="dialog_subscribe_title">Subscribe to package?</string>
+    <string name="dialog_subscribe_message">Subscribe to %1$s? You\'ll pay to activate it afterward.</string>
+    <string name="error_subscribe_failed">Could not subscribe to this package</string>
+    <string name="subscribed_pending_payment">Subscribed — pay now to activate</string>
+
+    <string name="title_my_subscriptions">My Subscriptions</string>
+    <string name="empty_subscriptions">No subscriptions yet</string>
+    <string name="empty_subscriptions_subtitle">Packages you subscribe to will show up here.</string>
+    <string name="error_subscriptions_load_failed">Could not load your subscriptions — check your connection</string>
+    <string name="action_cancel_subscription">Cancel</string>
+    <string name="dialog_cancel_subscription_title">Cancel this subscription?</string>
+    <string name="error_cancel_subscription_failed">Could not cancel this subscription</string>
+    <string name="subscription_cancelled">Subscription cancelled</string>
+
+    <string name="action_leave_review">Leave a Review</string>
+    <string name="dialog_review_title">Rate this service</string>
+    <string name="hint_review_comment_optional">Comment (optional)</string>
+    <string name="action_submit_review">Submit</string>
+    <string name="error_review_failed">Could not submit your review</string>
+    <string name="review_submitted">Review submitted</string>
+
+    <string name="action_browse_catalog">Browse Catalog</string>
+    <string name="action_view_packages">Packages</string>
+
+    <string name="chat_status_connecting">Connecting…</string>
+    <string name="chat_status_live">● Live</string>
+
+    <string name="title_support_tickets">Support Tickets</string>
+    <string name="action_new_ticket">+ New</string>
+    <string name="empty_tickets">No support tickets yet</string>
+    <string name="empty_tickets_subtitle">Tickets you open will show up here.</string>
+    <string name="error_tickets_load_failed">Could not load tickets — check your connection</string>
+
+    <string name="title_create_ticket">New Support Ticket</string>
+    <string name="hint_ticket_title">Title</string>
+    <string name="hint_ticket_description">Description</string>
+    <string name="hint_ticket_category">Category (optional)</string>
+    <string name="hint_ticket_priority">Priority</string>
+    <string name="error_ticket_title_required">Title is required</string>
+    <string name="error_ticket_description_required">Description is required</string>
+    <string name="error_ticket_create_failed">Could not create the ticket</string>
+    <string name="ticket_created">Ticket submitted</string>
+    <string name="action_submit_ticket">Submit Ticket</string>
+
+    <string name="error_ticket_load_failed">Could not load this ticket</string>
+    <string name="section_ticket_messages">Messages</string>
+    <string name="hint_ticket_message">Write a message…</string>
+
+    <string name="action_submit_satisfaction">Rate Support</string>
+    <string name="dialog_satisfaction_title">Rate your support experience</string>
+    <string name="hint_satisfaction_feedback_optional">Feedback (optional)</string>
+    <string name="satisfaction_submitted">Thanks for your feedback</string>
+    <string name="error_satisfaction_failed">Could not submit your rating</string>
+
+    <string name="action_account">Account</string>
+    <string name="title_account">Account</string>
+    <string name="action_edit_profile">Edit Profile</string>
+    <string name="action_company_profile">Company Profile</string>
+    <string name="action_notification_preferences">Notification Preferences</string>
+    <string name="action_notifications">Notifications</string>
+    <string name="action_help_center">Help Center</string>
+
+    <string name="title_edit_profile">Edit Profile</string>
+    <string name="hint_current_password">Current Password (required to change email)</string>
+    <string name="action_save">Save</string>
+    <string name="error_profile_load_failed">Could not load your profile</string>
+    <string name="error_profile_update_failed">Could not update your profile</string>
+    <string name="profile_updated">Profile updated</string>
+
+    <string name="section_change_password">Change Password</string>
+    <string name="hint_current_password_required">Current Password</string>
+    <string name="hint_new_password">New Password</string>
+    <string name="helper_password_min_length">At least 8 characters</string>
+    <string name="hint_confirm_password">Confirm New Password</string>
+    <string name="action_change_password">Change Password</string>
+    <string name="error_password_mismatch">New password and confirmation do not match</string>
+    <string name="error_change_password_failed">Could not change your password</string>
+    <string name="password_changed">Password changed</string>
+
+    <string name="title_company_profile">Company Profile</string>
+    <string name="label_status">Status</string>
+    <string name="label_onboarded_at">Client Since</string>
+    <string name="label_account_manager">Account Manager</string>
+    <string name="hint_billing_address_optional">Billing Address (optional)</string>
+    <string name="hint_shipping_address_optional">Shipping Address (optional)</string>
+    <string name="error_company_profile_load_failed">Could not load your company profile</string>
+    <string name="error_company_profile_update_failed">Could not update your company profile</string>
+    <string name="company_profile_updated">Company profile updated</string>
+
+    <string name="title_notification_preferences">Notification Preferences</string>
+    <string name="section_email_notifications">Email Notifications</string>
+    <string name="section_in_app_notifications">In-App Notifications</string>
+    <string name="pref_email_service_request">Email me about new service requests</string>
+    <string name="pref_email_status_change">Email me about status changes</string>
+    <string name="pref_email_invoice">Email me about invoices</string>
+    <string name="pref_email_payment">Email me about payments</string>
+    <string name="pref_email_task_assigned">Email me about task assignments</string>
+    <string name="pref_email_leave_update">Email me about leave updates</string>
+    <string name="pref_in_app_service_request">Notify me in-app about new service requests</string>
+    <string name="pref_in_app_status_change">Notify me in-app about status changes</string>
+    <string name="pref_email_marketing">Send me marketing emails</string>
+    <string name="error_preferences_load_failed">Could not load your preferences</string>
+    <string name="error_preferences_update_failed">Could not save your preferences</string>
+    <string name="preferences_updated">Preferences saved</string>
+
+    <string name="title_notifications">Notifications</string>
+    <string name="action_mark_all_read">Mark all read</string>
+    <string name="empty_notifications">No notifications yet</string>
+    <string name="empty_notifications_subtitle">Updates and alerts will show up here.</string>
+    <string name="error_notifications_load_failed">Could not load notifications</string>
+
+    <string name="title_help_center">Help Center</string>
+    <string name="hint_search_articles">Search articles…</string>
+    <string name="empty_articles">No articles found</string>
+    <string name="empty_articles_subtitle">Try a different search term or check back later.</string>
+    <string name="error_articles_load_failed">Could not load articles</string>
+    <string name="action_mark_helpful">This was helpful</string>
+    <string name="marked_helpful">Thanks for the feedback</string>
+
+    <string name="action_use_biometric">Unlock with fingerprint</string>
+    <string name="biometric_prompt_title">Unlock Zuhoo</string>
+    <string name="biometric_prompt_subtitle">Use your fingerprint to log in</string>
+    <string name="error_biometric_failed">Fingerprint not recognized</string>
+
+    <string name="action_change_language">Language</string>
+    <string name="dialog_language_title">Choose language</string>
+
+    <string name="title_attendance">Attendance</string>
+    <string name="action_check_in_out">Check In / Out</string>
+    <string name="action_check_in">Check In</string>
+    <string name="action_check_out">Check Out</string>
+    <string name="label_selfie">Selfie</string>
+    <string name="action_take_selfie">Take Selfie</string>
+    <string name="status_location_pending">Getting your location…</string>
+    <string name="status_location_captured">Location captured</string>
+    <string name="status_location_unavailable">Could not get your location — check your GPS settings</string>
+    <string name="status_not_checked_in">Not checked in today</string>
+    <string name="status_checked_in_at">Checked in at %1$s</string>
+    <string name="status_checked_out">Checked in at %1$s, checked out at %2$s</string>
+    <string name="status_location_flagged">Flagged for review: %1$s</string>
+    <string name="error_attendance_load_failed">Could not load today\'s attendance</string>
+    <string name="error_check_in_failed">Check-in failed</string>
+    <string name="error_check_out_failed">Check-out failed</string>
+    <string name="check_in_success">Checked in</string>
+    <string name="check_out_success">Checked out</string>
+    <string name="error_selfie_failed">Could not upload the selfie</string>
+    <string name="error_camera_permission_required">Camera permission is needed to take a check-in selfie</string>
+
+    <string name="action_attendance_location_settings">Attendance Location</string>
+    <string name="title_attendance_location_settings">Attendance Location</string>
+    <string name="attendance_location_settings_explainer">Employees checking in from outside this radius are flagged for your review instead of being blocked.</string>
+    <string name="action_enforce_gps">Require employees to be near the office to check in</string>
+    <string name="action_use_current_location">Use My Current Location</string>
+    <string name="hint_office_latitude">Office latitude</string>
+    <string name="hint_office_longitude">Office longitude</string>
+    <string name="hint_radius_meters">Allowed radius (meters)</string>
+    <string name="error_settings_load_failed">Could not load settings</string>
+    <string name="error_settings_save_failed">Could not save settings</string>
+    <string name="error_office_location_required">Set the office location first, or turn off enforcement</string>
+    <string name="error_invalid_location_input">Enter valid numbers for location and radius</string>
+    <string name="settings_saved">Settings saved</string>
+
+    <string name="title_my_leave">My Leave</string>
+    <string name="action_leave_requests">My Leave</string>
+    <string name="action_request_leave">Request Leave</string>
+    <string name="empty_leave_requests">No leave requests yet</string>
+    <string name="empty_leave_requests_subtitle">Requests you submit will show up here.</string>
+    <string name="error_leave_requests_load_failed">Could not load your leave requests</string>
+    <string name="leave_date_range_format">%1$s to %2$s (%3$d days)</string>
+    <string name="leave_balance_format">%1$d / %2$d days left</string>
+    <string name="label_rejection_reason">Reason</string>
+    <string name="action_cancel_leave">Cancel</string>
+    <string name="dialog_cancel_leave_title">Cancel leave request?</string>
+    <string name="dialog_cancel_leave_message">This leave request will be cancelled.</string>
+    <string name="leave_request_cancelled">Leave request cancelled</string>
+    <string name="error_leave_cancel_failed">Could not cancel the leave request</string>
+
+    <string name="title_create_leave_request">Request Leave</string>
+    <string name="hint_leave_type">Leave type</string>
+    <string name="hint_start_date">Start date</string>
+    <string name="hint_end_date">End date</string>
+    <string name="hint_reason_optional">Reason (optional)</string>
+    <string name="action_submit_leave_request">Submit Request</string>
+    <string name="leave_request_submitted">Leave request submitted</string>
+    <string name="error_leave_request_failed">Could not submit the leave request</string>
+    <string name="error_start_date_required">Choose a start date</string>
+    <string name="error_end_date_required">Choose an end date</string>
+    <string name="error_end_date_before_start">End date can\'t be before the start date</string>
+
+    <string name="title_leave_approvals">Leave Approvals</string>
+    <string name="action_leave_approvals">Leave Approvals</string>
+    <string name="empty_leave_approvals">No leave requests waiting for review</string>
+    <string name="empty_leave_approvals_subtitle">You\'re all caught up — new requests will appear here.</string>
+    <string name="error_leave_approvals_load_failed">Could not load leave requests</string>
+    <string name="action_approve">Approve</string>
+    <string name="action_reject">Reject</string>
+    <string name="dialog_reject_leave_title">Reason for rejecting</string>
+    <string name="hint_rejection_reason">Reason</string>
+    <string name="error_rejection_reason_required">A reason is required to reject a leave request</string>
+    <string name="error_leave_review_failed">Could not save your decision</string>
+    <string name="leave_approved">Leave request approved</string>
+    <string name="leave_rejected">Leave request rejected</string>
+
+    <string name="status_approved">Approved</string>
+
+    <string name="leave_type_annual">Annual</string>
+    <string name="leave_type_sick">Sick</string>
+    <string name="leave_type_casual">Casual</string>
+    <string name="leave_type_maternity">Maternity</string>
+    <string name="leave_type_paternity">Paternity</string>
+    <string name="leave_type_unpaid">Unpaid</string>
+    <string name="leave_type_compensatory">Compensatory</string>
+    <string name="leave_type_emergency">Emergency</string>
+    <string name="leave_type_other">Other</string>
+
+    <string name="title_my_payslips">My Payslips</string>
+    <string name="action_payslips">My Payslips</string>
+    <string name="empty_payslips">No payslips yet</string>
+    <string name="empty_payslips_subtitle">Payslips issued to you will show up here.</string>
+    <string name="error_payslips_load_failed">Could not load your payslips</string>
+    <string name="payslip_net_salary_format">Net pay: %1$s</string>
+    <string name="downloading_pdf">Downloading…</string>
+    <string name="payroll_status_draft">Draft</string>
+    <string name="payroll_status_approved">Approved</string>
+    <string name="payroll_status_paid">Paid</string>
+
+    <string name="title_notice_board">Notice Board</string>
+    <string name="action_notice_board">Notice Board</string>
+    <string name="label_upcoming_holidays">Upcoming Holidays</string>
+    <string name="label_announcements">Announcements</string>
+    <string name="empty_announcements">No announcements right now</string>
+    <string name="empty_announcements_subtitle">New company announcements will show up here.</string>
+    <string name="error_announcements_load_failed">Could not load announcements</string>
+
+    <string name="title_my_expenses">My Expenses</string>
+    <string name="action_expenses">My Expenses</string>
+    <string name="action_new_expense">New Expense</string>
+    <string name="empty_expenses">No expense claims yet</string>
+    <string name="empty_expenses_subtitle">Expense claims you submit will show up here.</string>
+    <string name="error_expenses_load_failed">Could not load your expenses</string>
+    <string name="label_approval_notes">Notes</string>
+    <string name="expense_status_paid">Paid</string>
+
+    <string name="title_create_expense">New Expense</string>
+    <string name="hint_expense_description">Description</string>
+    <string name="hint_expense_amount">Amount</string>
+    <string name="hint_expense_category">Category</string>
+    <string name="hint_vendor_optional">Paid to (optional)</string>
+    <string name="hint_expense_date">Expense date</string>
+    <string name="action_attach_receipt">Attach Receipt</string>
+    <string name="action_submit_expense">Submit Claim</string>
+    <string name="expense_submitted">Expense claim submitted</string>
+    <string name="error_expense_submit_failed">Could not submit the expense claim</string>
+    <string name="error_description_required">Enter a description</string>
+    <string name="error_amount_required">Enter an amount</string>
+    <string name="error_expense_date_required">Choose the expense date</string>
+
+    <string name="expense_category_travel">Travel</string>
+    <string name="expense_category_meals">Meals</string>
+    <string name="expense_category_office_supplies">Office Supplies</string>
+    <string name="expense_category_transport">Transport</string>
+    <string name="expense_category_accommodation">Accommodation</string>
+    <string name="expense_category_licensing">Licensing</string>
+    <string name="expense_category_other">Other</string>
+
+    <string name="title_expense_approvals">Expense Approvals</string>
+    <string name="action_expense_approvals">Expense Approvals</string>
+    <string name="empty_expense_approvals">No expense claims waiting for review</string>
+    <string name="empty_expense_approvals_subtitle">Claims submitted by employees will show up here.</string>
+    <string name="error_expense_approvals_load_failed">Could not load expense claims</string>
+    <string name="dialog_reject_expense_title">Reason for rejecting</string>
+    <string name="error_expense_review_failed">Could not save your decision</string>
+    <string name="expense_approved">Expense approved</string>
+    <string name="expense_rejected">Expense rejected</string>
+
+    <string name="title_company_overview">Company Overview</string>
+    <string name="action_company_overview">Company Overview</string>
+    <string name="label_finance_this_month">Finance — This Month</string>
+    <string name="label_hr_today">HR — Today</string>
+    <string name="stat_revenue">Revenue</string>
+    <string name="stat_expenses">Expenses</string>
+    <string name="stat_net_profit">Net Profit</string>
+    <string name="stat_cash_collected">Cash Collected</string>
+    <string name="stat_outstanding">Outstanding</string>
+    <string name="stat_overdue">Overdue</string>
+    <string name="stat_total_employees">Total Employees</string>
+    <string name="stat_present_today">Present Today</string>
+    <string name="stat_on_leave_today">On Leave Today</string>
+    <string name="stat_absent_today">Absent Today</string>
+    <string name="stat_open_positions">Open Positions</string>
+    <string name="stat_pending_leave_approvals">Pending Leave Approvals</string>
+    <string name="error_finance_dashboard_unavailable">Finance figures unavailable (missing permission)</string>
+    <string name="error_hr_dashboard_unavailable">HR figures unavailable (missing permission)</string>
+
+    <string name="title_my_leads">My Leads</string>
+    <string name="action_my_leads">My Leads</string>
+    <string name="empty_leads">No leads assigned to you</string>
+    <string name="empty_leads_subtitle">Leads assigned to you will show up here.</string>
+    <string name="error_leads_load_failed">Could not load leads</string>
+    <string name="label_estimated_value">Estimated value</string>
+    <string name="lead_status_new">New</string>
+    <string name="lead_status_contacted">Contacted</string>
+    <string name="lead_status_qualified">Qualified</string>
+    <string name="lead_status_disqualified">Disqualified</string>
+    <string name="lead_status_updated">Status updated</string>
+    <string name="error_lead_status_update_failed">Could not update the lead\'s status</string>
+
+    <string name="title_search">Search</string>
+    <string name="action_search">Search</string>
+    <string name="hint_search_query">Search leads, clients, invoices, requests…</string>
+    <string name="empty_search_prompt_title">Search for anything</string>
+    <string name="empty_search_prompt_subtitle">Find leads, clients, invoices, tickets, and more.</string>
+    <string name="empty_search_results">No results found</string>
+    <string name="empty_search_results_subtitle">Try a different search term.</string>
+    <string name="error_search_failed">Search failed</string>
+    <string name="search_type_lead">Lead</string>
+    <string name="search_type_client">Client</string>
+    <string name="search_type_opportunity">Opportunity</string>
+    <string name="search_type_service_request">Service Request</string>
+    <string name="search_type_ticket">Ticket</string>
+    <string name="search_type_invoice">Invoice</string>
+
+    <string name="title_wallet">Wallet</string>
+    <string name="action_wallet">Wallet</string>
+    <string name="label_total_available">Total Available</string>
+    <string name="label_credit_balance">Credit Balance</string>
+    <string name="label_recent_transactions">Recent Transactions</string>
+    <string name="empty_wallet_transactions">No transactions yet</string>
+    <string name="empty_wallet_transactions_subtitle">Your payments and transfers will show up here.</string>
+    <string name="error_wallet_load_failed">Could not load wallet</string>
+
+    <string name="title_company_directory">Company Directory</string>
+    <string name="action_directory">Directory</string>
+    <string name="empty_directory">No employees found</string>
+    <string name="empty_directory_subtitle">Your colleagues will show up here once they\'re added.</string>
+    <string name="error_directory_load_failed">Could not load the directory</string>
+
+    <string name="title_my_timesheet">My Timesheet</string>
+    <string name="action_my_timesheet">My Timesheet</string>
+    <string name="action_log_time">Log Time</string>
+    <string name="title_log_time">Log Time</string>
+    <string name="empty_timesheet">No time logged yet</string>
+    <string name="empty_timesheet_subtitle">Log your hours and they\'ll show up here.</string>
+    <string name="error_timesheet_load_failed">Could not load your timesheet</string>
+    <string name="error_timesheet_log_failed">Could not log this entry</string>
+    <string name="timesheet_logged">Time logged</string>
+    <string name="hint_hours_worked">Hours worked</string>
+    <string name="hint_project_name_optional">Project (optional)</string>
+</resources>

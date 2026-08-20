@@ -1,0 +1,35 @@
+<div class="container-fluid py-3">
+  <h4 class="mb-3">Pending Approvals</h4>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @for (approval of approvals; track approval.id) {
+  <div class="card mb-2">
+    <div class="card-body py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <a class="fw-semibold" [routerLink]="['/servicedesk/requests', approval.serviceRequestId]">
+          {{ approval.serviceRequestTitle }}
+        </a>
+        <div class="text-muted small">
+          Stage: <strong>{{ approval.workflowStageName }}</strong>
+          @if (approval.approverRole) { · Approver role: {{ approval.approverRole }} }
+          @if (approval.requestedByName) { · Requested by {{ approval.requestedByName }} }
+          · {{ approval.createdAt | date:'medium' }}
+        </div>
+      </div>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <input class="form-control form-control-sm" style="width: 240px"
+               placeholder="Decision notes (required to reject)" [(ngModel)]="notes[approval.id]" />
+        <button class="btn btn-success btn-sm" (click)="approve(approval)"><i class="bi bi-check-lg"></i> Approve</button>
+        <button class="btn btn-danger btn-sm" (click)="reject(approval)"><i class="bi bi-x-lg"></i> Reject</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && !approvals.length) { <app-empty-state icon="bi-clipboard-check" message="No pending approvals." /> }
+
+  <div class="d-flex justify-content-end mt-2">
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+</div>

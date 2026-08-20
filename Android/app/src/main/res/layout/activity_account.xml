@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Every view id below is referenced from AccountActivity.java (findViewById via ViewBinding)
+     — do not rename/remove without updating that class. Role-based visibility is still driven
+     entirely by AccountActivity.onCreate(); this layout only changed how each row is presented,
+     replacing a stack of full-width outlined buttons with a proper settings menu (icon + label,
+     left-aligned, clipped ripple), plus giving Log Out its own visually-separated danger action
+     instead of looking like the screen's primary CTA. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/screen_padding_h"
+        android:paddingTop="@dimen/screen_padding_v"
+        android:paddingBottom="@dimen/space_32">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/section_spacing"
+            android:text="@string/title_account"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleLarge" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEditProfile"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_edit_profile"
+            app:icon="@drawable/ic_account"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_16" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCompanyProfile"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_company_profile"
+            android:visibility="gone"
+            app:icon="@drawable/ic_briefcase"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_16" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNotifications"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_notifications"
+            app:icon="@drawable/ic_notifications"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_16" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNotificationPreferences"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_notification_preferences"
+            app:icon="@drawable/ic_notifications"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_16" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnHelpCenter"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_help_center"
+            app:icon="@drawable/ic_support"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_16" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnChangeLanguage"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_change_language" />
+
+        <!-- EMPLOYEE and COMPANY_OWNER — see AccountActivity.onCreate(). -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnWallet"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_wallet"
+            android:visibility="gone"
+            app:icon="@drawable/ic_wallet"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_16" />
+
+        <!-- EMPLOYEE and COMPANY_OWNER — see AccountActivity.onCreate(). -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDirectory"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_directory"
+            android:visibility="gone"
+            app:icon="@drawable/ic_account"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_16" />
+
+        <!-- COMPANY_OWNER only — see AccountActivity.onCreate(). -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCompanyOverview"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_company_overview"
+            android:visibility="gone"
+            app:icon="@drawable/ic_document"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_16" />
+
+        <!-- COMPANY_OWNER only — see AccountActivity.onCreate(). -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAttendanceLocationSettings"
+            style="@style/Widget.Zuhoo.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="start|center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_attendance_location_settings"
+            android:visibility="gone"
+            app:icon="@drawable/ic_calendar"
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/space_16" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchBiometric"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="@dimen/item_spacing"
+            android:background="@drawable/bg_card"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="@dimen/card_padding"
+            android:text="@string/action_use_biometric"
+            android:textAppearance="@style/TextAppearance.Zuhoo.BodyLarge"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            style="@style/Widget.Zuhoo.Button.Danger"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:text="@string/action_logout" />
+
+    </LinearLayout>
+
+</ScrollView>

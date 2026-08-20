@@ -1,0 +1,230 @@
+<div class="auth-page">
+
+  <!-- ═══════════════════════════════ LEFT PANEL ═══════════════════════════════ -->
+  <div class="left-panel">
+
+    <div class="logo-bar">
+      <img src="/brand/logo-icon.png" alt="ZuhooCMS" class="logo-icon" />
+      <span class="logo-text">ZuhooCMS</span>
+    </div>
+
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Client<br>
+        <span class="hero-highlight">Portal Access</span>
+      </h1>
+      <p class="hero-sub">
+        Register as a client to track your service requests, invoices, and communication
+        with your company in one place.
+      </p>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon"><i class="bi bi-clipboard-check"></i></div>
+          <div>
+            <div class="feature-title">Track Requests</div>
+            <div class="feature-desc">Follow the status of every service request</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="bi bi-chat-dots-fill"></i></div>
+          <div>
+            <div class="feature-title">Direct Communication</div>
+            <div class="feature-desc">Message your account manager directly</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
+          <div>
+            <div class="feature-title">Invoices &amp; Documents</div>
+            <div class="feature-desc">Everything in one secure portal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ RIGHT PANEL ═══════════════════════════════ -->
+  <div class="right-panel">
+    <div class="auth-card">
+
+      @if (submitted) {
+        <div class="text-center py-3">
+          <div class="success-icon-wrap">
+            <i class="bi bi-envelope-check"></i>
+          </div>
+          <h3 class="auth-title mt-4">Welcome aboard</h3>
+          <p class="auth-sub">Your client account has been created. You can now sign in to your portal.</p>
+          <a routerLink="/auth/login" class="btn-signin" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">
+            Back to Sign In
+          </a>
+        </div>
+      } @else {
+
+        <h2 class="auth-title">Register as a Client</h2>
+        <p class="auth-sub">Create your client account to access your company's portal</p>
+
+        @if (error) {
+          <div class="auth-alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            {{ error }}
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="submit()">
+
+          <!-- STEP 1: YOUR DETAILS -->
+          @if (currentStep === 1) {
+            <div class="field-row-2">
+              <div class="field-group">
+                <label class="field-label">First Name</label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-person field-icon"></i>
+                  <input type="text" class="field-input" formControlName="firstName" placeholder="Enter Your Firstname"
+                         [class.invalid]="form.controls.firstName.touched && form.controls.firstName.invalid"/>
+                </div>
+                @if (form.controls.firstName.touched && form.controls.firstName.invalid) {
+                  <span class="field-error">First name is required</span>
+                }
+              </div>
+              <div class="field-group">
+                <label class="field-label">Last Name</label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-person field-icon"></i>
+                  <input type="text" class="field-input" formControlName="lastName" placeholder="Enter Your Last name"
+                         [class.invalid]="form.controls.lastName.touched && form.controls.lastName.invalid"/>
+                </div>
+                @if (form.controls.lastName.touched && form.controls.lastName.invalid) {
+                  <span class="field-error">Last name is required</span>
+                }
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Email</label>
+              <div class="field-input-wrap">
+                <i class="bi bi-envelope field-icon"></i>
+                <input type="email" class="field-input" formControlName="email" placeholder="you@example.com"
+                       [class.invalid]="form.controls.email.touched && form.controls.email.invalid"/>
+              </div>
+              @if (form.controls.email.touched && form.controls.email.invalid) {
+                <span class="field-error">A valid email address is required</span>
+              }
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Phone <span class="field-opt">(optional)</span></label>
+              <div class="field-input-wrap">
+                <i class="bi bi-telephone field-icon"></i>
+                <input type="text" class="field-input" formControlName="phone" placeholder="+1 555 0000"/>
+              </div>
+            </div>
+
+            <div class="field-row-2">
+              <div class="field-group">
+                <label class="field-label">Password</label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-lock field-icon"></i>
+                  <input [type]="showPwd ? 'text' : 'password'" class="field-input" formControlName="password"
+                         placeholder="••••••••"
+                         [class.invalid]="form.controls.password.touched && form.controls.password.invalid"/>
+                  <button type="button" class="eye-btn" (click)="showPwd = !showPwd">
+                    <i class="bi" [class.bi-eye]="!showPwd" [class.bi-eye-slash]="showPwd"></i>
+                  </button>
+                </div>
+                @if (form.controls.password.touched && form.controls.password.invalid) {
+                  <span class="field-error">Min 8 characters</span>
+                }
+              </div>
+              <div class="field-group">
+                <label class="field-label">Confirm Password</label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-lock field-icon"></i>
+                  <input [type]="showConfirmPwd ? 'text' : 'password'" class="field-input" formControlName="confirmPassword"
+                         placeholder="••••••••"
+                         [class.invalid]="form.controls.confirmPassword.touched && (form.controls.confirmPassword.invalid || form.errors?.['passwordMismatch'])"/>
+                  <button type="button" class="eye-btn" (click)="showConfirmPwd = !showConfirmPwd">
+                    <i class="bi" [class.bi-eye]="!showConfirmPwd" [class.bi-eye-slash]="showConfirmPwd"></i>
+                  </button>
+                </div>
+                @if (form.controls.confirmPassword.touched && (form.controls.confirmPassword.invalid || form.errors?.['passwordMismatch'])) {
+                  <span class="field-error">Passwords must match</span>
+                }
+              </div>
+            </div>
+
+            <button type="button" class="btn-signin mt-3" (click)="nextStep()">
+              Next: Choose Company
+            </button>
+          }
+
+          <!-- STEP 2: COMPANY -->
+          @if (currentStep === 2) {
+            <div class="section-divider">Which company are you a client of?</div>
+
+            <div class="field-group">
+              <label class="field-label">Company</label>
+              <div class="field-input-wrap">
+                <i class="bi bi-building field-icon"></i>
+                <select class="field-input" formControlName="companyId"
+                        [class.invalid]="form.controls.companyId.touched && form.controls.companyId.invalid">
+                  <option [ngValue]="null" disabled>{{ companiesLoading ? 'Loading companies…' : 'Select a company' }}</option>
+                  @for (c of companies; track c.id) {
+                    <option [ngValue]="c.id">{{ c.companyName }}</option>
+                  }
+                </select>
+              </div>
+              @if (companiesError) {
+                <span class="field-error">{{ companiesError }}</span>
+              }
+              @if (form.controls.companyId.touched && form.controls.companyId.invalid) {
+                <span class="field-error">Please select a company</span>
+              }
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Your Company Name <span class="field-opt">(optional)</span></label>
+              <div class="field-input-wrap">
+                <i class="bi bi-briefcase field-icon"></i>
+                <input type="text" class="field-input" formControlName="clientCompanyName" placeholder="Your organization"/>
+              </div>
+            </div>
+
+            <div class="field-row-2">
+              <div class="field-group">
+                <label class="field-label">Industry <span class="field-opt">(optional)</span></label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-diagram-3 field-icon"></i>
+                  <input type="text" class="field-input" formControlName="industry" placeholder="e.g. Retail"/>
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Website <span class="field-opt">(optional)</span></label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-globe2 field-icon"></i>
+                  <input type="text" class="field-input" formControlName="website" placeholder="https://"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-3">
+              <button type="button" class="btn btn-light w-50" style="height:50px;border-radius:12px;font-weight:600;" (click)="prevStep()">Back</button>
+              <button type="submit" class="btn-signin w-50 mb-0" [disabled]="loading">
+                @if (loading) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Create Account
+              </button>
+            </div>
+          }
+
+        </form>
+
+        <p class="signup-link">
+          Already have an account? <a routerLink="/auth/login">Sign In</a>
+        </p>
+      }
+    </div>
+  </div>
+</div>

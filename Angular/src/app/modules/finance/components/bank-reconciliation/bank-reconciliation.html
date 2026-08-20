@@ -1,0 +1,227 @@
+<div class="container-fluid py-3">
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">Bank Reconciliation</h4>
+      <div class="page-subtitle mt-1">Match your books against the bank statement</div>
+    </div>
+    <button *appHasPermission="'BANK_RECONCILIATION_CREATE'" class="btn btn-primary-bos btn-sm px-3 fw-semibold" (click)="openCreate()">
+      <i class="bi bi-plus"></i> New Reconciliation
+    </button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  @if (pending.length) {
+  <div class="alert alert-warning py-2">
+    <strong>{{ pending.length }}</strong> reconciliation(s) pending review.
+  </div>
+  }
+
+  <!-- Start reconciliation modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Start Reconciliation</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Bank Account <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.bankAccountId">
+                <option [value]="0" disabled>Select account</option>
+                @for (a of accounts; track a.id) { <option [value]="a.id">{{ a.accountCode }} - {{ a.accountName }}</option> }
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Bank Statement Balance <span class="text-danger">*</span></label>
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="form.bankStatementBalance" />
+              <div class="form-text">The closing balance shown on your actual bank statement.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.bankAccountId || !form.bankStatementBalance" (click)="save()">Start Reconciliation</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <div class="row g-3">
+    <div [class]="selected ? 'col-lg-7' : 'col-12'">
+      @if (loading) { <app-loader /> }
+      @if (!loading && items.length) {
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden"><div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0 table-dark-header">
+          <thead><tr><th>Account</th><th>Date</th><th class="text-end">GL Balance</th><th class="text-end">Bank Balance</th><th class="text-end">Difference</th><th>Status</th></tr></thead>
+          <tbody>
+            @for (item of items; track item.id) {
+            <tr [class.table-danger]="!isBalanced(item) && !item.reconciled" role="button" (click)="view(item)">
+              <td>{{ item.bankAccountName || ('#' + item.bankAccountId) }}</td>
+              <td class="small text-muted">{{ item.reconciliationDate | date:'mediumDate' }}</td>
+              <td class="text-end">{{ item.glBalance | bosCurrency }}</td>
+              <td class="text-end">{{ item.bankStatementBalance | bosCurrency }}</td>
+              <td class="text-end fw-semibold" [class.text-danger]="!isBalanced(item)" [class.text-success]="isBalanced(item)">{{ item.difference | bosCurrency }}</td>
+              <td>
+                @if (item.reconciled) {
+                  <span class="badge text-bg-success">Reconciled</span>
+                  <div class="small text-muted">{{ item.reconciledDate | date:'mediumDate' }} @if (item.reconciledBy) { by {{ item.reconciledBy }} }</div>
+                } @else if (isBalanced(item)) {
+                  <span class="badge text-bg-info">Balanced - ready to close</span>
+                } @else {
+                  <span class="badge text-bg-warning">Pending - {{ item.difference | bosCurrency }} unexplained</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex justify-content-end"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+      </div>
+      }
+      @if (!loading && !items.length && !showForm) { <app-empty-state icon="bi-bank" message="No bank reconciliations yet." /> }
+    </div>
+
+    @if (selected) {
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn-close" style="font-size: 0.75rem;" (click)="close()" aria-label="Close"></button>
+            <span class="fw-semibold">{{ selected.bankAccountName }} &middot; {{ selected.reconciliationDate | date:'mediumDate' }}</span>
+          </div>
+          @if (selected.reconciled) { <span class="badge text-bg-success">Reconciled</span> }
+        </div>
+
+        <!-- Once closed, the notes explaining the discrepancy are the record -
+             without this they'd only exist inside the (hidden) editing textarea. -->
+        @if (selected.reconciled && selected.discrepancyNotes) {
+        <div class="card-body py-2 border-bottom">
+          <div class="small fw-semibold text-muted mb-1">Discrepancy Notes</div>
+          <div class="small">{{ selected.discrepancyNotes }}</div>
+        </div>
+        }
+
+        <div class="card-body py-2 border-bottom">
+          <div class="small fw-semibold text-muted mb-1">Bank Statement File</div>
+          @if (selected.statementFileUrl) {
+            <div class="d-flex justify-content-between align-items-center">
+              <a [href]="selected.statementFileUrl" target="_blank" rel="noopener" class="text-decoration-none small">
+                <i class="bi bi-paperclip me-1"></i>{{ selected.statementFileName }}
+              </a>
+              <span class="text-muted" style="font-size: 0.75rem;">{{ selected.statementUploadedAt | date:'medium' }}</span>
+            </div>
+            <label class="btn btn-outline-secondary btn-sm mt-2 mb-0" [class.disabled]="uploadingStatement">
+              @if (uploadingStatement) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Replace File
+              <input type="file" class="d-none" (change)="onStatementSelected($event)" [disabled]="uploadingStatement" />
+            </label>
+          } @else {
+            <label class="btn btn-outline-primary btn-sm mb-0" [class.disabled]="uploadingStatement">
+              @if (uploadingStatement) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Attach Bank Statement (PDF/Image)
+              <input type="file" class="d-none" (change)="onStatementSelected($event)" [disabled]="uploadingStatement" />
+            </label>
+          }
+        </div>
+
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <tbody>
+              <tr><td class="text-muted">GL Balance</td><td class="fw-bold">{{ selected.glBalance | bosCurrency }}</td></tr>
+              <tr><td class="text-muted">Bank Statement Balance</td><td>{{ selected.bankStatementBalance | bosCurrency }}</td></tr>
+              <tr><td class="text-muted">+ Outstanding Deposits</td><td class="text-success">+{{ selected.outstandingDepositsTotal | bosCurrency }}</td></tr>
+              <tr><td class="text-muted">- Outstanding Checks</td><td class="text-danger">-{{ selected.outstandingChecksTotal | bosCurrency }}</td></tr>
+              <tr class="border-top"><td class="text-muted fw-semibold">Adjusted Bank Balance</td><td class="fw-bold">{{ selected.adjustedBankBalance | bosCurrency }}</td></tr>
+              <tr>
+                <td class="text-muted fw-semibold">Difference</td>
+                <td class="fw-bold" [class.text-success]="isBalanced(selected)" [class.text-danger]="!isBalanced(selected)">
+                  {{ selected.difference | bosCurrency }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        @if (!isBalanced(selected) && !selected.reconciled) {
+        <div class="alert alert-warning small mx-3 mb-0 py-2">
+          <i class="bi bi-exclamation-triangle me-1"></i>
+          Check off transactions below as they show up on the bank statement. If the difference
+          still isn't zero once everything's checked, there's a real discrepancy (e.g. an
+          unrecorded bank fee) - post a journal entry for it, then it'll appear here to clear too.
+        </div>
+        }
+
+        <div class="card-body border-top">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="small fw-semibold text-muted">Outstanding Transactions</div>
+            @if (!selected.reconciled) {
+            <label class="btn btn-outline-primary btn-sm mb-0" [class.disabled]="importing">
+              @if (importing) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              <i class="bi bi-filetype-csv me-1"></i>Import Statement CSV
+              <input type="file" accept=".csv,text/csv" class="d-none" (change)="onStatementCsvSelected($event)" [disabled]="importing" />
+            </label>
+            }
+          </div>
+          @if (importResult) {
+          <div class="alert py-2 small" [class.alert-success]="importResult.unmatchedCount === 0" [class.alert-warning]="importResult.unmatchedCount > 0">
+            Matched and cleared <strong>{{ importResult.matched }}</strong> of {{ importResult.totalLines }} statement lines.
+            @if (importResult.unmatchedCount > 0) {
+              <div class="mt-1 fw-semibold">{{ importResult.unmatchedCount }} line(s) had no matching transaction in the books:</div>
+              <ul class="mb-0 mt-1">
+                @for (u of importResult.unmatchedLines; track $index) {
+                  <li>{{ u.date }} — {{ u.description || 'no description' }} ({{ u.amount | bosCurrency }}): {{ u.reason }}</li>
+                }
+              </ul>
+              <div class="mt-1 text-muted">Unmatched deposits/withdrawals usually mean something wasn't recorded in the books yet - post it (e.g. a bank fee via Journal Entry), then it will appear below to clear.</div>
+            }
+          </div>
+          }
+          @if (loadingTransactions) { <app-loader /> }
+          @if (!loadingTransactions && transactions.length) {
+          <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+            <table class="table table-sm mb-0">
+              <tbody>
+                @for (txn of transactions; track txn.id) {
+                <tr [class.text-decoration-line-through]="txn.isReconciled" [class.text-muted]="txn.isReconciled">
+                  <td style="width: 30px;">
+                    <input type="checkbox" class="form-check-input" [checked]="txn.isReconciled"
+                           [disabled]="selected.reconciled || togglingId === txn.id" (change)="toggle(txn)" />
+                  </td>
+                  <td class="small">{{ txn.transactionDate | date:'mediumDate' }}</td>
+                  <td class="small">{{ txn.description }} @if (txn.referenceNumber) { <span class="text-muted">({{ txn.referenceNumber }})</span> }</td>
+                  <td class="text-end small">
+                    @if (txn.debitAmount) { <span class="text-success">+{{ txn.debitAmount | bosCurrency }}</span> }
+                    @if (txn.creditAmount) { <span class="text-danger">-{{ txn.creditAmount | bosCurrency }}</span> }
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+          @if (!loadingTransactions && !transactions.length) {
+            <p class="text-muted small mb-0">No outstanding transactions - everything on this account has already cleared.</p>
+          }
+        </div>
+
+        @if (!selected.reconciled) {
+        <div class="card-footer">
+          <label class="form-label small text-muted mb-1">Notes (optional)</label>
+          <textarea class="form-control form-control-sm mb-2" rows="2" placeholder="Notes about this reconciliation" [(ngModel)]="reconcileNotes"></textarea>
+          <button class="btn btn-primary btn-sm w-100" [disabled]="!isBalanced(selected) || reconciling" (click)="confirmReconcile()">
+            @if (reconciling) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            @if (isBalanced(selected)) { Mark as Reconciled } @else { Clear the difference first }
+          </button>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</div>

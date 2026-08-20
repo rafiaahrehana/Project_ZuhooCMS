@@ -1,0 +1,173 @@
+/* Product showcase - charcoal band holding a LIGHT dashboard miniature
+   (the mockup's "Live Dashboard View"): dark around, the real app's light
+   theme inside the browser frame, so the product pops out of the page. */
+
+.product-showcase {
+  background:
+    radial-gradient(ellipse 55% 45% at 85% 0%,  rgba(var(--accent-rgb, 13 148 136), 0.14), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 8% 100%, rgba(var(--accent-rgb, 13 148 136), 0.09), transparent 66%),
+    linear-gradient(170deg, #0F1715 0%, #101720 55%, #0C1211 100%);
+  padding-block: clamp(3rem, 8vw, 5.5rem);
+
+  /* Soft glows, same family as the hero's. */
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.30;
+    pointer-events: none;
+  }
+  &::before {
+    width: 420px; height: 420px;
+    left: -120px; top: -80px;
+    background: rgba(var(--accent-rgb, 13 148 136), 0.45);
+  }
+  &::after {
+    width: 380px; height: 380px;
+    right: -100px; bottom: -60px;
+    background: rgba(16, 185, 129, 0.30);
+  }
+}
+
+.ps-title { color: #fff; }
+.ps-sub   { color: #94A8A0; }
+
+/* ── Browser frame: the light app on the dark band ──────────── */
+.ps-frame {
+  max-width: 860px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #E7ECF1;
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+}
+
+.ps-chrome {
+  height: 42px;
+  background: #DCE3EA;
+  border-bottom: 1px solid #CBD5DE;
+}
+
+.ps-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #B7C2CC;
+}
+
+.ps-url {
+  font-size: 0.75rem;
+  color: #64748B;
+  background: #CDD7E0;
+  border-radius: 999px;
+  padding: 0.2rem 0.9rem;
+}
+
+/* ── Stats ─────────────────────────────────────────────────── */
+.ps-stat {
+  border: 1px solid #D8E0E7;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  background: #F1F4F7;
+
+  i { color: #059669; font-size: 1.05rem; }
+}
+
+.ps-stat-value {
+  color: #0F172A;
+  font-weight: 800;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.ps-stat-label {
+  color: #64748B;
+  font-size: 0.72rem;
+}
+
+/* ── Pipeline slice ────────────────────────────────────────── */
+.ps-panel {
+  border: 1px solid #D8E0E7;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  background: #F1F4F7;
+}
+
+.ps-panel-title {
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 0.9rem;
+
+  i { color: #0D9488; }
+}
+
+.ps-panel-hint {
+  color: #059669;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ps-deal {
+  display: grid;
+  grid-template-columns: 1fr auto 180px;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-top: 1px solid #DFE6EC;
+
+  &:first-of-type { border-top: none; }
+}
+
+.ps-deal-main { min-width: 0; }
+
+.ps-deal-name {
+  display: block;
+  color: #111827;
+  font-weight: 600;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-deal-client {
+  color: #64748B;
+  font-size: 0.72rem;
+}
+
+.ps-deal-amount {
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.ps-deal-stage {
+  span {
+    display: block;
+    color: #64748B;
+    font-size: 0.68rem;
+    margin-top: 0.25rem;
+  }
+}
+
+.ps-deal-bar {
+  height: 5px;
+  border-radius: 999px;
+  background: #CDD7E0;
+  overflow: hidden;
+
+  div {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #10B981, #2DD4BF);
+  }
+}
+
+/* The stage column is the first thing to give on a phone. */
+@media (max-width: 575.98px) {
+  .ps-deal { grid-template-columns: 1fr auto; }
+  .ps-deal-stage { display: none; }
+}

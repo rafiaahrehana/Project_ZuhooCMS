@@ -1,0 +1,36 @@
+// FAQ on the charcoal band: light text, accent-tinted open state, and the
+// Bootstrap chevron inverted so it is visible on dark.
+
+.accordion-button:not(.collapsed) {
+  background-color: transparent !important;
+  color: var(--accent) !important;
+  box-shadow: none !important;
+}
+
+.accordion-button:focus {
+  box-shadow: none !important;
+}
+
+// Bootstrap draws the chevron as a dark inline SVG; invert it for dark.
+.accordion-button::after {
+  filter: invert(1) brightness(1.4);
+}
+
+.faq-item {
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10) !important;
+
+  &:last-child { border-bottom: none !important; }
+}
+
+.faq-ghost-btn {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #E7ECEF;
+  background: rgba(255, 255, 255, 0.04);
+
+  &:hover {
+    border-color: rgba(var(--accent-rgb), 0.7);
+    color: #fff;
+    background: rgba(var(--accent-rgb), 0.12);
+  }
+}

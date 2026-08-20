@@ -1,0 +1,91 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Support Agents</h4>
+    <button class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> Add Agent</button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <!-- Create / Edit modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Support Agent' : 'Add New Support Agent' }}</h5>
+          <button class="btn-close" (click)="showForm = false; editingId = null;"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Platform User <span class="text-danger">*</span></label>
+              @if (!editingId) {
+                <select class="form-select form-select-sm" [(ngModel)]="form.userId">
+                  <option [ngValue]="undefined" disabled selected>Select platform user</option>
+                  @for (u of platformUsers; track u.id) {
+                    <option [value]="u.id">{{ u.firstName }} {{ u.lastName }} ({{ u.email }})</option>
+                  }
+                </select>
+              } @else {
+                <input class="form-control form-control-sm" [value]="editingAgentName" readonly disabled />
+              }
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Department</label>
+              <input class="form-control form-control-sm" placeholder="e.g. IT, Level 1" [(ngModel)]="form.department" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Specialization</label>
+              <input class="form-control form-control-sm" placeholder="e.g. Billing, Technical" [(ngModel)]="form.specialization" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Max concurrent tickets</label>
+              <input class="form-control form-control-sm" type="number" [(ngModel)]="form.maxConcurrentTickets" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null;">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="save()">{{ editingId ? 'Save' : 'Add' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && agents.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Name</th><th>Department</th><th>Status</th><th>Accepting</th><th>Tickets Handled</th><th class="text-end">Satisfaction</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          @for (a of agents; track a.id) {
+          <tr>
+            <td><strong>{{ a.fullName }}</strong><div class="text-muted small">{{ a.email }}</div></td>
+            <td>{{ a.department || '-' }}</td>
+            <td><span class="badge {{ statusClass(a.status) }}">{{ a.status }}</span></td>
+            <td>
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" [checked]="a.acceptingTickets" (change)="toggleAccepting(a)" />
+              </div>
+            </td>
+            <td>{{ a.totalTicketsHandled }}</td>
+            <td class="text-end">{{ a.satisfactionScore | number:'1.1-1' }}</td>
+            <td class="text-end">
+              <button class="btn btn-outline-secondary btn-sm" (click)="openEdit(a)" title="Edit Agent">
+                <i class="bi bi-pencil"></i>
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !agents.length) { <app-empty-state icon="bi-headset" message="No agents yet." /> }
+</div>

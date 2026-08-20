@@ -1,0 +1,46 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-kanban me-2"></i>Pipeline</h4>
+      <p class="small mb-0 page-subtitle">Drag a candidate to move them through the hiring funnel</p>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading) {
+  <div class="d-flex gap-3 overflow-auto align-items-start pb-2" cdkDropListGroup>
+    @for (column of columns; track column.key) {
+    <div class="card border-0 shadow-sm flex-shrink-0" style="width: 240px">
+      <div class="card-header bg-white py-2 border-0 d-flex justify-content-between align-items-center">
+        <span class="small fw-bold text-uppercase" style="letter-spacing:.04em">{{ column.label }}</span>
+        <span class="badge rounded-pill text-bg-light border">{{ (board[column.key] || []).length }}</span>
+      </div>
+      <div class="card-body p-2 pt-0"
+           [id]="column.key"
+           cdkDropList
+           [cdkDropListData]="board[column.key]"
+           [cdkDropListEnterPredicate]="canEnter"
+           [class.pipeline-locked]="!column.droppable"
+           [title]="!column.droppable ? (column.key === 'OFFER' ? 'Offers only move from the Offers screen' : 'Hiring only happens through the Hire action') : ''"
+           (cdkDropListDropped)="onDrop($event, column)">
+        @for (a of board[column.key]; track a.id) {
+        <div class="card border mb-2" cdkDrag [cdkDragDisabled]="!column.droppable && column.key === 'HIRED'">
+          <div class="card-body p-2">
+            <div class="fw-semibold small">{{ a.candidateName }}</div>
+            <div class="text-muted small text-truncate">{{ a.jobPostingTitle }}</div>
+            @if (a.source) { <div class="text-muted mt-1" style="font-size: 0.68rem"><i class="bi bi-signpost-2 me-1"></i>{{ a.source | titlecase }}</div> }
+            <a class="small" [routerLink]="['/hrm/applications']">View <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+        }
+        @if (!board[column.key]?.length) {
+        <div class="text-center py-4 text-muted small">Empty</div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>

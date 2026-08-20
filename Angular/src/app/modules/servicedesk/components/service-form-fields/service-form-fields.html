@@ -1,0 +1,85 @@
+<div class="container-fluid py-3">
+  <div class="mb-2">
+    <a routerLink="/servicedesk/services" class="text-decoration-none text-muted small"><i class="bi bi-chevron-left"></i> Services</a>
+  </div>
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h4 class="mb-0">Form Fields</h4>
+      <div class="text-muted small">{{ service?.name || 'Service' }}</div>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> Add Field</button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Field' : 'Add Field' }}</h5>
+          <button class="btn-close" (click)="showForm = false; editingId = null"></button>
+        </div>
+        <div class="modal-body">
+      <div class="row g-2">
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Label *" [(ngModel)]="form.label" /></div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="form.fieldType">
+            @for (ft of fieldTypes; track ft) { <option [value]="ft">{{ ft }}</option> }
+          </select>
+        </div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Sort order" [(ngModel)]="form.sortOrder" /></div>
+        <div class="col-md-3">
+          <input class="form-control form-control-sm" placeholder="Validation rules" [(ngModel)]="form.validationRules" />
+          @if (form.fieldType === 'DROPDOWN' || form.fieldType === 'RADIO') {
+          <div class="form-text small">For Dropdown/Radio: enter the choices here, comma-separated (e.g. Small, Medium, Large)</div>
+          }
+        </div>
+        <div class="col-md-1 d-flex align-items-center">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ff-required" [(ngModel)]="form.required" />
+            <label class="form-check-label small" for="ff-required">Required</label>
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.label" (click)="save()">{{ editingId ? 'Update' : 'Save' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && fields.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr><th class="text-center">Order</th><th>Label</th><th>Type</th><th>Validation</th><th class="text-center">Required</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (f of fields; track f.id) {
+          <tr>
+            <td class="text-center">{{ f.sortOrder }}</td>
+            <td class="fw-medium">{{ f.label }}</td>
+            <td class="text-muted small">{{ f.fieldType }}</td>
+            <td class="text-muted small text-truncate" style="max-width:300px">{{ f.validationRules || '-' }}</td>
+            <td class="text-center">@if (f.required) { <i class="bi bi-check-lg text-success"></i> } @else { - }</td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(f)"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-outline-danger btn-sm" (click)="deleteTarget = f"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+  @if (!loading && !fields.length && !showForm) { <app-empty-state icon="bi-input-cursor-text" message="No form fields defined for this service yet." /> }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Remove Field" message="Remove this form field?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

@@ -1,0 +1,150 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0">Service Templates</h4>
+    <button *appHasPermission="'SERVICE_TEMPLATE_CREATE'" class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> New Template</button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && templates.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Name</th><th>Category</th><th class="text-end">Price</th><th class="text-center">Days</th><th class="text-center">Fields</th><th class="text-center">Docs</th><th class="text-center">Stages</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (t of templates; track t.id) {
+          <tr>
+            <td class="fw-medium">{{ t.name }}</td>
+            <td>{{ t.categoryName || '-' }}</td>
+            <td class="text-end">{{ t.defaultPrice | bosCurrency }}</td>
+            <td class="text-center">{{ t.estimatedDays || '-' }}</td>
+            <td class="text-center">{{ t.formFields?.length || 0 }}</td>
+            <td class="text-center">{{ t.requiredDocuments?.length || 0 }}</td>
+            <td class="text-center">{{ t.workflowStages?.length || 0 }}</td>
+            <td><span class="badge" [class.text-bg-success]="t.active" [class.text-bg-secondary]="!t.active">{{ t.active ? 'Active' : 'Inactive' }}</span></td>
+            <td class="text-end text-nowrap">
+              <button *appHasPermission="'SERVICE_TEMPLATE_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(t)"><i class="bi bi-pencil"></i></button>
+              <button *appHasPermission="'SERVICE_TEMPLATE_DELETE'" class="btn btn-outline-danger btn-sm" (click)="deleteTarget = t"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !templates.length) { <app-empty-state icon="bi-file-earmark-ruled" message="No service templates yet. Templates package form fields, required documents, and stages together for reuse." /> }
+
+  @if (editorOpen) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Template' : 'New Template' }}</h5>
+          <button class="btn-close" (click)="closeEditor()"></button>
+        </div>
+        <div class="modal-body">
+          <ul class="nav nav-tabs small mb-3">
+            <li class="nav-item"><a class="nav-link" role="button" [class.active]="editorTab === 'basics'" (click)="editorTab = 'basics'">Basics</a></li>
+            <li class="nav-item"><a class="nav-link" role="button" [class.active]="editorTab === 'fields'" (click)="editorTab = 'fields'">Form Fields <span class="text-muted">· {{ form.formFields?.length || 0 }}</span></a></li>
+            <li class="nav-item"><a class="nav-link" role="button" [class.active]="editorTab === 'documents'" (click)="editorTab = 'documents'">Documents <span class="text-muted">· {{ form.requiredDocuments?.length || 0 }}</span></a></li>
+            <li class="nav-item"><a class="nav-link" role="button" [class.active]="editorTab === 'stages'" (click)="editorTab = 'stages'">Stages <span class="text-muted">· {{ form.workflowStages?.length || 0 }}</span></a></li>
+          </ul>
+
+          @if (editorTab === 'basics') {
+          <div class="row g-2">
+            <div class="col-md-6"><input class="form-control form-control-sm" placeholder="Name *" [(ngModel)]="form.name" /></div>
+            <div class="col-md-3">
+              <select class="form-select form-select-sm" [(ngModel)]="form.categoryId">
+                <option [ngValue]="undefined">Category</option>
+                @for (c of categories; track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }
+              </select>
+            </div>
+            <div class="col-md-3"><input class="form-control form-control-sm" type="number" placeholder="Default price" [(ngModel)]="form.defaultPrice" /></div>
+            <div class="col-md-3"><input class="form-control form-control-sm" type="number" placeholder="Estimated days" [(ngModel)]="form.estimatedDays" /></div>
+            <div class="col-md-6"><input class="form-control form-control-sm" placeholder="Icon URL" [(ngModel)]="form.iconUrl" /></div>
+            <div class="col-md-3 d-flex align-items-end">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="tpl-active" [(ngModel)]="form.active" />
+                <label class="form-check-label small" for="tpl-active">Active</label>
+              </div>
+            </div>
+            <div class="col-12"><textarea class="form-control form-control-sm" rows="3" placeholder="Description" [(ngModel)]="form.description"></textarea></div>
+          </div>
+          }
+
+          @if (editorTab === 'fields') {
+          <div class="d-flex justify-content-end mb-2">
+            <button class="btn btn-outline-primary btn-sm" (click)="addField()"><i class="bi bi-plus"></i> Add Field</button>
+          </div>
+          @if (!(form.formFields?.length)) { <div class="text-muted small">No form fields yet.</div> }
+          @for (f of form.formFields; track trackField($index, f); let i = $index) {
+          <div class="row g-2 align-items-center mb-2 border-bottom pb-2">
+            <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Label *" [(ngModel)]="f.label" /></div>
+            <div class="col-md-2">
+              <select class="form-select form-select-sm" [(ngModel)]="f.fieldType">
+                @for (ft of fieldTypes; track ft) { <option [value]="ft">{{ ft }}</option> }
+              </select>
+            </div>
+            <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Order" [(ngModel)]="f.sortOrder" /></div>
+            <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Validation rules" [(ngModel)]="f.validationRules" /></div>
+            <div class="col-md-1"><div class="form-check"><input class="form-check-input" type="checkbox" [id]="'ff-req-' + i" [(ngModel)]="f.required" /><label class="form-check-label small" [for]="'ff-req-' + i">Req</label></div></div>
+            <div class="col-md-1 text-end"><button class="btn btn-outline-danger btn-sm" (click)="removeField(i)"><i class="bi bi-trash"></i></button></div>
+          </div>
+          }
+          }
+
+          @if (editorTab === 'documents') {
+          <div class="d-flex justify-content-end mb-2">
+            <button class="btn btn-outline-primary btn-sm" (click)="addDocument()"><i class="bi bi-plus"></i> Add Document</button>
+          </div>
+          @if (!(form.requiredDocuments?.length)) { <div class="text-muted small">No required documents yet.</div> }
+          @for (d of form.requiredDocuments; track trackDoc($index, d); let i = $index) {
+          <div class="row g-2 align-items-center mb-2 border-bottom pb-2">
+            <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Document name *" [(ngModel)]="d.docName" /></div>
+            <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Description" [(ngModel)]="d.description" /></div>
+            <div class="col-md-2"><input class="form-control form-control-sm" placeholder="Formats (pdf,jpg)" [(ngModel)]="d.allowedFormats" /></div>
+            <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Max age (days)" [(ngModel)]="d.maxAgeDays" /></div>
+            <div class="col-md-1"><div class="form-check"><input class="form-check-input" type="checkbox" [id]="'doc-mand-' + i" [(ngModel)]="d.mandatory" /><label class="form-check-label small" [for]="'doc-mand-' + i">Req</label></div></div>
+            <div class="col-md-1 text-end"><button class="btn btn-outline-danger btn-sm" (click)="removeDocument(i)"><i class="bi bi-trash"></i></button></div>
+          </div>
+          }
+          }
+
+          @if (editorTab === 'stages') {
+          <div class="d-flex justify-content-end mb-2">
+            <button class="btn btn-outline-primary btn-sm" (click)="addStage()"><i class="bi bi-plus"></i> Add Stage</button>
+          </div>
+          @if (!(form.workflowStages?.length)) { <div class="text-muted small">No workflow stages yet.</div> }
+          @for (s of form.workflowStages; track trackStage($index, s); let i = $index) {
+          <div class="row g-2 align-items-center mb-2 border-bottom pb-2">
+            <div class="col-md-1"><input class="form-control form-control-sm" type="number" placeholder="Order" [(ngModel)]="s.stageOrder" /></div>
+            <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Stage name *" [(ngModel)]="s.stageName" /></div>
+            <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Description" [(ngModel)]="s.stageDescription" /></div>
+            <div class="col-md-3 d-flex gap-3">
+              <div class="form-check"><input class="form-check-input" type="checkbox" [id]="'st-client-' + i" [(ngModel)]="s.requiresClientAction" /><label class="form-check-label small" [for]="'st-client-' + i">Client</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" [id]="'st-pay-' + i" [(ngModel)]="s.requiresPayment" /><label class="form-check-label small" [for]="'st-pay-' + i">Pay</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" [id]="'st-final-' + i" [(ngModel)]="s.isFinalStage" /><label class="form-check-label small" [for]="'st-final-' + i">Final</label></div>
+            </div>
+            <div class="col-md-1 text-end"><button class="btn btn-outline-danger btn-sm" (click)="removeStage(i)"><i class="bi bi-trash"></i></button></div>
+          </div>
+          }
+          }
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="closeEditor()">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.name" (click)="save()">{{ editingId ? 'Update' : 'Save' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Template" message="Delete this template?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

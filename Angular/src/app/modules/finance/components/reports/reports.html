@@ -1,0 +1,339 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Finance Reports</h4>
+  </div>
+  @if (error && selected) { <div class="alert alert-warning py-2">{{ error }}</div> }
+
+  <!-- Report picker: one horizontal card per group - icon/title/count on the
+       left, the group's report rows on the right. Clicking a row opens that
+       report's own filter form below instead of a single dropdown driving
+       every report. -->
+  @if (!selected) {
+  <div class="report-picker">
+    <div class="report-search mb-3">
+      <i class="bi bi-search"></i>
+      <input type="text" class="form-control" placeholder="Search reports..." [(ngModel)]="catalogSearch" />
+    </div>
+
+    <div class="filter-pills">
+      @for (cat of categoryPills; track cat) {
+      <button class="filter-pill" [class.active]="activeCategory === cat" (click)="activeCategory = cat">
+        @if (cat === 'FAVORITES') { <i class="bi bi-star-fill me-1"></i> }
+        {{ categoryLabel(cat) }}
+      </button>
+      }
+    </div>
+
+    @for (group of filteredGroups; track group.title) {
+    <div class="report-group-card mb-3">
+      <div class="report-group-side">
+        <span class="report-group-icon variant-{{ group.variant }}"><i class="bi {{ group.icon }}"></i></span>
+        <div>
+          <div class="report-group-name">{{ group.title }}</div>
+          <div class="report-group-count">{{ group.cards.length + group.external.length }} report{{ group.cards.length + group.external.length === 1 ? '' : 's' }}</div>
+        </div>
+      </div>
+      <div class="report-group-list">
+        @for (card of group.cards; track card.type) {
+        <button type="button" class="report-row" (click)="openReport(card.type)">
+          <span class="report-row-icon"><i class="bi {{ card.icon }}"></i></span>
+          <span class="report-row-body">
+            <span class="report-row-label">{{ card.label }}</span>
+            <span class="report-row-desc">{{ card.desc }}</span>
+          </span>
+          <button type="button" class="report-row-fav" [class.is-fav]="isFavorite(cardId(card))"
+                  [attr.aria-label]="isFavorite(cardId(card)) ? 'Remove from favorites' : 'Add to favorites'"
+                  (click)="toggleFavorite(cardId(card), $event)">
+            <i class="bi" [class.bi-star-fill]="isFavorite(cardId(card))" [class.bi-star]="!isFavorite(cardId(card))"></i>
+          </button>
+          <i class="bi bi-chevron-right report-row-arrow"></i>
+        </button>
+        }
+        @for (ext of group.external; track ext.label) {
+        <a [routerLink]="ext.link" class="report-row">
+          <span class="report-row-icon"><i class="bi {{ ext.icon }}"></i></span>
+          <span class="report-row-body">
+            <span class="report-row-label">{{ ext.label }}</span>
+            <span class="report-row-desc">{{ ext.desc }}</span>
+          </span>
+          <button type="button" class="report-row-fav" [class.is-fav]="isFavorite(externalId(ext))"
+                  [attr.aria-label]="isFavorite(externalId(ext)) ? 'Remove from favorites' : 'Add to favorites'"
+                  (click)="toggleFavorite(externalId(ext), $event)">
+            <i class="bi" [class.bi-star-fill]="isFavorite(externalId(ext))" [class.bi-star]="!isFavorite(externalId(ext))"></i>
+          </button>
+          <i class="bi bi-chevron-right report-row-arrow"></i>
+        </a>
+        }
+      </div>
+    </div>
+    }
+
+    @if (!filteredGroups.length && activeCategory === 'FAVORITES') {
+      <div class="text-muted small text-center py-5"><i class="bi bi-star d-block mb-2" style="font-size:1.5rem"></i>No favorites yet - click the star on any report to pin it here.</div>
+    } @else if (!filteredGroups.length) {
+      <div class="text-muted small text-center py-5">No reports match "{{ catalogSearch }}".</div>
+    }
+  </div>
+  }
+
+  @if (selected) {
+  <button type="button" class="btn btn-outline-secondary btn-sm mb-3" (click)="backToReports()">
+    <i class="bi bi-arrow-left me-1"></i>All Reports
+  </button>
+
+  <div class="card mb-3"><div class="card-body py-2">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label small mb-0 fw-semibold">{{ reportLabel(reportType) }}</label>
+      </div>
+      @if (reportType === 'ACCOUNT_LEDGER') {
+      <div class="col-md-3">
+        <label class="form-label small mb-0">Account</label>
+        <select class="form-select form-select-sm" [(ngModel)]="ledgerAccountId">
+          <option [ngValue]="null">— Select account —</option>
+          @for (a of accounts; track a.id) { <option [ngValue]="a.id">{{ a.accountCode }} · {{ a.accountName }}</option> }
+        </select>
+      </div>
+      }
+      @if (usesDateRange()) {
+      <div class="col-md-3">
+        <label class="form-label small mb-0">Start Date</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="startDate" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small mb-0">End Date</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="endDate" />
+      </div>
+      }
+      @if (!usesDateRange()) {
+      <div class="col-md-3">
+        <label class="form-label small mb-0">As Of Date</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="asOfDate" />
+      </div>
+      }
+      <div class="col-md-3">
+        <button class="btn btn-primary btn-sm" (click)="generate()">Generate</button>
+      </div>
+    </div>
+  </div></div>
+
+  @if (loading) { <div class="text-center py-5"><div class="spinner-border text-primary"></div></div> }
+
+  @if (profitLoss) {
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Period</div><div class="fw-bold">{{ profitLoss.periodStart }} → {{ profitLoss.periodEnd }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Total Revenue</div><div class="fw-bold">{{ profitLoss.totalRevenue | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Total Expense</div><div class="fw-bold">{{ profitLoss.totalExpense | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Net Profit</div><div class="fw-bold" [class]="netProfitClass">{{ profitLoss.netProfit | bosCurrency }}</div></div></div></div>
+  </div>
+  @if (plChartData) {
+  <div class="card mb-3"><div class="card-body">
+    <div class="small text-muted fw-semibold mb-2">Revenue vs Expense</div>
+    <div style="height: 280px;">
+      <canvas baseChart [type]="'bar'" [data]="plChartData" [options]="plChartOptions"></canvas>
+    </div>
+  </div></div>
+  }
+  }
+
+  @if (balanceSheet) {
+  <div class="row g-3">
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">As Of</div><div class="fw-bold">{{ balanceSheet.asOfDate }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Total Assets</div><div class="fw-bold">{{ balanceSheet.totalAssets | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Total Liabilities</div><div class="fw-bold">{{ balanceSheet.totalLiabilities | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Total Equity</div><div class="fw-bold">{{ balanceSheet.totalEquity | bosCurrency }}</div></div></div></div>
+  </div>
+  @if (!balanceSheet.balanced) {
+  <div class="alert alert-danger mt-3 py-2">
+    <i class="bi bi-exclamation-triangle me-1"></i>
+    <strong>This balance sheet doesn't balance</strong> - Assets and Liabilities + Equity differ by
+    {{ balanceSheet.outOfBalanceAmount | bosCurrency }}. This usually means a prior fiscal year hasn't been
+    closed yet (net income never rolled into Retained Earnings) - see Accounting Periods.
+  </div>
+  }
+  }
+
+  @if (trialBalance) {
+  @if (tbChartData) {
+  <div class="card mb-3"><div class="card-body">
+    <div class="small text-muted fw-semibold mb-2">Debit vs Credit by Account</div>
+    <div style="height: 300px;">
+      <canvas baseChart [type]="'bar'" [data]="tbChartData" [options]="tbChartOptions"></canvas>
+    </div>
+  </div></div>
+  }
+  <div class="card">
+    <div class="card-header py-2 fw-semibold">Trial Balance — {{ trialBalance.asOfDate }}</div>
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Code</th><th>Account</th><th class="text-end">Debit</th><th class="text-end">Credit</th></tr></thead>
+        <tbody>
+          @for (a of trialBalance.accounts; track a.accountId) {
+          <tr>
+            <td>{{ a.accountCode }}</td>
+            <td>{{ a.accountName }}</td>
+            <td class="text-end">{{ a.debitBalance | bosCurrency }}</td>
+            <td class="text-end">{{ a.creditBalance | bosCurrency }}</td>
+          </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="fw-bold"><td colspan="2">Total</td><td class="text-end">{{ trialBalance.totalDebit | bosCurrency }}</td><td class="text-end">{{ trialBalance.totalCredit | bosCurrency }}</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (ageing) {
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">As Of</div><div class="fw-bold">{{ ageing.asOfDate }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Total Outstanding</div><div class="fw-bold">{{ ageing.totalOutstanding | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Current</div><div class="fw-bold">{{ ageing.current | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">90+ Days Overdue</div><div class="fw-bold text-danger">{{ ageing.over90 | bosCurrency }}</div></div></div></div>
+  </div>
+  @if (ageingChartData) {
+  <div class="card mb-3"><div class="card-body">
+    <div class="small text-muted fw-semibold mb-2">Outstanding by Age</div>
+    <div style="height: 280px;">
+      <canvas baseChart [type]="'bar'" [data]="ageingChartData" [options]="ageingChartOptions"></canvas>
+    </div>
+  </div></div>
+  }
+  <div class="card">
+    <div class="card-header py-2 fw-semibold">Outstanding Invoices — {{ ageing.asOfDate }}</div>
+    @if (ageing.lines.length) {
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Invoice</th><th>Client</th><th>Due Date</th><th>Bucket</th><th class="text-end">Balance</th></tr></thead>
+        <tbody>
+          @for (l of ageing.lines; track l.invoiceId) {
+          <tr>
+            <td>{{ l.invoiceNumber }}</td>
+            <td>{{ l.clientName || '-' }}</td>
+            <td class="small">{{ l.dueDate | date:'mediumDate' }}</td>
+            <td><span class="badge" [class.text-bg-light]="l.bucket === 'CURRENT'" [class.text-bg-warning]="l.bucket === '1-30'" [class.text-bg-danger]="l.bucket !== 'CURRENT' && l.bucket !== '1-30'">{{ l.bucket }}</span></td>
+            <td class="text-end">{{ l.balanceAmount | bosCurrency }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <div class="card-body text-muted small">No outstanding invoices.</div>
+    }
+  </div>
+  }
+
+  @if (apAgeing) {
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">As Of</div><div class="fw-bold">{{ apAgeing.asOfDate }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Total We Owe</div><div class="fw-bold">{{ apAgeing.totalOutstanding | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Current</div><div class="fw-bold">{{ apAgeing.current | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">90+ Days Overdue</div><div class="fw-bold text-danger">{{ apAgeing.over90 | bosCurrency }}</div></div></div></div>
+  </div>
+  @if (ageingChartData) {
+  <div class="card mb-3"><div class="card-body">
+    <div class="small text-muted fw-semibold mb-2">Payables by Age</div>
+    <div style="height: 280px;">
+      <canvas baseChart [type]="'bar'" [data]="ageingChartData" [options]="ageingChartOptions"></canvas>
+    </div>
+  </div></div>
+  }
+  <div class="card">
+    <div class="card-header py-2 fw-semibold">Outstanding Vendor Bills — {{ apAgeing.asOfDate }}</div>
+    @if (apAgeing.lines.length) {
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Bill</th><th>Vendor</th><th>Due Date</th><th>Bucket</th><th class="text-end">Balance</th></tr></thead>
+        <tbody>
+          @for (l of apAgeing.lines; track l.billId) {
+          <tr>
+            <td>{{ l.billNumber }}</td>
+            <td>{{ l.vendorName || '-' }}</td>
+            <td class="small">{{ l.dueDate | date:'mediumDate' }}</td>
+            <td><span class="badge" [class.text-bg-light]="l.bucket === 'CURRENT'" [class.text-bg-warning]="l.bucket === '1-30'" [class.text-bg-danger]="l.bucket !== 'CURRENT' && l.bucket !== '1-30'">{{ l.bucket }}</span></td>
+            <td class="text-end">{{ l.balanceAmount | bosCurrency }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <div class="card-body text-muted small">No outstanding vendor bills.</div>
+    }
+  </div>
+  }
+
+  @if (cashFlow) {
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Period</div><div class="fw-bold">{{ cashFlow.periodStart }} → {{ cashFlow.periodEnd }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Opening Balance</div><div class="fw-bold">{{ cashFlow.openingBalance | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Net Change</div><div class="fw-bold" [class]="netChangeClass">{{ cashFlow.netChange | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Closing Balance</div><div class="fw-bold">{{ cashFlow.closingBalance | bosCurrency }}</div></div></div></div>
+  </div>
+  @if (cashFlowChartData) {
+  <div class="card mb-3"><div class="card-body">
+    <div class="small text-muted fw-semibold mb-2">Cash In vs Out by Source</div>
+    <div style="height: 280px;">
+      <canvas baseChart [type]="'bar'" [data]="cashFlowChartData" [options]="cashFlowChartOptions"></canvas>
+    </div>
+  </div></div>
+  }
+  <div class="card">
+    <div class="card-header py-2 fw-semibold">Cash Flow by Category</div>
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Category</th><th class="text-end">Inflow</th><th class="text-end">Outflow</th></tr></thead>
+        <tbody>
+          @for (l of cashFlow.lines; track l.category) {
+          <tr>
+            <td>{{ l.category }}</td>
+            <td class="text-end text-success">{{ l.inflow | bosCurrency }}</td>
+            <td class="text-end text-danger">{{ l.outflow | bosCurrency }}</td>
+          </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="fw-bold"><td>Total</td><td class="text-end">{{ cashFlow.totalInflows | bosCurrency }}</td><td class="text-end">{{ cashFlow.totalOutflows | bosCurrency }}</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (accountLedger) {
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Account</div><div class="fw-bold">{{ accountLedger.accountCode }} · {{ accountLedger.accountName }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Period</div><div class="fw-bold">{{ accountLedger.periodStart }} → {{ accountLedger.periodEnd }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Opening Balance</div><div class="fw-bold">{{ accountLedger.openingBalance | bosCurrency }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card"><div class="card-body py-2"><div class="text-muted small">Closing Balance</div><div class="fw-bold">{{ accountLedger.closingBalance | bosCurrency }}</div></div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-header py-2 fw-semibold">Transactions — {{ accountLedger.accountName }}</div>
+    @if (accountLedger.entries.length) {
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Date</th><th>Description</th><th>Reference</th><th class="text-end">Debit</th><th class="text-end">Credit</th></tr></thead>
+        <tbody>
+          @for (e of accountLedger.entries; track e.id) {
+          <tr>
+            <td class="small text-nowrap">{{ e.transactionDate | date:'mediumDate' }}</td>
+            <td class="small">{{ e.description || '-' }}</td>
+            <td class="small text-muted">{{ e.referenceType }}@if (e.referenceNumber) { · {{ e.referenceNumber }} }</td>
+            <td class="text-end">@if (e.debitAmount) { {{ e.debitAmount | bosCurrency }} }</td>
+            <td class="text-end">@if (e.creditAmount) { {{ e.creditAmount | bosCurrency }} }</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <div class="card-body text-muted small">No transactions on this account in the selected period.</div>
+    }
+  </div>
+  }
+
+  @if (!loading && !profitLoss && !balanceSheet && !trialBalance && !ageing && !apAgeing && !cashFlow && !accountLedger) { <div class="text-muted">Set the dates and click Generate.</div> }
+  }
+</div>

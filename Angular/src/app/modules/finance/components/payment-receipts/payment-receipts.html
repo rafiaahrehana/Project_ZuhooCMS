@@ -1,0 +1,138 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0"><i class="bi bi-receipt-cutoff me-2"></i>Payment Receipts</h4>
+    <button *appHasPermission="'PAYMENT_RECEIPT_CREATE'" class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> Record Payment</button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (showForm) {
+  <div class="card mb-3"><div class="card-body">
+    <div class="row g-2">
+      <div class="col-md-4">
+        <label class="form-label small text-muted mb-1">Client *</label>
+        <select class="form-select form-select-sm" [(ngModel)]="form.clientId">
+          <option [value]="0" disabled>Select client</option>
+          @for (c of clients; track c.id) { <option [value]="c.id">{{ c.clientCompanyName || (c.firstName + ' ' + c.lastName) }}</option> }
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small text-muted mb-1">Amount *</label>
+        <input type="number" class="form-control form-control-sm" [(ngModel)]="form.amount" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small text-muted mb-1">Payment Date *</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="form.paymentDate" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small text-muted mb-1">Method *</label>
+        <select class="form-select form-select-sm" [(ngModel)]="form.paymentMethod">
+          @for (m of methods; track m) { <option [value]="m">{{ m }}</option> }
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small text-muted mb-1">Transaction Reference</label>
+        <input class="form-control form-control-sm" [(ngModel)]="form.transactionReference" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small text-muted mb-1">Notes</label>
+        <input class="form-control form-control-sm" [(ngModel)]="form.notes" />
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary btn-sm" [disabled]="!form.clientId || !form.amount" (click)="save()">Save</button>
+        <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+      </div>
+    </div>
+  </div></div>
+  }
+
+  @if (!loading && receipts.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light"><tr><th>Receipt #</th><th>Client</th><th>Invoice</th><th class="text-end">Amount</th><th>Date</th><th>Method</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @for (r of receipts; track r.id) {
+        <tr>
+          <td class="small">{{ r.receiptNumber }}</td>
+          <td>{{ r.clientName || ('#' + r.clientId) }}</td>
+          <td class="small text-muted">{{ r.invoiceNumber || '-' }}</td>
+          <td class="text-end">{{ r.amount | bosCurrency }}</td>
+          <td class="small text-muted">{{ r.paymentDate | date:'mediumDate' }}</td>
+          <td><span class="badge text-bg-light border">{{ r.paymentMethod }}</span></td>
+          <td><span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span></td>
+          <td class="text-end text-nowrap">
+            @if (r.status === 'PENDING') { <button *appHasPermission="'PAYMENT_RECEIPT_CONFIRM'" class="btn btn-outline-primary btn-sm me-1" (click)="confirm(r)">Confirm</button> }
+            @if (r.status === 'CONFIRMED') { <button *appHasPermission="'PAYMENT_RECEIPT_CONFIRM'" class="btn btn-outline-success btn-sm me-1" (click)="openDeposit(r)">Deposit</button> }
+            @if (r.status === 'CONFIRMED' || r.status === 'DEPOSITED') {
+              <button *appHasPermission="'PAYMENT_RECEIPT_CONFIRM'" class="btn btn-outline-warning btn-sm me-1" (click)="reverseTarget = r; reverseReason = ''" title="Payment bounced (NSF/chargeback)">Reverse</button>
+            }
+            @if (r.status === 'PENDING') {
+              <button *appHasPermission="'PAYMENT_RECEIPT_DELETE'" class="btn btn-outline-danger btn-sm" (click)="deleteTarget = r" title="Delete"><i class="bi bi-trash"></i></button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-end"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+  </div>
+  }
+  @if (!loading && !receipts.length && !showForm) { <app-empty-state icon="bi-receipt-cutoff" message="No payment receipts yet." /> }
+
+  @if (depositTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Mark as Deposited</h5><button class="btn-close" (click)="depositTarget = null"></button></div>
+        <div class="modal-body">
+          @if (bankAccounts.length) {
+            <label class="form-label small fw-semibold">Deposit to account *</label>
+            <select class="form-select" [(ngModel)]="depositBank">
+              <option value="">Select bank / cash account</option>
+              @for (a of bankAccounts; track a.id) {
+                <option [value]="a.accountCode + ' · ' + a.accountName">{{ a.accountCode }} · {{ a.accountName }}</option>
+              }
+            </select>
+            <div class="form-text">Bank/cash accounts come from your Chart of Accounts.</div>
+          } @else {
+            <div class="alert alert-warning py-2 small mb-0">
+              No bank/cash accounts found. Add one under <a routerLink="/finance/coa" (click)="depositTarget = null">Chart of Accounts</a> first.
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="depositTarget = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!depositBank.trim()" (click)="doDeposit()">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (reverseTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Reverse Payment - {{ reverseTarget.receiptNumber }}</h5><button class="btn-close" (click)="reverseTarget = null"></button></div>
+        <div class="modal-body">
+          <div class="alert alert-warning py-2 small">
+            This unwinds the payment from the books (Cr Cash / Dr Accounts Receivable)
+            @if (reverseTarget.invoiceNumber) { and restores the balance owed on invoice {{ reverseTarget.invoiceNumber }} }.
+            Use for bounced cheques, failed transfers, or chargebacks.
+          </div>
+          <label class="form-label small text-muted">Reason (optional)</label>
+          <input class="form-control form-control-sm" [(ngModel)]="reverseReason" placeholder="e.g. Cheque returned NSF" />
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="reverseTarget = null">Cancel</button>
+          <button class="btn btn-warning btn-sm" (click)="doReverse()">Reverse Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Payment Receipt" message="Delete this payment receipt?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

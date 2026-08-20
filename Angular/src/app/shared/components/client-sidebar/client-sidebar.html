@@ -1,0 +1,15 @@
+<div class="sidebar-wrapper sidebar-scroll h-100 py-3">
+
+  <div class="sidebar-group-header text-uppercase fw-bold"><span>Client Portal</span></div>
+  <ul class="nav flex-column mb-4">
+    @for (item of items; track item.link) {
+      <li class="nav-item">
+        <!-- Label wrapped so the collapsed rail can hide it; a bare text node
+             cannot be targeted by CSS. -->
+        <a class="sidebar-link" [routerLink]="item.link" routerLinkActive="active">
+          <i class="bi {{ item.icon }}"></i><span>{{ item.label }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+</div>

@@ -1,0 +1,7 @@
+@if (session) {
+<div class="impersonation-banner d-flex align-items-center justify-content-center gap-3 py-2 px-3 text-white">
+  <i class="bi bi-eye-fill"></i>
+  <span>Viewing as <strong>{{ session.companyName }}</strong> — Platform Admin session, expires in {{ remaining }}</span>
+  <button type="button" class="btn btn-sm btn-light" (click)="endSession()">End session</button>
+</div>
+}

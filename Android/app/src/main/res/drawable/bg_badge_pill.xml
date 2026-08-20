@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fully-rounded status badge background. Solid color here is a placeholder — StatusBadgeView
+     always overrides it via backgroundTintList with one of the status_*_soft tones, so the
+     badge's fill and its text share the same status color at different opacities. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/status_neutral_soft" />
+    <corners android:radius="@dimen/radius_pill" />
+</shape>

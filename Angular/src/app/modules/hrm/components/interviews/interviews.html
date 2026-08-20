@@ -1,0 +1,218 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-camera-video me-2"></i>Interviews</h4>
+      <p class="small mb-0 page-subtitle">Schedule rounds, capture interviewer feedback and hire recommendations</p>
+    </div>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm" style="width: 160px" [(ngModel)]="statusFilter" (change)="page = 0; load()">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ label(s) }}</option> }
+      </select>
+      <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-primary btn-sm text-nowrap" (click)="openSchedule()">
+        <i class="bi bi-plus-lg me-1"></i>Schedule Interview
+      </button>
+    </div>
+  </div>
+
+  @if (error && !showForm) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && interviews.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Candidate</th><th>Position</th><th>Round</th><th>When</th><th>Mode</th>
+            <th>Interviewer</th><th>Status</th><th>Rating</th><th>Recommendation</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (i of interviews; track i.id) {
+          <tr>
+            <td class="fw-semibold">{{ i.applicantName }}</td>
+            <td class="small">{{ i.jobTitle || '-' }}</td>
+            <td><span class="badge badge-soft-primary">{{ label(i.round) }}</span></td>
+            <td class="small">
+              {{ i.scheduledAt | date:'MMM d, y, h:mm a' }}
+              @if (i.durationMinutes) { <div class="text-muted" style="font-size: 0.7rem">{{ i.durationMinutes }} min</div> }
+            </td>
+            <td class="small">
+              {{ label(i.mode || '') }}
+              @if (i.meetingLink) { <a [href]="i.meetingLink" target="_blank" rel="noopener" class="ms-1" title="Join"><i class="bi bi-box-arrow-up-right"></i></a> }
+            </td>
+            <td class="small">{{ i.interviewerName || '-' }}</td>
+            <td><span class="badge {{ statusBadge(i.status) }}">{{ label(i.status) }}</span></td>
+            <td>
+              @if (i.rating) {
+                <span class="text-warning">@for (s of [1,2,3,4,5]; track s) {<i class="bi {{ s <= i.rating! ? 'bi-star-fill' : 'bi-star' }}" style="font-size: 0.7rem"></i>}</span>
+              } @else { <span class="text-muted small">-</span> }
+            </td>
+            <td>
+              @if (i.recommendation) { <span class="badge {{ recommendationBadge(i.recommendation) }}">{{ label(i.recommendation) }}</span> }
+              @else { <span class="text-muted small">-</span> }
+            </td>
+            <td class="text-end text-nowrap">
+              @if (i.status === 'SCHEDULED') {
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-success btn-sm me-1" (click)="openFeedback(i)" title="Record feedback">Feedback</button>
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(i)" title="Reschedule"><i class="bi bi-pencil"></i></button>
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-danger btn-sm" (click)="cancelTarget = i" title="Cancel"><i class="bi bi-x-lg"></i></button>
+              } @else if (i.status === 'COMPLETED' || i.status === 'NO_SHOW') {
+                <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-secondary btn-sm" (click)="openFeedback(i)" title="Edit feedback"><i class="bi bi-chat-square-text"></i></button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !interviews.length) {
+    <app-empty-state icon="bi-camera-video" message="No interviews scheduled yet." />
+  }
+
+  <!-- Schedule / reschedule modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Reschedule Interview' : 'Schedule Interview' }}</h5>
+          <button class="btn-close" (click)="showForm = false; editingId = null"></button>
+        </div>
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="row g-2">
+            @if (!editingId) {
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Application <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.jobApplicationId">
+                <option [ngValue]="undefined">— Select candidate —</option>
+                @for (a of applications; track a.id) { <option [ngValue]="a.id">{{ a.applicantName }}{{ a.jobTitle ? ' · ' + a.jobTitle : '' }}</option> }
+              </select>
+            </div>
+            }
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Round</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.round">
+                @for (r of rounds; track r) { <option [value]="r">{{ label(r) }}</option> }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Date & Time <span class="text-danger">*</span></label>
+              <input type="datetime-local" class="form-control form-control-sm" [(ngModel)]="form.scheduledAt" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Duration (min)</label>
+              <input type="number" min="15" step="15" class="form-control form-control-sm" [(ngModel)]="form.durationMinutes" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Mode</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.mode">
+                @for (m of modes; track m) { <option [value]="m">{{ label(m) }}</option> }
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label small text-secondary mb-1">Meeting Link</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.meetingLink" placeholder="https://meet..." />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Interviewer</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.interviewerId">
+                <option [ngValue]="null">— Unassigned —</option>
+                @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option> }
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="saving" (click)="save()">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            {{ editingId ? 'Save Changes' : 'Schedule' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Feedback modal -->
+  @if (feedbackTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Feedback · {{ feedbackTarget.applicantName }} ({{ label(feedbackTarget.round) }})</h5>
+          <button class="btn-close" (click)="feedbackTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Rating</label>
+              <div>
+                @for (s of [1,2,3,4,5]; track s) {
+                <button type="button" class="btn btn-link p-0 me-1 text-warning" (click)="feedbackForm.rating = s">
+                  <i class="bi {{ feedbackForm.rating >= s ? 'bi-star-fill' : 'bi-star' }} fs-5"></i>
+                </button>
+                }
+                @if (feedbackForm.rating) { <span class="small text-muted ms-2">{{ feedbackForm.rating }}/5</span> }
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Strengths</label>
+              <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="feedbackForm.strengths"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Concerns</label>
+              <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="feedbackForm.concerns"></textarea>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label small text-secondary mb-1">Recommendation</label>
+              <select class="form-select form-select-sm" [(ngModel)]="feedbackForm.recommendation">
+                <option [ngValue]="null">— Select —</option>
+                @for (r of recommendations; track r) { <option [value]="r">{{ label(r) }}</option> }
+              </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="fbNoShow" [(ngModel)]="feedbackForm.noShow" />
+                <label class="form-check-label small" for="fbNoShow">Candidate no-show</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="feedbackTarget = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="savingFeedback" (click)="saveFeedback()">
+            @if (savingFeedback) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Save Feedback
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Cancel confirm -->
+  @if (cancelTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2"><h5 class="modal-title fs-6 fw-semibold">Cancel Interview</h5><button class="btn-close" (click)="cancelTarget = null"></button></div>
+        <div class="modal-body small">Cancel the {{ label(cancelTarget.round) }} interview with {{ cancelTarget.applicantName }}?</div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="cancelTarget = null">Keep it</button>
+          <button class="btn btn-danger btn-sm" (click)="doCancel()">Cancel Interview</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

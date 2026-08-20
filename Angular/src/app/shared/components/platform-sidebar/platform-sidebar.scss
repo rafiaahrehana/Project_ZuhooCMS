@@ -1,0 +1,68 @@
+// Platform-staff rail. Same light treatment as the tenant sidebar; the amber
+// group label is what distinguishes platform context from a normal company.
+
+:host {
+  width: 240px;
+  flex-shrink: 0;
+  height: 100%;
+  background-color: var(--bos-sidebar-bg);
+  display: block;
+}
+
+.sidebar-nav {
+  background-color: var(--bos-sidebar-bg);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 0.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.nav-group-label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bs-warning);
+  font-weight: 700;
+  padding: 0.65rem 0.9rem 0.2rem;
+}
+
+.nav-link {
+  color: var(--bos-sidebar-text);
+  transition: background-color var(--bos-transition), color var(--bos-transition);
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  min-height: 38px;
+  padding: 0.4rem 0.75rem;
+  border-radius: 10px;
+  margin: 0.1rem 0.5rem;
+  display: flex;
+  align-items: center;
+
+  i {
+    opacity: 0.85;
+    color: var(--bos-muted);
+    font-size: 1rem;
+    margin-right: 0.6rem;
+    flex-shrink: 0;
+    transition: color var(--bos-transition);
+  }
+
+  &:hover {
+    background-color: var(--bos-sidebar-hover);
+    color: var(--bos-brand);
+
+    i { color: var(--bos-brand); opacity: 1; }
+  }
+
+  &.active {
+    background: var(--bos-gradient-accent);
+    color: var(--bos-sidebar-active-fg);
+    font-weight: 700;
+    box-shadow: 0 14px 26px -18px rgb(var(--bos-brand-rgb) / 0.9);
+
+    i { color: var(--bos-sidebar-active-fg); opacity: 1; }
+  }
+}

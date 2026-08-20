@@ -1,0 +1,209 @@
+<div class="container-fluid py-3">
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h4 class="page-title mb-0"><i class="bi bi-building-gear me-2"></i>Company Profile</h4>
+      <div class="page-subtitle mt-1">Company details, accounting basis, address and bank info — shown on every invoice PDF sent to your clients</div>
+    </div>
+    <button class="btn btn-primary btn-sm px-3 fw-semibold" (click)="openEdit()">
+      <i class="bi bi-pencil me-1"></i>Edit Settings
+    </button>
+  </div>
+
+  @if (error && !editing) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <!-- Read-only summary. The form opens in a modal via Edit Settings, so the
+       page can't be edited by accident while scanning it. -->
+  @if (!loading) {
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-transparent fw-semibold"><i class="bi bi-building me-2 text-primary"></i>Company Details</div>
+        <div class="card-body">
+          <div class="row g-2 small">
+            <div class="col-6"><span class="text-muted d-block">Company Name</span><span class="fw-semibold">{{ form.companyName || '-' }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Phone</span><span class="fw-semibold">{{ form.companyPhone || '-' }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Website</span><span class="fw-semibold">{{ form.website || '-' }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Tax / VAT / BIN</span><span class="fw-semibold">{{ form.taxRegistrationNumber || '-' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-transparent fw-semibold"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Accounting</div>
+        <div class="card-body">
+          <div class="row g-2 small">
+            <div class="col-6"><span class="text-muted d-block">Fiscal Year Starts In</span><span class="fw-semibold">{{ monthName(form.fiscalYearStartMonth) }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Base Currency</span><span class="fw-semibold">{{ form.baseCurrency || 'BDT' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-transparent fw-semibold"><i class="bi bi-geo-alt me-2 text-primary"></i>Business Address</div>
+        <div class="card-body small">
+          {{ addressSummary || 'No address on file yet.' }}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-header bg-transparent fw-semibold"><i class="bi bi-bank me-2 text-primary"></i>Bank Details for Invoice Payments</div>
+        <div class="card-body">
+          <div class="row g-2 small">
+            <div class="col-6"><span class="text-muted d-block">Bank</span><span class="fw-semibold">{{ form.bankName || '-' }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Account Name</span><span class="fw-semibold">{{ form.bankAccountName || '-' }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Account Number</span><span class="fw-semibold">{{ form.bankAccountNumber || '-' }}</span></div>
+            <div class="col-6"><span class="text-muted d-block">Branch</span><span class="fw-semibold">{{ form.bankBranch || '-' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (editing) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <form (ngSubmit)="save()">
+          <div class="modal-header py-2">
+            <h5 class="modal-title fs-6 fw-semibold">Edit Billing Settings</h5>
+            <button type="button" class="btn-close" [disabled]="saving" (click)="editing = false"></button>
+          </div>
+          <div class="modal-body">
+            @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+    <div class="card border-0 shadow-sm rounded-4 mb-3">
+      <div class="card-header bg-white fw-semibold">Company Details</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small text-muted">Company Name</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.companyName" name="companyName" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">Phone</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.companyPhone" name="companyPhone" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">Website</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.website" name="website" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small text-muted">Tax / VAT / BIN Registration Number</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.taxRegistrationNumber" name="taxRegistrationNumber" placeholder="e.g. BIN-000123456-0101" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-3">
+      <div class="card-header bg-white fw-semibold">Accounting</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label small text-muted">Fiscal Year Starts In</label>
+            <select class="form-select form-select-sm" [(ngModel)]="form.fiscalYearStartMonth" name="fiscalYearStartMonth">
+              <option [ngValue]="1">January</option>
+              <option [ngValue]="2">February</option>
+              <option [ngValue]="3">March</option>
+              <option [ngValue]="4">April</option>
+              <option [ngValue]="5">May</option>
+              <option [ngValue]="6">June</option>
+              <option [ngValue]="7">July</option>
+              <option [ngValue]="8">August</option>
+              <option [ngValue]="9">September</option>
+              <option [ngValue]="10">October</option>
+              <option [ngValue]="11">November</option>
+              <option [ngValue]="12">December</option>
+            </select>
+            <div class="form-text">Drives how your Accounting Periods are dated. Changing this doesn't move periods you've already generated.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small text-muted">Base Currency</label>
+            <select class="form-select form-select-sm" [(ngModel)]="form.baseCurrency" name="baseCurrency">
+              <option value="BDT">BDT — Bangladeshi Taka</option>
+              <option value="USD">USD — US Dollar</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+              <option value="INR">INR — Indian Rupee</option>
+            </select>
+            <div class="form-text">The currency your General Ledger keeps its books in. Foreign-currency invoices convert at their exchange rate.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-3">
+      <div class="card-header bg-white fw-semibold">Business Address</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small text-muted">Street Address</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.locationDetail!.streetAddress" name="streetAddress" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">City / Area (Level 3)</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.locationDetail!.level3" name="level3" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">District / State (Level 2)</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.locationDetail!.level2" name="level2" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">Division / Region (Level 1)</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.locationDetail!.level1" name="level1" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">Postal Code</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.locationDetail!.postalCode" name="postalCode" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">Country</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.locationDetail!.country" name="country" placeholder="e.g. Bangladesh" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-3">
+      <div class="card-header bg-white fw-semibold">Bank Details for Invoice Payments</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label small text-muted">Bank Name</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.bankName" name="bankName" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">Account Name</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.bankAccountName" name="bankAccountName" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">Account Number</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.bankAccountNumber" name="bankAccountNumber" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted">Branch</label>
+            <input class="form-control form-control-sm" [(ngModel)]="form.bankBranch" name="bankBranch" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-secondary btn-sm" [disabled]="saving" (click)="editing = false">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold" [disabled]="saving">
+              @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Save Settings
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  }
+</div>

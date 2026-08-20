@@ -1,0 +1,836 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// DARK THEME
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Driven by data-theme="dark" on <html> (ThemeService + the pre-paint script in
+// index.html). ThemeService also sets Bootstrap's own data-bs-theme="dark", so
+// .card, .modal-content, .dropdown-menu, .table, .form-control, .btn-close,
+// .accordion, .list-group and .page-link recolour from Bootstrap's dark palette
+// without anything here. This file covers the rest:
+//
+//   1. our --bos-* tokens
+//   2. the Bootstrap variables Bootstrap's dark mode does not repoint
+//   3. the few utilities that are literal by design (.bg-white, .text-dark,
+//      .table-light) and would otherwise punch white holes in a dark page
+//
+// The public landing page is deliberately excluded - see the bottom of the file.
+
+:root[data-theme='dark'] {
+
+  // ── Brand logo ──────────────────────────────────────────────
+  // Contrast swap: light theme shows the DARK chip (logo-icon.png is a copy
+  // of logo-dark.png), dark theme shows the LIGHT chip - each pops against
+  // its opposite background. One rule instead of touching eleven templates.
+  img[src$='/brand/logo-icon.png'] { content: url('/brand/logo-light.png'); }
+
+  // ── Brand ───────────────────────────────────────────────────
+  // Lifted from #315CF6. The light-mode brand is too dark to sit on a near-black
+  // surface: as a button fill under white text it lands around 2.4:1. #059669
+  // carries white text at ~3.6:1, which clears the 3:1 bar for UI components.
+  // #047857, not #10B981: the brand fills buttons and the sidebar pill under
+  // white 14px text, which needs 4.5:1 - #059669 only reaches 3.8.
+  --bos-brand:          #047857;
+  --bos-brand-hover:    #059669;
+  // Used as a background in 8 places (table headers, banners) and as ink in 2.
+  // It stays a dark surface, because the table headers are the dominant use and
+  // they are meant to be dark in both themes; the two ink uses are corrected
+  // below by name rather than by inverting the token and breaking the headers.
+  --bos-brand-dark:     #0A100E;
+  --bos-brand-rgb:      4, 120, 87;
+  --bos-brand-soft:     rgb(16 185 129 / 0.20);
+
+  --bos-lavender:       #6EE7B7;
+  --bos-lavender-lt:    #16241E;
+  --bos-lavender-mid:   #1E332A;
+
+  --bs-primary:         #047857;
+  --bs-primary-rgb:     4, 120, 87;
+
+  // ── Semantic ────────────────────────────────────────────────
+  // Lightened so each still reads as text on a dark card, and the -soft alphas
+  // raised: 0.13 over white is a visible tint, but over the dark card it disappears.
+  --bs-success:         #34D399;
+  --bs-success-rgb:     52, 211, 153;
+  --bos-success-soft:   rgb(52 211 153 / 0.18);
+  --bs-danger:          #F87171;
+  --bs-danger-rgb:      248, 113, 113;
+  --bos-danger-soft:    rgb(248 113 113 / 0.18);
+  --bs-warning:         #FBBF24;
+  --bs-warning-rgb:     251, 191, 36;
+  --bos-warning-soft:   rgb(251 191 36 / 0.18);
+  --bs-info:            #38BDF8;
+  --bs-info-rgb:        56, 189, 248;
+  --bos-info-soft:      rgb(56 189 248 / 0.18);
+  --bos-neutral-soft:   rgb(141 160 184 / 0.16);
+
+  // ── Surfaces & text ─────────────────────────────────────────
+  // A green-leaning charcoal, matching the landing's charcoal-emerald skin
+  // so logged-out and logged-in dark surfaces read as one product.
+  //
+  // Contrast here is tuned DOWN from the obvious maximum, deliberately. Light
+  // text on a near-black field at 15:1 produces halation - the glyphs bloom and
+  // the edges shimmer, worst for astigmatic readers - which is why every mature
+  // dark theme caps body text well below white. Material uses 87% white for
+  // high-emphasis text for the same reason. The ramp below lands primary text
+  // at 10.9:1 on a card and 12.7:1 on the page, still far above the 4.5:1 AA
+  // floor but out of the glare zone.
+  //
+  // Surfaces are also lifted a step: separating page from card by luminance
+  // (0.0099 apart, was 0.0076) is what carries the hierarchy, so the text does
+  // not have to be blinding to make a card look like a card.
+  --bos-text:           #D6DFDA;   // 10.9 on card / 12.7 on page  (was 13.6 / 15.4)
+  --bos-text-secondary: #B3C1BA;   // 8.0 on card
+  --bos-muted:          #94A39B;   // 5.7 on card - comfortably past AA
+  --bos-border:         #2C3B34;
+  --bos-border-light:   #232E29;
+  --bos-bg-page:        #121915;
+  --bos-bg-card:        #1B2620;
+  --bos-bg-hover:       #263329;
+  --bos-bg-subtle:      #17201B;
+
+  // ── Chrome ──────────────────────────────────────────────────
+  // Slightly lighter than the page so the shell reads as raised, which is the
+  // inverse of light mode where the white shell sits above a tinted page.
+  --bos-sidebar-bg:        #182220;
+  --bos-sidebar-text:      #B3C1BA;
+  --bos-sidebar-muted:     #94A39B;
+  --bos-sidebar-hover:     #263329;
+  --bos-sidebar-active:    #047857;
+  // Stays pure white - it sits on the saturated blue pill, not on the dark
+  // field, so it is not a source of glare.
+  --bos-sidebar-active-fg: #FFFFFF;
+  --bos-sidebar-border:    #2C3B34;
+  --bos-navbar-bg:         #182220;
+  --bos-navbar-fg:         #B3C1BA;
+  --bos-navbar-border:     #2C3B34;
+
+  // ── Bootstrap body ──────────────────────────────────────────
+  --bs-body-bg:         #121915;
+  --bs-body-color:      #D6DFDA;
+  --bs-border-color:    #2C3B34;
+  --bs-secondary-bg:    #17201B;
+  // .text-muted resolves to this in Bootstrap 5.3. Left at Bootstrap's own
+  // dark value it is too dim against our card colour.
+  --bs-secondary-color: #94A39B;
+  // Not pure white. This drives headings and .text-emphasis, which are large
+  // and bold - exactly the type that blooms worst on a dark field.
+  --bs-emphasis-color:  #E5EBE7;
+  // Links take the brand at #059669, which is only 4.0:1 as text on a card.
+  // The lighter step clears AA at 6.2:1 and still reads unmistakably as a link.
+  // --bos-link is read by the `a` rule in global.scss; the --bs-link-* pair
+  // covers Bootstrap's own components.
+  --bos-link:            #6EE7B7;
+  --bos-link-hover:      #A7F3D0;
+  --bs-link-color:       #6EE7B7;
+  --bs-link-color-rgb:   110, 231, 183;
+  --bs-link-hover-color: #A7F3D0;
+  --bs-tertiary-bg:     #1B2620;
+  // <body class="bg-light"> - repointed for the same reason as light mode, so
+  // the utility lands on the page colour instead of Bootstrap's grey.
+  --bs-light:           #121915;
+  --bs-light-rgb:       18, 25, 21;
+  --bs-dark:            #D6DFDA;
+  --bs-dark-rgb:        214, 223, 218;
+
+  // ── Shadows ─────────────────────────────────────────────────
+  // Opacity roughly doubled. A shadow tuned for white is invisible on the dark page;
+  // on dark the shadow is what separates a card from the page.
+  --bos-shadow-sm:    0 1px 2px rgb(0 0 0 / 0.40), 0 1px 1px -1px rgb(0 0 0 / 0.30);
+  --bos-shadow-card:  0 12px 28px -18px rgb(0 0 0 / 0.75), 0 2px 8px -4px rgb(0 0 0 / 0.45);
+  --bos-shadow-lg:    0 22px 45px -24px rgb(0 0 0 / 0.80), 0 8px 18px -12px rgb(0 0 0 / 0.55);
+  --bs-box-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.40), 0 1px 1px -1px rgb(0 0 0 / 0.30);
+  --bs-box-shadow:    0 12px 28px -18px rgb(0 0 0 / 0.75), 0 2px 8px -4px rgb(0 0 0 / 0.45);
+  --bs-box-shadow-lg: 0 22px 45px -24px rgb(0 0 0 / 0.80), 0 8px 18px -12px rgb(0 0 0 / 0.55);
+
+  --bos-gradient-brand:  linear-gradient(135deg, #065F46 0%, #059669 55%, #6EE7B7 100%);
+  --bos-gradient-accent: linear-gradient(135deg, #059669 0%, #047857 100%);
+  --bos-focus-ring:      0 0 0 3px rgb(16 185 129 / 0.35);
+
+  // ── Accent palette ──────────────────────────────────────────
+  // Only -soft and -ink move. The core hue is the card's identity and must stay
+  // recognisably the same colour; what changes is that -soft becomes a dark
+  // wash instead of a pastel, and -ink becomes light instead of dark, because
+  // both are now drawn against the dark card rather than white.
+  --bos-a-violet-soft:  rgb(139 92 246 / 0.18);   --bos-a-violet-ink:  #C4B5FD;
+  --bos-a-blue-soft:    rgb(37 99 235 / 0.20);    --bos-a-blue-ink:    #93C5FD;
+  --bos-a-teal-soft:    rgb(13 148 136 / 0.20);   --bos-a-teal-ink:    #5EEAD4;
+  --bos-a-lime-soft:    rgb(101 163 13 / 0.20);   --bos-a-lime-ink:    #BEF264;
+  --bos-a-emerald-soft: rgb(16 185 129 / 0.18);   --bos-a-emerald-ink: #6EE7B7;
+  --bos-a-indigo-soft:  rgb(99 102 241 / 0.20);   --bos-a-indigo-ink:  #A5B4FC;
+  --bos-a-amber-soft:   rgb(245 158 11 / 0.18);   --bos-a-amber-ink:   #FCD34D;
+  --bos-a-rose-soft:    rgb(225 29 72 / 0.20);    --bos-a-rose-ink:    #FDA4AF;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Literal utilities
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Bootstrap keeps .bg-white and .text-dark literal in dark mode by design -
+// they mean "white" and "black", not "the surface colour". This app uses them
+// as surface/ink shorthands in ~380 places, so left alone they would punch
+// white cards and black text into every dark page. Repointed centrally rather
+// than edited across the templates.
+//
+// !important is required, not lazy: Bootstrap generates these utilities with
+// !important, so a plain declaration loses to them.
+
+[data-theme='dark'] {
+
+  .bg-white { background-color: var(--bos-bg-card) !important; }
+  .text-dark { color: var(--bos-text) !important; }
+
+  // ── Tables ──────────────────────────────────────────────────
+  // Tables get their own neutral grey step rather than sharing the card's
+  // colour. With page, card and table within a few points of each other the
+  // whole screen reads as one flat sheet and you cannot see where the data
+  // starts. Grey also separates a table from the blue-slate chrome around it.
+  //
+  //   page   #121915   card  #1B2620   table body #212B25   header #2C3833
+  //
+  // The header is the lightest of the four so the column labels sit on top of
+  // the stack, which is the same order light mode uses.
+  // !important is required, not lazy: global.scss sets the header to
+  // var(--bos-brand-dark) with !important, and importance beats specificity.
+  // This rule is also more specific, so it wins among the important ones.
+  .table-light,
+  .table th,
+  .table > thead > tr > th,
+  .table > thead.table-light > tr > * {
+    --bs-table-bg: #2C3833;
+    background-color: #2C3833 !important;
+    --bs-table-color: var(--bos-text);
+    color: var(--bos-text) !important;
+    --bs-table-border-color: #3A4841;
+    border-color: #3A4841;
+  }
+
+  // The body sits a step above the card it is drawn on, so the table reads as
+  // a panel rather than as text floating on the card.
+  // Cells need !important, not more selector. Component sheets style their own
+  // cells (invoices.scss sets `.table td { color: #334155 }`, which measured
+  // 1.4:1 here) and once Angular adds its [_ngcontent] attribute to each
+  // compound that rule out-specifies anything reasonable written from here.
+  .table > tbody > tr > td,
+  .table > tbody > tr > th {
+    background-color: #212B25 !important;
+    border-color: #3A4841 !important;
+    color: var(--bos-text) !important;
+  }
+
+  // ...but keep the cell-level semantic colours, which carry meaning.
+  .table td.amount-total { color: #6EE7B7 !important; }
+  .table td.due-date     { color: #FCA5A5 !important; }
+
+  // Subtle backgrounds, used for chips and empty states.
+  .bg-light { background-color: var(--bos-bg-subtle) !important; }
+  // ...except on <body>, which carries .bg-light but is the page, not a chip.
+  body.bg-light { background-color: var(--bos-bg-page) !important; }
+  .bg-body, .bg-body-tertiary { background-color: var(--bos-bg-card) !important; }
+
+  // Bootstrap's -subtle pairs are computed from the light theme's tint map and
+  // come out near-white; recomputed here against the dark surface.
+  .bg-primary-subtle   { background-color: rgb(16 185 129 / 0.18) !important; }
+  .bg-success-subtle   { background-color: rgb(52 211 153 / 0.18) !important; }
+  .bg-danger-subtle    { background-color: rgb(248 113 113 / 0.18) !important; }
+  .bg-warning-subtle   { background-color: rgb(251 191 36 / 0.18) !important; }
+  .bg-info-subtle      { background-color: rgb(56 189 248 / 0.18) !important; }
+  .bg-secondary-subtle { background-color: rgb(141 160 184 / 0.16) !important; }
+
+  // :not() matters here. .bg-primary-bos is a solid brand fill that sets its
+  // own white ink, and both classes land on the same element (the avatar
+  // circles). Without the exclusion this override is more specific, so it wins
+  // and paints brand-blue text onto a brand-blue disc.
+  .text-primary:not(.bg-primary-bos) { color: #6EE7B7 !important; }
+  .text-success   { color: #34D399 !important; }
+  .text-danger    { color: #F87171 !important; }
+  .text-warning   { color: #FBBF24 !important; }
+  .text-info      { color: #38BDF8 !important; }
+  .text-secondary { color: var(--bos-muted) !important; }
+  .text-muted     { color: var(--bos-muted) !important; }
+  .text-black     { color: var(--bos-text) !important; }
+
+  .border, .border-top, .border-bottom, .border-start, .border-end {
+    border-color: var(--bos-border) !important;
+  }
+
+  .input-group-text {
+    background-color: var(--bos-bg-subtle);
+    border-color: var(--bos-border);
+    color: var(--bos-muted);
+  }
+
+  // Outline buttons draw their label in the semantic colour, and several of
+  // those are still the light-mode value here - too dark to read on a dark
+  // card. Each is pinned to the lightened semantic.
+  //
+  // The :hover/:focus/:active pairs are NOT redundant. Setting `color` on the
+  // base rule out-specifies Bootstrap's own `.btn:hover { color:
+  // var(--bs-btn-hover-color) }`, so without these the label keeps its resting
+  // colour once the hover fill lands underneath it - green text on a green
+  // fill, i.e. a button that looks blank. The spinner inherits currentColor,
+  // so it vanished the same way while an export was running.
+  @mixin outline-btn($ink, $fill, $on-fill: #0A100E) {
+    --bs-btn-color: #{$ink};
+    --bs-btn-border-color: #{rgba($fill, 0.55)};
+    --bs-btn-hover-bg: #{$fill};
+    --bs-btn-hover-border-color: #{$fill};
+    --bs-btn-hover-color: #{$on-fill};
+    --bs-btn-active-bg: #{$fill};
+    --bs-btn-active-border-color: #{$fill};
+    --bs-btn-active-color: #{$on-fill};
+    color: $ink;
+
+    &:hover, &:focus, &:active, &.active, &:focus-visible {
+      background-color: $fill;
+      border-color: $fill;
+      color: $on-fill;
+    }
+  }
+
+  .btn-outline-success { @include outline-btn(#34D399, #34D399); }
+  .btn-outline-danger  { @include outline-btn(#F87171, #F87171); }
+  .btn-outline-warning { @include outline-btn(#FBBF24, #FBBF24); }
+  .btn-outline-info    { @include outline-btn(#38BDF8, #38BDF8); }
+  .btn-outline-primary { @include outline-btn(#6EE7B7, #059669, #FFFFFF); }
+  .btn-outline-secondary {
+    @include outline-btn(#B3C1BA, #3A4841, #E5EBE7);
+  }
+
+  // Cards and modals carry hand-written white in several component sheets.
+  .card, .modal-content, .dropdown-menu, .offcanvas {
+    background-color: var(--bos-bg-card);
+    border-color: var(--bos-border);
+    color: var(--bos-text);
+  }
+
+  // .modal-body is styled white in global.scss and is NOT covered by
+  // .modal-content, so every modal in the app was a white sheet carrying the
+  // dark theme's light text - unreadable, and the single most visible thing
+  // wrong with dark mode. The body/header/footer all defer to the content's
+  // surface instead of painting their own.
+  .card-header, .card-footer,
+  .modal-header, .modal-body, .modal-footer {
+    background-color: transparent !important;
+    border-color: var(--bos-border);
+    color: var(--bos-text);
+  }
+
+  // The blanket border-color above flattened the modal header's 3px brand
+  // accent bar into the ordinary border colour; restore the brand line.
+  .modal-header { border-top-color: var(--bos-brand); }
+
+  // Secondary buttons keep a pale grey fill from global.scss, which left the
+  // dark theme's light label on a light button at 1.2:1.
+  .btn-secondary {
+    --bs-btn-bg: var(--bos-bg-hover);
+    --bs-btn-border-color: var(--bos-border);
+    --bs-btn-color: var(--bos-text);
+    --bs-btn-hover-bg: var(--bos-border);
+    --bs-btn-hover-border-color: var(--bos-muted);
+    --bs-btn-hover-color: var(--bos-text);
+    background: var(--bos-bg-hover);
+    border-color: var(--bos-border);
+    color: var(--bos-text);
+
+    &:hover, &:focus { background: var(--bos-border); color: var(--bos-text); }
+  }
+
+  // The modal scrim is a literal rgba(0,0,0,.4) inline style on every converted
+  // form. It is too weak over a dark page to read as a scrim.
+  .modal.d-block { background: rgb(0 0 0 / 0.65) !important; }
+
+  // ── Form controls ───────────────────────────────────────────
+  // Inputs read as wells: a step DARKER than the card they sit on, with a
+  // border light enough to trace the field's edge. At the card's own colour
+  // they disappeared entirely - you could not see where a field began, which
+  // is the "form and background matching" problem.
+  .form-control, .form-select, .form-check-input {
+    background-color: #131A16;
+    border-color: #3A4841;
+    color: var(--bos-text);
+
+    &::placeholder { color: var(--bos-muted); }
+    &:focus {
+      background-color: #101614;
+      border-color: var(--bos-brand);
+      color: var(--bos-text);
+    }
+    &:disabled, &[readonly] { background-color: #19211C; color: var(--bos-muted); }
+  }
+
+  // Checked boxes keep the brand fill, or they look disabled.
+  .form-check-input:checked {
+    background-color: var(--bos-brand);
+    border-color: var(--bos-brand);
+  }
+
+  .input-group-text { border-color: #3A4841; }
+
+  // Bootstrap's dark table still inherits striping tuned for light surfaces.
+  .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--bos-text);
+    --bs-table-border-color: var(--bos-border);
+    --bs-table-hover-bg: var(--bos-bg-hover);
+    --bs-table-hover-color: var(--bos-text);
+    --bs-table-striped-bg: rgb(255 255 255 / 0.03);
+    --bs-table-striped-color: var(--bos-text);
+  }
+
+  // Alerts: Bootstrap's dark variants are readable but sit on near-white fills
+  // in 5.3 when the -subtle variables are not repointed.
+  .alert-danger  { background-color: rgb(248 113 113 / 0.15); border-color: rgb(248 113 113 / 0.35); color: #FCA5A5; }
+  .alert-success { background-color: rgb(52 211 153 / 0.15);  border-color: rgb(52 211 153 / 0.35);  color: #6EE7B7; }
+  .alert-warning { background-color: rgb(251 191 36 / 0.15);  border-color: rgb(251 191 36 / 0.35);  color: #FCD34D; }
+  .alert-info    { background-color: rgb(56 189 248 / 0.15);  border-color: rgb(56 189 248 / 0.35);  color: #7DD3FC; }
+
+  // The two places --bos-brand-dark is ink rather than a surface. Left alone
+  // they would be near-black text on a dark card.
+  .coa-net, .coa-balance { color: var(--bos-text) !important; }
+
+  // ── Soft badges ─────────────────────────────────────────────
+  // The second .badge-soft-* block in global.scss sets literal dark inks
+  // (#92400E and friends) chosen for a pale wash. On a dark card those are
+  // near-invisible - the warning badge measured 2.3:1. Each becomes the light
+  // end of its own hue, drawn on a slightly stronger wash.
+  // ── Solid badges ────────────────────────────────────────────
+  // Bootstrap's .text-bg-* pairs a semantic fill with an ink chosen for the
+  // LIGHT palette, where those fills are dark enough for white text. Our dark
+  // semantics are deliberately light, so the inherited white ink collapsed to
+  // 1.7-2.8:1 - the "Yes"/"Approved" badges were effectively unreadable.
+  // Dark ink on a light fill is the correct pairing and lands at 5.1-11.2:1.
+  .text-bg-success, .text-bg-warning, .text-bg-info,
+  .text-bg-danger, .text-bg-primary, .text-bg-secondary {
+    color: #0A100E !important;
+  }
+  // Bootstrap's secondary is a mid grey that leaves dark ink at only 4.0:1.
+  // Our muted step takes it to 7.2:1.
+  .text-bg-secondary { background-color: #94A39B !important; }
+  // .text-bg-light means "a pale chip"; on dark it has to become a raised one,
+  // which needs the light ink back.
+  .text-bg-light, .text-bg-dark {
+    background-color: var(--bos-bg-hover) !important;
+    color: var(--bos-text) !important;
+  }
+
+  .badge-soft-primary   { background: rgb(16 185 129 / 0.20)  !important; color: #A7F3D0 !important; }
+  .badge-soft-success   { background: rgb(52 211 153 / 0.18)  !important; color: #6EE7B7 !important; }
+  .badge-soft-danger    { background: rgb(248 113 113 / 0.18) !important; color: #FCA5A5 !important; }
+  .badge-soft-warning   { background: rgb(251 191 36 / 0.18)  !important; color: #FCD34D !important; }
+  .badge-soft-info      { background: rgb(56 189 248 / 0.18)  !important; color: #7DD3FC !important; }
+  .badge-soft-secondary,
+  .badge-soft-muted     { background: rgb(147 162 184 / 0.16) !important; color: var(--bos-text-secondary) !important; }
+
+  // Progress tracks are inline rgba(255,255,255,0.6) so they read as a white
+  // groove on a pastel card. At 60% white on a dark card that is a bright bar
+  // competing with its own fill, so the track drops to a faint tint.
+  .progress { background-color: rgb(255 255 255 / 0.10) !important; }
+
+  // Scrollbars, which otherwise stay light grey on a dark page in Chromium.
+  * {
+    scrollbar-color: var(--bos-border) transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--bos-border);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-track { background: transparent; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Stat cards
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// stat-card.scss hardcodes `background: #fff`, which no token swap reaches.
+// These are the first thing you see on every dashboard, and they were still
+// white cards carrying grey-on-white labels at 2.6:1 - the single worst
+// readability failure in the theme, and most of what "text not properly
+// visible" was pointing at.
+//
+// The `:root` prefix is load-bearing. Angular's view encapsulation rewrites the
+// component's own rule as `.stat-card[_ngcontent-x]`, which is two selectors,
+// and component styles are injected after this stylesheet - so a plain
+// `[data-theme='dark'] .stat-card` ties on specificity and loses on order.
+// `:root[data-theme='dark'] .stat-card` is three, and wins outright.
+//
+// The tint wash and accent bar are built from --c, so they keep working once
+// the base surface is dark.
+:root[data-theme='dark'] {
+  .stat-card {
+    background: var(--bos-bg-card);
+    border-color: rgba(var(--c-rgb), 0.35);
+
+    // The wash is tuned for white underneath; at 0.12 over a dark card it is
+    // invisible, so it is lifted to carry the same hint of hue.
+    &::before {
+      background: linear-gradient(135deg, rgba(var(--c-rgb), 0.22), rgba(var(--c-rgb), 0.06) 60%, transparent);
+    }
+
+    .stat-label, .stat-sub { color: var(--bos-muted); }
+
+    // The big number takes --c, and every --c is a light-mode accent picked to
+    // sit on white. On a dark card the two darkest were unreadable: purple at
+    // 2.8:1 and danger at 3.1:1. Each variant moves to the light end of the
+    // same hue - same colour identity, now legible (5.3-8.5:1).
+    //
+    // Only --c-value is redefined, not --c: the 3px accent bar and the tint
+    // wash still want the saturated original, which reads correctly as a
+    // block of colour even where it would fail as text.
+    &.variant-primary .stat-value { color: #34D399; }
+    &.variant-purple  .stat-value { color: #A78BFA; }
+    &.variant-success .stat-value { color: #4ADE80; }
+    &.variant-info    .stat-value { color: #38BDF8; }
+    &.variant-danger  .stat-value { color: #F87171; }
+    // variant-dark is near-black indigo - as a number on a dark card it is
+    // invisible, so it borrows the indigo tint instead.
+    &.variant-dark    .stat-value { color: #A5B4FC; }
+  }
+
+  // Brand blue as a *fill* under white text only reaches 3.7:1. Deepened for
+  // buttons specifically, which brings white to 4.8:1. The token itself stays
+  // at #047857 - it is the right colour for bars, rings and tints, where the
+  // 3:1 UI-component rule applies rather than the 4.5:1 text rule.
+  // `background` is set directly, not just the variable: global.scss has a
+  // `.btn-primary { background: var(--bos-brand) }` rule that bypasses
+  // --bs-btn-bg entirely, so setting the variable alone changes nothing.
+  .btn-primary {
+    --bs-btn-bg: #047857;
+    --bs-btn-border-color: #047857;
+    --bs-btn-disabled-bg: #047857;
+    --bs-btn-disabled-border-color: #047857;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-hover-bg: #059669;
+    --bs-btn-hover-border-color: #059669;
+    --bs-btn-active-bg: #065F46;
+    --bs-btn-active-border-color: #065F46;
+    background: #047857;
+    border-color: #047857;
+
+    &:hover, &:focus { background: #059669; border-color: #059669; }
+    &:active { background: #065F46; border-color: #065F46; }
+  }
+
+  // Brand blue as *text* on the sidebar is 4.2:1, just under the floor. The
+  // lighter step clears it at 5.4:1 without losing the blue.
+  .sidebar-sublink.active { color: #10B981; }
+
+  // ── Dashboard ───────────────────────────────────────────────
+  // dashboard.component.scss predates the token layer and hardcodes its own
+  // surfaces and ink: a #f8fafc page, #ffffff cards, and "contrast utilities"
+  // built from $deep-slate/$secondary-slate. On dark those left whole panels
+  // white, and the contrast utilities inverted into near-black text on a dark
+  // card at 1.2:1 - text that is there but cannot be read at all.
+  //
+  // Same :root prefix, same reason: these are encapsulated component rules.
+  .container-fluid { background-color: transparent; }
+
+  .dashboard-card {
+    background: var(--bos-bg-card);
+    border-color: var(--bos-border);
+  }
+
+  .card-header { border-bottom-color: var(--bos-border); }
+
+  // Component sheets set `.card .card-footer` to a near-white, and being
+  // component styles they are injected after this file - so the plain
+  // [data-theme] form ties on specificity and loses on order.
+  .card > .card-footer,
+  .card > .card-header {
+    background-color: transparent !important;
+    border-color: var(--bos-border) !important;
+  }
+
+  // ── "Contrast" ink utilities ────────────────────────────────
+  // A family of hand-rolled classes (.text-purple-dark, .text-blue-contrast,
+  // and 17 more) that hardcode a deep hue for use on a pastel card. Their whole
+  // purpose is legibility, and on dark they deliver the exact opposite - one
+  // measured 1.1:1, which is text you cannot see at all.
+  //
+  // Each maps to the light end of the same hue. -contrast and -dark collapse to
+  // one value per hue: they exist to give two depths against white, and on a
+  // dark card there is only one useful direction to go.
+  .text-dark-contrast      { color: var(--bos-text) !important; }
+  .text-secondary-contrast { color: var(--bos-text-secondary) !important; }
+  .text-purple-contrast,
+  .text-purple-dark        { color: #C4B5FD !important; }
+  .text-blue-contrast,
+  .text-blue-dark          { color: #93C5FD !important; }
+  .text-teal-contrast,
+  .text-teal-dark          { color: #5EEAD4 !important; }
+  .text-emerald-contrast,
+  .text-emerald-dark       { color: #6EE7B7 !important; }
+  .text-indigo-contrast,
+  .text-indigo-dark        { color: #A5B4FC !important; }
+  .text-amber-contrast,
+  .text-amber-dark         { color: #FCD34D !important; }
+  .text-lime-contrast,
+  .text-lime-dark          { color: #BEF264 !important; }
+  .text-danger-contrast,
+  .text-danger-dark        { color: #FCA5A5 !important; }
+  // The four .text-<hue>-success classes are all green-700 (#15803d) - the
+  // "+18% vs last 7 days" deltas. Same green, one light value.
+  .text-purple-success,
+  .text-blue-success,
+  .text-teal-success,
+  .text-lime-success       { color: #6EE7B7 !important; }
+
+  // KPI washes fade to #fff at the far end of the gradient, which shows as a
+  // pale corner on a dark card. Re-mixed to fade into the card instead.
+  .platform-kpi-card {
+    &.pk-purple { background: linear-gradient(135deg, rgb(139 92 246 / 0.22), rgb(139 92 246 / 0.06) 60%, var(--bos-bg-card)); }
+    &.pk-green  { background: linear-gradient(135deg, rgb(16 185 129 / 0.22), rgb(16 185 129 / 0.06) 60%, var(--bos-bg-card)); }
+    &.pk-blue   { background: linear-gradient(135deg, rgb(56 189 248 / 0.22), rgb(56 189 248 / 0.06) 60%, var(--bos-bg-card)); }
+    &.pk-amber  { background: linear-gradient(135deg, rgb(245 158 11 / 0.22), rgb(245 158 11 / 0.06) 60%, var(--bos-bg-card)); }
+  }
+
+  // Chart axis labels and gridlines are SVG <text>/<line>, which inherit
+  // nothing useful and were sitting at 1.4:1.
+  svg text { fill: var(--bos-muted); }
+  svg .grid line, svg line.grid { stroke: var(--bos-border); }
+
+  // .btn-light is a pale grey chip by definition; on dark it has to become the
+  // raised surface instead.
+  .btn-light {
+    --bs-btn-bg: var(--bos-bg-hover);
+    --bs-btn-border-color: var(--bos-border);
+    --bs-btn-color: var(--bos-text);
+    --bs-btn-hover-bg: var(--bos-border);
+    --bs-btn-hover-border-color: var(--bos-muted);
+    --bs-btn-hover-color: var(--bos-text);
+  }
+
+  // A white pill carrying its own dark hue as ink - the pattern used for
+  // "N Invoices Overdue" and friends. The surface flips, so the ink must too.
+  .badge.bg-white {
+    &.text-danger  { color: #FCA5A5 !important; }
+    &.text-success { color: #6EE7B7 !important; }
+    &.text-warning { color: #FCD34D !important; }
+    &.text-primary { color: #A7F3D0 !important; }
+  }
+
+  // ── Remaining hardcoded light surfaces ──────────────────────
+  // The full set of component rules that paint themselves white or near-white,
+  // found by scanning every .scss for a literal light background. Each one is
+  // a panel that would otherwise stay a white rectangle on a dark page - and
+  // worse, our now-light body text lands on it at about 1.4:1.
+  //
+  // Landing-page components are absent on purpose: /home forces light, so
+  // their whites are correct there and must not be touched.
+  .auth-card,
+  .form-panel,
+  .quick-action-tile,
+  .quick-action-card,
+  .designation-modal-content,
+  .designation-combobox-menu,
+  .pricing-section,
+  .chat-thread__status,
+  .chat-thread__composer,
+  .category-card {
+    background: var(--bos-bg-card);
+    border-color: var(--bos-border);
+    color: var(--bos-text);
+  }
+
+  .chat-thread__bubble { background: var(--bos-bg-hover); color: var(--bos-text); }
+
+  .field-input, .social-btn {
+    background: var(--bos-bg-subtle);
+    border-color: var(--bos-border);
+    color: var(--bos-text);
+    &:focus { background: var(--bos-bg-card); }
+  }
+
+  // Row hovers that lighten toward white need to lighten toward the raised
+  // surface instead, or the hover reads as a flash.
+  .notification-item:hover,
+  .invoice-row:hover,
+  tbody tr:hover { background-color: var(--bos-bg-hover) !important; }
+
+  // ── Component ink ───────────────────────────────────────────
+  // The rest of the hardcoded inks, found by scanning every component
+  // stylesheet for a colour that fails AA against the dark card. Grouped by
+  // the hue they should become rather than by the file they came from.
+  // Landing components are excluded - that route is forced light.
+  .text-navy, .designation-text, .text-slate-800,
+  .panel-title, .invoice-number-badge,
+  .pricing-section, .pricing-card,
+  .pricing-card:not(.pricing-card-highlighted) h4 { color: var(--bos-text) !important; }
+
+  .category-title { color: var(--bos-text) !important; }
+
+  .designation-field-label, .category-badge, .preview-chip,
+  .chat-thread__author, .chat-thread__status,
+  .subdomain-suffix, .category-desc, .explore-link,
+  .settings-tab, .table { color: var(--bos-text-secondary) !important; }
+
+  .section-label, .hero-sub, .feature-desc, .section-divider,
+  .view-all-link, .text-indigo, .text-purple, .bg-light-purple,
+  .text-primary-bos, .btn-outline-purple, .badge-eyebrow,
+  .trust-badge, .plan-icon-badge { color: #A5B4FC !important; }
+
+  .auth-alert, .field-error, .designation-field-error,
+  .text-danger, .text-rose, .table td.due-date { color: #FCA5A5 !important; }
+
+  .text-blue { color: #7DD3FC !important; }
+  .text-teal { color: #5EEAD4 !important; }
+  .text-emerald { color: #6EE7B7 !important; }
+
+  .messages-card__internal-toggle, .chat-thread__internal-tag,
+  .chat-thread__bubble--internal { color: #FCD34D !important; }
+
+  .list-group-item-action.active, .settings-tab.active { color: #6EE7B7 !important; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Inline pastel cards
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// 109 elements across 17 templates carry their pastel as an inline style
+// attribute (`style="background-color: #f3e8ff"`), mostly the stat cards on the
+// dashboards. Inline styles beat every stylesheet rule that is not !important,
+// so in dark mode these would stay bright pastel - white-hot rectangles on a
+// near-black page, and the worst-looking thing about the whole theme.
+//
+// Matching on the attribute is the only way to reach them without editing all
+// 109 sites. Each light pastel maps to a low-alpha wash of the same hue, so the
+// card keeps its identity (violet card stays violet) but is drawn on dark. The
+// accompanying `border-top: 3px solid <accent>` is already !important inline
+// and needs nothing: a saturated accent bar reads correctly on both themes.
+//
+// The `i` flag is deliberate - the same hex appears in both cases across the
+// templates, and an attribute selector is case-sensitive by default.
+//
+// The proper fix is for these to bind a --card-accent custom property the way
+// the service and category cards now do, at which point this whole block can be
+// deleted. Until then this keeps dark mode honest without a 17-file rewrite.
+
+[data-theme='dark'] {
+  $pastels: (
+    // violet family
+    '#f3e8ff': rgb(139 92 246 / 0.18),
+    '#ede9fe': rgb(139 92 246 / 0.18),
+    '#f5f3ff': rgb(139 92 246 / 0.14),
+    '#faf5ff': rgb(139 92 246 / 0.14),
+    '#1e1b4b': rgb(139 92 246 / 0.22),
+    // blue family
+    '#dbeafe': rgb(37 99 235 / 0.20),
+    '#eff6ff': rgb(37 99 235 / 0.15),
+    '#e0f2fe': rgb(56 189 248 / 0.18),
+    '#3b82f6': rgb(37 99 235 / 0.30),
+    // indigo
+    '#e0e7ff': rgb(99 102 241 / 0.20),
+    // teal / cyan
+    '#ccfbf1': rgb(13 148 136 / 0.20),
+    '#f0fdfa': rgb(13 148 136 / 0.14),
+    '#cffafe': rgb(56 189 248 / 0.18),
+    '#ecfeff': rgb(56 189 248 / 0.14),
+    // green / emerald
+    '#d1fae5': rgb(16 185 129 / 0.18),
+    '#ecfdf5': rgb(16 185 129 / 0.14),
+    '#dcfce7': rgb(16 185 129 / 0.18),
+    '#f0fdf4': rgb(16 185 129 / 0.14),
+    '#10b981': rgb(16 185 129 / 0.30),
+    // lime
+    '#ecfccb': rgb(101 163 13 / 0.20),
+    // amber
+    '#fef3c7': rgb(245 158 11 / 0.18),
+    '#fffbeb': rgb(245 158 11 / 0.14),
+    '#fff7ed': rgb(245 158 11 / 0.14),
+    // rose / red
+    '#ffe4e6': rgb(225 29 72 / 0.20),
+    '#fee2e2': rgb(248 113 113 / 0.18),
+    '#fff5f5': rgb(248 113 113 / 0.14),
+    // neutrals - these become surfaces, not washes
+    '#f8fafc': #232E28,
+    '#f1f5f9': #232E28,
+    '#ffffff': #1B2620,
+  );
+
+  // Both attribute selectors must match, so this only fires on elements whose
+  // inline style actually sets a background. Without the first one it also hits
+  // elements that merely pass the hex to a custom property - the service cards
+  // set [style.--card-accent]="#10b981" and were having their background
+  // overridden by a rule that had nothing to do with them.
+  @each $hex, $dark in $pastels {
+    [style*='background'][style*='#{$hex}' i] {
+      background-color: $dark !important;
+    }
+  }
+
+  // The ink counterpart. The same templates set deep hues inline as text
+  // colour - `style="color: #3730a3"` - which on a dark card measured as low
+  // as 1.7:1. Each maps to the light end of its own hue, so a purple caption
+  // stays purple and becomes readable.
+  //
+  // Only 700-950 shades are listed, and that is deliberate: `background-color:
+  // #x` contains the substring `color: #x`, so a selector matching a hex that
+  // is also used as a background would recolour that element's text by
+  // accident. Every hex below is ink-only across the templates; the mid-tones
+  // that double as fills (#8b5cf6, #10b981) are left alone, and they read
+  // acceptably on dark anyway.
+  $inks: (
+    '#6b21a8': #C4B5FD, '#3b0764': #C4B5FD, '#7c3aed': #C4B5FD,
+    '#0369a1': #93C5FD, '#0c4a6e': #93C5FD, '#2563eb': #93C5FD,
+    '#0284c7': #7DD3FC,
+    '#0f766e': #5EEAD4, '#115e59': #5EEAD4,
+    '#065f46': #6EE7B7, '#047857': #6EE7B7, '#059669': #6EE7B7,
+    '#4d7c0f': #BEF264, '#365314': #BEF264,
+    '#b45309': #FCD34D, '#78350f': #FCD34D, '#92400e': #FCD34D,
+    '#9f1239': #FCA5A5, '#991b1b': #FCA5A5, '#7f1d1d': #FCA5A5, '#be123c': #FCA5A5,
+    '#3730a3': #A5B4FC, '#4338ca': #A5B4FC, '#312e81': #A5B4FC, '#4f46e5': #A5B4FC,
+    '#064e3b': #6EE7B7, '#881337': #FDA4AF, '#7e22ce': #C4B5FD,
+    '#6b46ff': #A78BFA, '#7d55fa': #A78BFA, '#8b5cf6': #C4B5FD,
+    '#dc2626': #FCA5A5, '#e11d48': #FDA4AF,
+    '#0d9488': #5EEAD4, '#0891b2': #7DD3FC, '#6b7280': #94A39B,
+  );
+
+  @each $hex, $light in $inks {
+    [style*='color: #{$hex}' i] { color: $light !important; }
+  }
+
+  // Same indigo, set by class rather than inline.
+  .view-all-link { color: #A5B4FC !important; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Landing page
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Not handled here. ThemeService forces data-theme="light" while the /home
+// route is active (see LIGHT_ONLY_ROUTES), which makes every rule in this file
+// inert there rather than relying on token pinning - pinning would rescue the
+// token-based rules above but not the literal ones (.table-light, .alert-*,
+// the pastel block), so half the page would go dark and half would not.
+
+// Pipeline board stage washes. pipeline-board.scss forces light pastels with
+// !important (and component styles are injected after this file), so these
+// carry the same importance and win on :root specificity. Same hue per
+// stage, dark instead of pastel.
+:root[data-theme='dark'] {
+  .stage-bg-qualification { background: #1C2432 !important; }
+  .stage-bg-presentation  { background: #18222E !important; }
+  .stage-bg-proposal      { background: #16242E !important; }
+  .stage-bg-negotiation   { background: #211F31 !important; }
+  .stage-bg-won           { background: #15261F !important; }
+  .stage-bg-lost          { background: #2A191B !important; }
+
+  // The navbar avatar initial: brand-green ink on the brand-soft wash only
+  // reached 3.1:1; the mint ink clears AA on the same wash.
+  .profile-avatar { color: #6EE7B7; }
+}
+
+// Straggler inks the audit caught below 3:1 on dark.
+:root[data-theme='dark'] {
+  // Component sheet re-inks the fallback with var(--bos-brand), which is now
+  // a deep green - unreadable on its own soft wash. Importance needed because
+  // that rule is injected after this file.
+  .profile-avatar, .profile-avatar-fallback { color: #6EE7B7 !important; }
+
+  // Soft buttons keep their light-mode deep inks (readable on a pale wash,
+  // 2.6:1 on the dark one).
+  .btn-soft-success { color: #4ADE80; &:hover { color: #86EFAC; } }
+  .btn-soft-warning { color: #FBBF24; &:hover { color: #FCD34D; } }
+
+  // Small code chips on tinted cards: muted ink dipped to ~2.6 there.
+  .dept-code, .coa-code { color: var(--bos-text-secondary) !important; }
+}

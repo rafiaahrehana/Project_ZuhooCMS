@@ -1,0 +1,213 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-receipt me-2"></i>{{ canViewAll ? 'Payslips' : 'My Payslips' }}</h4>
+      <p class="text-muted small mb-0">
+        {{ canViewAll
+            ? 'Payslips for every employee. Download any as a PDF.'
+            : 'Your pay history. Download any payslip as a PDF.' }}
+      </p>
+    </div>
+
+    <!-- Period pickers belong to the company-wide view only: the personal view
+         lists a single employee's whole history, which is short enough to page
+         through without filtering. -->
+    @if (canViewAll) {
+    <div class="d-flex flex-wrap gap-2">
+      <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="month" (change)="onPeriodChange()">
+        @for (m of months; track m) { <option [ngValue]="m">{{ monthLabel(m) }}</option> }
+      </select>
+      <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="year" (change)="onPeriodChange()">
+        @for (y of years; track y) { <option [ngValue]="y">{{ y }}</option> }
+      </select>
+    </div>
+    }
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (canViewAll && !loading && payslips.length) {
+  <div class="input-group input-group-sm mb-3" style="max-width: 320px;">
+    <span class="input-group-text"><i class="bi bi-search"></i></span>
+    <input class="form-control" placeholder="Search employee..." [(ngModel)]="search" />
+  </div>
+  }
+
+  @if (!loading && visiblePayslips.length) {
+  <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light text-uppercase small">
+          <tr>
+            @if (canViewAll) { <th class="ps-4">Employee</th> }
+            <th [class.ps-4]="!canViewAll">Pay Period</th>
+            <th class="text-end">Basic Salary</th>
+            <th class="text-end">Billable Pay</th>
+            <th class="text-end">Overtime</th>
+            <th class="text-end">Gross</th>
+            <th class="text-end">Deductions</th>
+            <th class="text-end">Net Salary</th>
+            <th>Status</th>
+            <th>Paid On</th>
+            <th class="text-end pe-4">Payslip</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of visiblePayslips; track p.id) {
+          <tr>
+            @if (canViewAll) { <td class="ps-4 fw-semibold">{{ p.employeeName || '-' }}</td> }
+            <td [class.ps-4]="!canViewAll" class="fw-semibold">{{ monthLabel(p.payMonth) }} {{ p.payYear }}</td>
+            <td class="text-end">{{ p.basicSalary | number:'1.2-2' }}</td>
+            <td class="text-end">
+              @if (p.billablePay) {
+                <div>{{ p.billablePay | number:'1.2-2' }}</div>
+                <div class="text-muted small">{{ p.billableHours | number:'1.1-1' }} hrs &times; {{ p.billableRate | number:'1.2-2' }}/hr</div>
+              } @else {
+                <span class="text-muted">-</span>
+              }
+            </td>
+            <td class="text-end">
+              @if (p.overtimePay) {
+                <div>{{ p.overtimePay | number:'1.2-2' }}</div>
+                <div class="text-muted small">{{ p.overtimeHours | number:'1.1-1' }} hrs &times; {{ p.overtimeRate | number:'1.2-2' }}/hr</div>
+              } @else {
+                <span class="text-muted">-</span>
+              }
+            </td>
+            <td class="text-end">{{ gross(p) | number:'1.2-2' }}</td>
+            <td class="text-end text-danger">{{ totalDeductions(p) | number:'1.2-2' }}</td>
+            <td class="text-end fw-semibold">{{ p.netSalary | number:'1.2-2' }}</td>
+            <td><span class="badge {{ statusClass(p.status) }}">{{ p.status }}</span></td>
+            <td class="text-muted small">{{ p.paidAt ? (p.paidAt | date:'mediumDate') : '-' }}</td>
+            <td class="text-end pe-4 text-nowrap">
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="viewing = p" title="View full breakdown">
+                <i class="bi bi-eye"></i>
+              </button>
+              @if (canDownload(p)) {
+              <button class="btn btn-outline-primary btn-sm" [disabled]="downloadingId === p.id"
+                      (click)="download(p)" title="Download payslip as PDF">
+                @if (downloadingId === p.id) {
+                  <span class="spinner-border spinner-border-sm"></span>
+                } @else {
+                  <i class="bi bi-download me-1"></i>PDF
+                }
+              </button>
+              } @else {
+                <span class="text-muted small" title="Available once the payroll is approved">Not ready</span>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end border-0 py-3">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+
+  @if (!loading && payslips.length && !visiblePayslips.length) {
+    <app-empty-state icon="bi-search" [message]="'No payslips match \'' + search + '\'.'" />
+  }
+  @if (!loading && !payslips.length) {
+    <app-empty-state icon="bi-cash-stack"
+      [message]="canViewAll ? 'No payslips for this period yet.' : 'No payslips found yet.'" />
+  }
+</div>
+
+<!-- Full payslip breakdown, mirroring the PDF line for line. -->
+@if (viewing; as p) {
+<div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)" (click)="viewing = null">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Payslip — {{ monthLabel(p.payMonth) }} {{ p.payYear }}</h5>
+        <button type="button" class="btn-close" (click)="viewing = null"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 small mb-3">
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Employee</span><span class="fw-semibold">{{ p.employeeName || '-' }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Status</span><span class="badge {{ statusClass(p.status) }}">{{ p.status }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Payment Method</span><span class="fw-semibold">{{ p.paymentMethod ? p.paymentMethod.replaceAll('_', ' ') : '-' }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Paid On</span><span class="fw-semibold">{{ p.paidAt ? (p.paidAt | date:'mediumDate') : '-' }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Payment Reference</span><span class="fw-semibold">{{ p.paymentReference || '-' }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Approved By</span><span class="fw-semibold">{{ p.approvedByName || '-' }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Absent Days</span><span class="fw-semibold">{{ p.absentDays || 0 }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Created</span><span class="fw-semibold">{{ p.createdAt | date:'mediumDate' }}</span></div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <h6 class="text-uppercase small fw-bold text-success mb-2"><i class="bi bi-plus-circle me-1"></i>Earnings</h6>
+            <table class="table table-sm mb-0">
+              <tbody>
+                <tr><td>Basic Salary</td><td class="text-end">{{ (p.basicSalary || 0) | number:'1.2-2' }}</td></tr>
+                <tr><td>House Rent</td><td class="text-end">{{ (p.houseRent || 0) | number:'1.2-2' }}</td></tr>
+                <tr><td>Medical Allowance</td><td class="text-end">{{ (p.medicalAllowance || 0) | number:'1.2-2' }}</td></tr>
+                <tr><td>Transport Allowance</td><td class="text-end">{{ (p.transportAllowance || 0) | number:'1.2-2' }}</td></tr>
+                <tr><td>Food Allowance</td><td class="text-end">{{ (p.foodAllowance || 0) | number:'1.2-2' }}</td></tr>
+                <tr><td>Special Allowance</td><td class="text-end">{{ (p.specialAllowance || 0) | number:'1.2-2' }}</td></tr>
+                <tr><td>Bonus</td><td class="text-end">{{ (p.bonus || 0) | number:'1.2-2' }}</td></tr>
+                <tr>
+                  <td>Billable Pay
+                    @if (p.billablePay) { <div class="text-muted small">{{ p.billableHours | number:'1.1-1' }} hrs × {{ p.billableRate | number:'1.2-2' }}</div> }
+                  </td>
+                  <td class="text-end">{{ (p.billablePay || 0) | number:'1.2-2' }}</td>
+                </tr>
+                <tr>
+                  <td>Overtime
+                    @if (p.overtimePay) { <div class="text-muted small">{{ p.overtimeHours | number:'1.1-1' }} hrs × {{ p.overtimeRate | number:'1.2-2' }}</div> }
+                  </td>
+                  <td class="text-end">{{ (p.overtimePay || 0) | number:'1.2-2' }}</td>
+                </tr>
+                <tr><td>Other Allowances <span class="text-muted small">(components)</span></td><td class="text-end">{{ (p.otherEarnings || 0) | number:'1.2-2' }}</td></tr>
+                <tr class="table-light fw-bold"><td>Gross Earnings</td><td class="text-end">{{ gross(p) | number:'1.2-2' }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-uppercase small fw-bold text-danger mb-2"><i class="bi bi-dash-circle me-1"></i>Deductions</h6>
+            <table class="table table-sm mb-0">
+              <tbody>
+                <tr><td>Tax</td><td class="text-end">{{ (p.taxDeduction || 0) | number:'1.2-2' }}</td></tr>
+                <tr><td>Provident Fund</td><td class="text-end">{{ (p.providentFundDeduction || 0) | number:'1.2-2' }}</td></tr>
+                <tr><td>Insurance</td><td class="text-end">{{ (p.insuranceDeduction || 0) | number:'1.2-2' }}</td></tr>
+                <tr>
+                  <td>Absence
+                    @if (p.absentDays) { <span class="text-muted small">({{ p.absentDays }} day{{ p.absentDays === 1 ? '' : 's' }})</span> }
+                  </td>
+                  <td class="text-end">{{ (p.attendanceDeduction || 0) | number:'1.2-2' }}</td>
+                </tr>
+                <tr><td>Other Deductions</td><td class="text-end">{{ (p.deductions || 0) | number:'1.2-2' }}</td></tr>
+                <tr><td>Component Deductions <span class="text-muted small">(loan, insurance…)</span></td><td class="text-end">{{ (p.otherDeductions || 0) | number:'1.2-2' }}</td></tr>
+                <tr class="table-light fw-bold"><td>Total Deductions</td><td class="text-end">{{ totalDeductions(p) | number:'1.2-2' }}</td></tr>
+              </tbody>
+            </table>
+            <div class="d-flex justify-content-between align-items-center mt-3 p-3 rounded-3"
+                 style="background: var(--bos-brand-soft); border: 1px solid var(--bos-border);">
+              <span class="fw-bold text-uppercase small">Net Pay</span>
+              <span class="fw-bold fs-5">{{ p.netSalary | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        @if (p.notes) {
+          <div class="small text-muted mt-3"><i class="bi bi-sticky me-1"></i>{{ p.notes }}</div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="viewing = null">Close</button>
+        @if (canDownload(p)) {
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="downloadingId === p.id" (click)="download(p)">
+          @if (downloadingId === p.id) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          @else { <i class="bi bi-download me-1"></i> }
+          Download PDF
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}

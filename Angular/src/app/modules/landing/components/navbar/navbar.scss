@@ -1,0 +1,136 @@
+// Padding is fluid, so navbar.ts measures nav.offsetHeight for the anchor
+// scroll offset rather than assuming a fixed 80px.
+.navbar {
+  padding-block: clamp(0.8rem, 2.4vw, 1.4rem);
+  transition: padding 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+
+  // Dark glass, not the white glass-panel: the page below is charcoal in
+  // every section, so the bar never needs a light state.
+  &.scrolled {
+    padding-block: clamp(0.5rem, 1.6vw, 0.7rem);
+    background: rgba(12, 18, 17, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.logo-icon {
+  width: clamp(30px, 7vw, 36px);
+  height: clamp(30px, 7vw, 36px);
+  object-fit: cover;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+.brand-accent {
+  background: linear-gradient(120deg, #6EE7B7, #10B981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.text-white-hover {
+  &:hover {
+    color: white !important;
+  }
+}
+
+.nav-link {
+  font-size: 0.92rem;
+  font-weight: 500;
+  position: relative;
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #10B981, #6EE7B7);
+    transition: width 0.25s ease;
+  }
+
+  &:hover::after {
+    width: 70%;
+  }
+}
+
+.dropdown-menu-bos {
+  border: 1px solid rgba(54, 124, 43, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(30, 27, 75, 0.14);
+  padding: 0.5rem;
+  margin-top: 0.75rem !important;
+
+  .dropdown-item {
+    border-radius: 8px;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: background 0.15s ease;
+
+    &:hover, &:focus {
+      background: var(--bos-lavender-lt);
+      color: var(--bos-brand);
+    }
+  }
+}
+
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    padding: 0.75rem;
+    border-radius: 16px;
+    margin-top: 0.9rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+
+    // 5 links + Login + the Get Started button do not fit a landscape phone
+    // (~360px of height), so the panel scrolls rather than running off-screen.
+    max-height: calc(100dvh - 7rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    .nav-link {
+      // Was var(--bos-dark), which is defined nowhere - the rule was dead and
+      // the links only looked right because of the template's text-dark class.
+      color: rgba(255, 255, 255, 0.82) !important;
+      display: flex;
+      align-items: center;
+      min-height: 44px;               // WCAG 2.5.8 touch target
+      border-radius: 10px;
+      padding-inline: 0.75rem;
+
+      &::after { display: none; }
+
+      &:hover, &:active, &:focus-visible {
+        background: rgba(255, 255, 255, 0.07);
+        color: #fff !important;
+      }
+    }
+
+    .nav-login {
+      color: rgba(255, 255, 255, 0.82) !important;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  // Scrolled over a light section the bar goes glass-white; the dark panel
+  // still reads fine against it, so it just needs a lighter drop shadow.
+  .navbar.scrolled .navbar-collapse {
+    box-shadow: 0 20px 44px rgba(30, 27, 75, 0.28);
+  }
+}

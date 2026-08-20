@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    PROD flavor.
+
+    No cleartext anywhere, and no user-installed CAs — so a proxy certificate dropped onto a
+    device cannot silently read a real user's traffic.
+
+    CERTIFICATE PINNING is set up below but deliberately left commented out, because a wrong pin
+    does not degrade gracefully: it bricks every request the app makes, and the only fix is a new
+    release. Turn it on only once you have the real values and a tested backup pin.
+
+    To enable:
+      1. Get the pin for your production host:
+           openssl s_client -servername api.zuhoo.app -connect api.zuhoo.app:443 </dev/null \
+             | openssl x509 -pubkey -noout \
+             | openssl pkey -pubin -outform der \
+             | openssl dgst -sha256 -binary | openssl enc -base64
+      2. Repeat for your CA's intermediate certificate — that is the BACKUP pin. Without a second
+         pin, a routine certificate rotation takes the app offline until users update.
+      3. Paste both below, uncomment, and set an expiration you will actually renew before.
+-->
+<network-security-config>
+
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!--
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.zuhoo.app</domain>
+        <pin-set expiration="2027-01-01">
+            <pin digest="SHA-256">REPLACE_WITH_LEAF_OR_INTERMEDIATE_PIN=</pin>
+            <pin digest="SHA-256">REPLACE_WITH_BACKUP_PIN=</pin>
+        </pin-set>
+    </domain-config>
+    -->
+
+</network-security-config>

@@ -1,0 +1,200 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+      <a routerLink="/crm/pipeline" class="text-decoration-none small text-muted d-inline-flex align-items-center gap-1 mb-1">
+        <i class="bi bi-arrow-left"></i> Back to Pipeline
+      </a>
+      <h3 class="fw-bold mb-1">Pipeline Reports</h3>
+      <div class="text-muted">Stage breakdown and win/loss trends across your sales pipeline.</div>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && summary) {
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small text-uppercase" style="letter-spacing:.04em">Won</div>
+          <div class="fs-3 fw-bold text-success">{{ wonAmount | bosCurrency }}</div>
+          <div class="text-muted small">{{ wonDeals.length }} deals closed won</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small text-uppercase" style="letter-spacing:.04em">Lost</div>
+          <div class="fs-3 fw-bold text-danger">{{ lostAmount | bosCurrency }}</div>
+          <div class="text-muted small">{{ lostDeals.length }} deals closed lost</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small text-uppercase" style="letter-spacing:.04em">Win Rate</div>
+          <div class="fs-3 fw-bold">{{ winRate }}%</div>
+          <div class="text-muted small">Of all closed deals</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 fw-semibold">Pipeline Value by Stage</div>
+        <div class="card-body" style="min-height:320px">
+          <canvas baseChart [data]="stageChartData!" type="bar" [options]="stageChartOptions"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 fw-semibold">Won vs Lost (last 6 months)</div>
+        <div class="card-body" style="min-height:320px">
+          <canvas baseChart [data]="trendChartData!" type="bar" [options]="trendChartOptions"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 fw-semibold">Lead Conversion</div>
+        <div class="card-body">
+          <div class="d-flex justify-content-around text-center mb-3">
+            <div>
+              <div class="fs-4 fw-bold">{{ leads.length }}</div>
+              <div class="text-muted small">Total Leads</div>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold text-success">{{ convertedLeadsCount }}</div>
+              <div class="text-muted small">Converted</div>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold" style="color:var(--bos-brand)">{{ leadConversionRate }}%</div>
+              <div class="text-muted small">Conversion Rate</div>
+            </div>
+          </div>
+          <div style="min-height:220px">
+            <canvas baseChart [data]="leadStatusChartData!" type="doughnut" [options]="leadStatusChartOptions"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 fw-semibold">Revenue by Month</div>
+        <div class="card-body" style="min-height:320px">
+          <canvas baseChart [data]="revenueChartData!" type="bar" [options]="revenueChartOptions"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 fw-semibold">
+          Forecast <span class="text-muted small fw-normal">open pipeline by expected close month</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Close Month</th><th class="text-end">Deals</th>
+                <th class="text-end">Pipeline Value</th><th class="text-end">Weighted Forecast</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of forecast; track row.label) {
+              <tr>
+                <td>{{ row.label }}</td>
+                <td class="text-end">{{ row.count }}</td>
+                <td class="text-end">{{ row.amount | bosCurrency }}</td>
+                <td class="text-end fw-semibold">{{ row.weighted | bosCurrency }}</td>
+              </tr>
+              }
+              @if (!forecast.length) {
+              <tr><td colspan="4" class="text-center text-muted py-3">No open opportunities.</td></tr>
+              }
+            </tbody>
+            @if (forecast.length) {
+            <tfoot>
+              <tr class="fw-bold">
+                <td>Total</td>
+                <td class="text-end">{{ allOpportunities.length - wonDeals.length - lostDeals.length }}</td>
+                <td class="text-end">{{ forecastTotals.amount | bosCurrency }}</td>
+                <td class="text-end">{{ forecastTotals.weighted | bosCurrency }}</td>
+              </tr>
+            </tfoot>
+            }
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 fw-semibold">
+          Why Deals Are Lost
+        </div>
+        <div class="card-body py-2">
+          @for (r of lossReasons; track r.label) {
+          <div class="d-flex align-items-center gap-2 py-1">
+            <span class="small" style="min-width: 150px;">{{ r.label }}</span>
+            <div class="progress flex-grow-1" style="height: 8px;">
+              <div class="progress-bar bg-danger" [style.width.%]="r.pct"></div>
+            </div>
+            <span class="small text-muted text-nowrap" style="min-width: 110px;" title="{{ r.value | bosCurrency }} lost">
+              {{ r.count }} ({{ r.pct }}%)
+            </span>
+          </div>
+          }
+          @if (!lossReasons.length) {
+          <div class="text-center text-muted py-3 small">No lost deals - nothing to explain yet.</div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 fw-semibold">Sales Performance</div>
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Rep</th><th class="text-end">Opportunities</th><th class="text-end">Won</th>
+                <th class="text-end">Lost</th><th class="text-end">Win Rate</th><th class="text-end">Won Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of salesPerformance; track row.ownerId) {
+              <tr>
+                <td>{{ row.ownerName }}</td>
+                <td class="text-end">{{ row.totalOpportunities }}</td>
+                <td class="text-end text-success">{{ row.wonCount }}</td>
+                <td class="text-end text-danger">{{ row.lostCount }}</td>
+                <td class="text-end">{{ row.winRate }}%</td>
+                <td class="text-end fw-semibold">{{ row.wonValue | bosCurrency }}</td>
+              </tr>
+              }
+              @if (!salesPerformance.length) {
+              <tr><td colspan="6" class="text-center text-muted py-3">No opportunities yet.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

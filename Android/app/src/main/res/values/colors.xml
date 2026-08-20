@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- "Charcoal & Green" system: black/ash/white/grey chrome and surfaces, with the
+         SAAS-PROJECT brand green (frontend/BusinessFlow's bos brand token) reserved as the one
+         accent color: buttons, links, active states, brand mark. Ported from a green-toolbar
+         look where every screen was solid green; the chrome (toolbar, status bar) is now
+         near-black so green reads as a deliberate accent instead of the whole app's wallpaper.
+         values-night/colors.xml carries the dark-theme counterpart. -->
+
+    <!-- Chrome: toolbar, status bar. Same near-black in both themes — the chrome doesn't
+         change with light/dark, only the content surfaces do. -->
+    <color name="chrome_black">#15171A</color>
+    <color name="chrome_black_elevated">#1E2124</color>
+
+    <!-- Brand green — unchanged from BusinessFlow, this IS "my saas project green". -->
+    <color name="brand_primary">#367C2B</color>
+    <color name="brand_primary_hover">#2A6421</color>
+    <color name="brand_deep">#14300F</color>
+
+    <color name="brand_accent">#8FC46B</color>
+    <color name="brand_accent_soft">#EEF6E7</color>
+    <color name="brand_accent_mid">#D6EAC5</color>
+
+    <color name="status_success">#16A34A</color>
+    <color name="status_danger">#DC2626</color>
+    <color name="status_warning">#D97706</color>
+    <color name="status_info">#2563EB</color>
+
+    <!-- Soft-tint pill backgrounds for StatusBadgeView — ~12% alpha of the status color, so a
+         badge reads as a shaped chip rather than plain colored text sitting on the page. -->
+    <color name="status_success_soft">#1F16A34A</color>
+    <color name="status_danger_soft">#1FDC2626</color>
+    <color name="status_warning_soft">#1FD97706</color>
+    <color name="status_info_soft">#1F2563EB</color>
+    <color name="status_neutral_soft">#1482868C</color>
+
+    <!-- Ash/grey scale — text, borders, muted surfaces. Near-black ink rather than pure #000
+         (softer on the eyes), cool grey rather than blue-grey (matches "ash", not the old
+         slate-blue palette). -->
+    <color name="text_primary">#17181B</color>
+    <color name="text_secondary">#494D53</color>
+    <color name="text_muted">#82868C</color>
+    <color name="border">#E1E3E6</color>
+    <color name="divider">#EDEEF0</color>
+    <color name="bg_page">#F6F7F8</color>
+    <color name="bg_card">#FFFFFF</color>
+
+    <!-- Disabled state — a distinct muted pair rather than reusing text_muted/border, so
+         "disabled" reads unambiguously different from "secondary/quiet but interactive". -->
+    <color name="text_disabled">#B4B7BB</color>
+    <color name="bg_disabled">#F0F1F2</color>
+
+    <!-- Notification accent: a brighter green than brand_primary for legibility against a dark
+         notification shade. -->
+    <color name="notification_accent">#059669</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

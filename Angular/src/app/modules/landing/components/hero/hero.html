@@ -1,0 +1,108 @@
+<section class="hero-section position-relative d-flex align-items-center overflow-hidden">
+  <!-- Decorative layers -->
+  <div class="hero-grid"></div>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="glow glow-3"></div>
+  <div class="orbit-ring ring-1"></div>
+  <div class="orbit-ring ring-2"></div>
+
+  <div class="container position-relative z-1">
+    <div class="row align-items-center g-5">
+
+      <!-- Left Content -->
+      <div class="col-lg-6 hero-text pe-lg-5 pt-5 pt-lg-0">
+        <span class="eyebrow-badge on-dark fade-in" style="animation-delay: 0s;">
+          <span class="eyebrow-dot"></span>
+          ZuhooCMS
+        </span>
+
+        <h1 class="display-3 fw-bold text-white mb-3 mt-4 slide-up tracking-tight" style="animation-delay: 0.1s;">
+          AI-Powered Business <br />
+          <span class="gradient-text">Operating System</span>
+        </h1>
+
+        <p class="text-white fw-semibold mb-3 slide-up" style="animation-delay: 0.2s; font-size: 1.25rem;">
+          One Platform. Every Business Operation.
+        </p>
+
+        <p class="lead text-white-50 mb-5 slide-up" style="animation-delay: 0.3s; font-size: 1.05rem;">
+          ZuhooCMS helps companies manage HR, CRM, Finance, Service Desk, Procurement, Inventory, AI Automation, and Business Operations from a single secure cloud platform.
+        </p>
+
+        <div class="d-flex flex-wrap gap-3 slide-up" style="animation-delay: 0.4s;">
+          <a routerLink="/auth/register" class="btn-accent-solid btn-lg">
+            Start Free Trial
+            <i class="bi bi-arrow-right"></i>
+          </a>
+          <!-- Not a link to a form: one click and the visitor is inside the
+               real product, read-only, on seeded data. -->
+          <button type="button" class="btn btn-glass-outline btn-lg d-flex align-items-center gap-2"
+                  [disabled]="startingDemo" (click)="seeDemo()">
+            @if (startingDemo) {
+              <span class="spinner-border spinner-border-sm"></span>
+              Opening demo…
+            } @else {
+              <i class="bi bi-play-circle"></i>
+              See Demo
+            }
+          </button>
+        </div>
+        @if (demoError) {
+          <div class="small mt-2" style="color: #FCA5A5;">{{ demoError }}</div>
+        }
+
+        <div class="mt-5 pt-4 hero-stats slide-up d-flex flex-wrap align-items-center gap-4" style="animation-delay: 0.5s;">
+          <div class="stat-chip">
+            <span class="text-white fs-4 fw-bold">99.9%</span>
+            <span class="text-white-50 small">Uptime SLA</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-chip">
+            <span class="text-white fs-4 fw-bold">10k+</span>
+            <span class="text-white-50 small">Teams Globally</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-chip">
+            <span class="text-white fs-4 fw-bold">24/7</span>
+            <span class="text-white-50 small">Global Support</span>
+          </div>
+        </div>
+      </div>
+
+      <!--
+        Right visual. This used to be a lazily-loaded three.js particle field on
+        desktop with the CSS composite below as the mobile fallback; the WebGL
+        scene was dropped, so the composite is now the visual on every screen.
+      -->
+      <div class="col-lg-6 position-relative hero-visual-col fade-in" style="animation-delay: 0.5s;">
+        <!-- Decorative only, and the figures are illustrative - keep it out
+             of the accessibility tree. -->
+        <div class="hero-visual-fallback" aria-hidden="true">
+          <div class="hero-orbit orbit-a">
+            <span class="hero-node n1"></span>
+            <span class="hero-node n2"></span>
+            <span class="hero-node n3"></span>
+          </div>
+          <div class="hero-orbit orbit-b">
+            <span class="hero-node n4"></span>
+            <span class="hero-node n5"></span>
+          </div>
+          <div class="hero-ops-card">
+            <div class="ops-head"><span class="ops-pulse"></span>LIVE OPERATIONS</div>
+            <div class="ops-row"><i class="bi bi-people"></i><span>Headcount</span><b class="ops-violet">1,284</b></div>
+            <div class="ops-row"><i class="bi bi-graph-up-arrow"></i><span>Pipeline</span><b class="ops-cyan">৳4.2M</b></div>
+            <div class="ops-row"><i class="bi bi-robot"></i><span>AI tasks</span><b class="ops-emerald">312</b></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scroll cue -->
+  <div class="scroll-cue d-flex flex-column align-items-center gap-2 fade-in" style="animation-delay: 1s;">
+    <span class="small text-white-50 tracking-widest text-uppercase">Scroll</span>
+    <div class="scroll-cue-line"></div>
+  </div>
+</section>

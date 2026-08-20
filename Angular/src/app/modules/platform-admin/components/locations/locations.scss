@@ -1,0 +1,40 @@
+.finder-column {
+  min-height: 400px;
+  max-height: 500px;
+  overflow-y: auto;
+  border-right: 1px solid rgba(0,0,0,0.08);
+}
+.finder-column:last-child {
+  border-right: none;
+}
+.list-group-item-action {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  margin-bottom: 2px;
+  transition: all 0.2s ease;
+}
+.list-group-item-action.active {
+  background-color: rgba(13, 110, 253, 0.08);
+  color: var(--bos-brand);
+  font-weight: 600;
+}
+.list-group-item-action.active .text-muted {
+  color: rgba(13, 110, 253, 0.7) !important;
+}
+.list-group-item-action:hover:not(.active) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+.action-btn-group {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.list-group-item-action:hover .action-btn-group {
+  opacity: 1;
+}
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}

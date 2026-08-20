@@ -1,0 +1,175 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-piggy-bank me-2"></i>Loans &amp; Advances</h4>
+      <p class="small mb-0 page-subtitle">Employee loans and salary advances, recovered automatically through payroll</p>
+    </div>
+    <button *appHasPermission="'PAYROLL_PROCESS'" class="btn btn-primary-bos btn-sm px-3 fw-semibold" (click)="openCreate()">
+      <i class="bi bi-plus-lg me-1"></i>New Loan / Advance
+    </button>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  <div class="filter-pills mb-3">
+    <button class="filter-pill" [class.active]="statusFilter === ''" (click)="statusFilter = ''">All</button>
+    <button class="filter-pill" [class.active]="statusFilter === 'ACTIVE'" (click)="statusFilter = 'ACTIVE'">Active</button>
+    <button class="filter-pill" [class.active]="statusFilter === 'CLOSED'" (click)="statusFilter = 'CLOSED'">Closed</button>
+    <button class="filter-pill" [class.active]="statusFilter === 'CANCELLED'" (click)="statusFilter = 'CANCELLED'">Cancelled</button>
+  </div>
+
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && filteredLoans.length) {
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 table-dark-header">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Type</th>
+            <th>Principal</th>
+            <th>Monthly Installment</th>
+            <th>Progress</th>
+            <th>Remaining</th>
+            <th>Status</th>
+            <th class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of filteredLoans; track l.id) {
+          <tr>
+            <td class="fw-semibold text-dark py-3 ps-3">
+              {{ l.employeeName }}
+              <div class="text-muted fw-normal small">Disbursed {{ l.disbursedDate | date:'mediumDate' }}</div>
+              @if (l.reason) { <div class="text-muted fw-normal" style="font-size: 0.72rem">{{ l.reason }}</div> }
+            </td>
+            <td><span class="badge {{ typeBadge(l.type) }}">{{ l.type }}</span></td>
+            <td>{{ l.principalAmount | bosCurrency }}</td>
+            <td>{{ l.monthlyInstallment | bosCurrency }}</td>
+            <td style="width: 140px">
+              <div class="progress" style="height: 6px">
+                <div class="progress-bar bg-success" [style.width.%]="progressPercent(l)"></div>
+              </div>
+              <div class="text-muted small mt-1">{{ progressPercent(l) }}% recovered</div>
+            </td>
+            <td class="fw-semibold">{{ l.remainingBalance | bosCurrency }}</td>
+            <td><span class="badge {{ statusBadge(l.status) }}">{{ l.status }}</span></td>
+            <td class="text-end pe-3">
+              <button class="btn-action" title="Repayment history" (click)="openHistory(l)"><i class="bi bi-clock-history"></i></button>
+              @if (l.status === 'ACTIVE') {
+              <button *appHasPermission="'PAYROLL_PROCESS'" class="btn-action btn-action-danger" title="Cancel" (click)="cancelTarget = l"><i class="bi bi-x-lg"></i></button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (!loading && !filteredLoans.length) { <app-empty-state icon="bi-piggy-bank" message="No loans or advances found." /> }
+
+  <!-- Create form -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">New Loan / Advance</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Employee <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.employeeId">
+                <option [ngValue]="null">— Select employee —</option>
+                @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option> }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Type</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.type">
+                <option value="LOAN">Loan</option>
+                <option value="ADVANCE">Advance</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Disbursed Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="form.disbursedDate" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Principal Amount <span class="text-danger">*</span></label>
+              <input type="number" min="0.01" step="0.01" class="form-control form-control-sm" [(ngModel)]="form.principalAmount" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Monthly Installment <span class="text-danger">*</span></label>
+              <input type="number" min="0.01" step="0.01" class="form-control form-control-sm" [(ngModel)]="form.monthlyInstallment" />
+              <div class="form-text">Deducted from net pay each period this loan is active, until settled.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Reason</label>
+              <input class="form-control form-control-sm" placeholder="e.g. Medical emergency" [(ngModel)]="form.reason" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Notes</label>
+              <input class="form-control form-control-sm" placeholder="Optional" [(ngModel)]="form.notes" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!canSave || saving" (click)="save()">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Create
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Repayment history -->
+  @if (historyTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Repayment History — {{ historyTarget.employeeName }}</h5>
+          <button class="btn-close" (click)="historyTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          @if (historyLoading) { <app-loader /> }
+          @if (!historyLoading && history.length) {
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Period</th><th class="text-end">Amount</th><th class="text-end">Balance After</th></tr></thead>
+            <tbody>
+              @for (r of history; track r.id) {
+              <tr>
+                <td>{{ months[r.payMonth] }} {{ r.payYear }}</td>
+                <td class="text-end">{{ r.amount | bosCurrency }}</td>
+                <td class="text-end">{{ r.balanceAfter | bosCurrency }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
+          @if (!historyLoading && !history.length) {
+            <div class="text-muted small text-center py-3">No installments recovered yet — this loan hasn't ridden a PAID payroll.</div>
+          }
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="historyTarget = null">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!cancelTarget" title="Cancel Loan/Advance"
+    message="Cancel this loan/advance? Only possible since no installment has been recovered yet."
+    (confirmed)="doCancel()" (cancelled)="cancelTarget = null" />
+</div>

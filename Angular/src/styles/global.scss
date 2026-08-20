@@ -1,0 +1,2696 @@
+// Geist, Inter and Space Grotesk are loaded by a single <link> in index.html.
+// They are deliberately not @import-ed here: Angular inlines an @import-ed
+// stylesheet into styles.css at build time, which duplicated ~34 kB of font CSS
+// into the initial bundle and tripped the anyComponentStyle budget.
+
+
+:root {
+
+  // ── Brand ─────────────────────────────────────────────────
+  // Emerald on light slate surfaces (matches the landing skin). Every colour
+  // below is a token:
+  // nothing in a component should hardcode a hex, because a second palette
+  // (dark mode) swaps these values and only these values.
+  --bos-brand:          #367C2B;
+  --bos-brand-hover:    #2A6421;
+  --bos-brand-dark:     #14300F;   // the wave's deep forest band
+  --bos-brand-rgb:      54, 124, 43;
+
+  // Tint of the brand, for selected rows and icon tiles.
+  --bos-brand-soft:     rgb(54 124 43 / 0.10);
+
+
+  --bos-lavender:       #8FC46B;
+  --bos-lavender-lt:    #EEF6E7;
+  --bos-lavender-mid:   #D6EAC5;
+
+  --bs-primary:         #367C2B;
+  --bs-primary-rgb:     54, 124, 43;
+
+
+  // Semantic colours, each paired with a low-alpha companion. The pair is the
+  // unit: -soft is the fill, the solid is the text/icon drawn on it. Alpha
+  // rather than a flat hex so the same token works on white and on a tinted row.
+  --bs-success:         #0B7B61;
+  --bs-success-rgb:     11, 123, 97;
+  --bos-success-soft:   rgb(15 155 122 / 0.13);
+  --bs-danger:          #C2394C;
+  --bs-danger-rgb:      194, 57, 76;
+  --bos-danger-soft:    rgb(224 82 100 / 0.13);
+  --bs-warning:         #9A5B06;
+  --bs-warning-rgb:     154, 91, 6;
+  --bos-warning-soft:   rgb(200 121 20 / 0.14);
+  --bs-info:            #077699;
+  --bs-info-rgb:        7, 118, 153;
+  --bos-info-soft:      rgb(12 157 200 / 0.13);
+  --bos-neutral-soft:   rgb(104 119 137 / 0.12);
+
+
+  --bos-text:           #111827;
+  --bos-text-secondary: #273447;
+  --bos-muted:          #687789;
+  --bos-border:         #DBE4EF;
+  --bos-border-light:   #EAF0F7;
+  --bos-bg-page:        #F4F7FB;
+  --bos-bg-card:        #FFFFFF;
+  --bos-bg-hover:       #EEF6E7;
+  --bos-bg-subtle:      #F7F9FC;
+
+
+  --bos-sidebar-bg:       #FFFFFF;
+  --bos-sidebar-text:     #273447;
+  --bos-sidebar-muted:    #687789;
+  --bos-sidebar-hover:    #EEF6E7;
+  --bos-sidebar-active:   #367C2B;
+  --bos-sidebar-active-fg: #FFFFFF;
+  --bos-sidebar-border:   #D9E2EC;
+  --bos-navbar-bg:        #FFFFFF;
+  --bos-navbar-fg:        #273447;
+  --bos-navbar-border:    #DBE4EF;
+
+  // Bootstrap body
+  --bs-body-bg:           #F4F7FB;
+  --bs-body-color:        #273447;
+  --bs-border-color:      #DBE4EF;
+  --bs-secondary-bg:      #F7F9FC;
+  // index.html puts .bg-light on <body>, and Bootstrap's utility reads these -
+  // repointed here so the class lands on the page colour rather than Bootstrap's
+  // own grey, without editing the markup or fighting it with !important.
+  --bs-light:             #F4F7FB;
+  --bs-light-rgb:         244, 247, 251;
+
+  --bs-border-radius:     8px;
+  --bs-border-radius-sm:  6px;
+  --bs-border-radius-lg:  12px;
+  --bs-border-radius-xl:  16px;
+  --bs-border-radius-xxl: 24px;
+  --bs-border-radius-pill: 50rem;
+
+  // ── Shadows ───────────────────────────────────────────────
+  // Slate-tinted rather than neutral black: a grey shadow over a blue-grey page
+  // reads muddy, whereas tinting it toward the surface hue keeps it clean.
+  --bos-shadow-sm:    0 1px 2px rgb(22 34 51 / 0.06), 0 1px 1px -1px rgb(22 34 51 / 0.08);
+  --bos-shadow-card:  0 12px 28px -18px rgb(22 34 51 / 0.35), 0 2px 8px -4px rgb(22 34 51 / 0.12);
+  --bos-shadow-lg:    0 22px 45px -24px rgb(22 34 51 / 0.42), 0 8px 18px -12px rgb(22 34 51 / 0.18);
+  --bs-box-shadow-sm: 0 1px 2px rgb(22 34 51 / 0.06), 0 1px 1px -1px rgb(22 34 51 / 0.08);
+  --bs-box-shadow:    0 12px 28px -18px rgb(22 34 51 / 0.35), 0 2px 8px -4px rgb(22 34 51 / 0.12);
+  --bs-box-shadow-lg: 0 22px 45px -24px rgb(22 34 51 / 0.42), 0 8px 18px -12px rgb(22 34 51 / 0.18);
+
+  // ── Typography
+  // Geist, with Inter kept as the first fallback so nothing reflows oddly if the
+  // Geist request fails - the two have very similar metrics.
+  --bs-body-font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --bs-body-font-size:   0.875rem;
+  --bos-heading-font:    'Geist', 'Inter', sans-serif;
+  // Distinct display face for the public marketing site only (landing module) -
+  // deliberately not applied app-wide so the authenticated dashboard's typography
+  // is untouched.
+  --font-display:        'Space Grotesk', 'Inter', sans-serif;
+  --bos-gradient-brand:  linear-gradient(135deg, #2A6421 0%, #367C2B 55%, #A9CF8E 100%);
+  // The two-stop fill used on the active sidebar item and primary buttons.
+  --bos-gradient-accent: linear-gradient(135deg, #4C9A3B 0%, #367C2B 100%);
+
+  // ── Motion
+  --bos-transition:   180ms ease;
+  --bos-focus-ring:   0 0 0 3px rgb(54 124 43 / 0.24);
+
+  // ── Landing accent palette
+  // The same 8 accents the authenticated dashboards use for their pastel stat
+  // cards, so the logged-out marketing page and the logged-in product read as
+  // one system. Sections never reference these directly - they read --accent,
+  // which the .accent-* classes below set. See "LANDING ACCENT SYSTEM".
+  //   <name>       core: 3px bar, icon glyph, gradient mid-stop
+  //   <name>-rgb   triple for rgba() washes
+  //   <name>-soft  pastel surface (identical hex to the dashboard cards)
+  //   <name>-ink   dark text that passes AA on -soft
+  //   <name>-deep  dark end of the 135deg icon gradient
+  --bos-a-violet:       #8B5CF6;
+  --bos-a-violet-rgb:   139, 92, 246;
+  --bos-a-violet-soft:  #F3E8FF;
+  --bos-a-violet-ink:   #6B21A8;
+  --bos-a-violet-deep:  #7E22CE;
+
+  --bos-a-blue:         #2563EB;
+  --bos-a-blue-rgb:     37, 99, 235;
+  --bos-a-blue-soft:    #DBEAFE;
+  --bos-a-blue-ink:     #0369A1;
+  --bos-a-blue-deep:    #1D4ED8;
+
+  --bos-a-teal:         #0D9488;
+  --bos-a-teal-rgb:     13, 148, 136;
+  --bos-a-teal-soft:    #CCFBF1;
+  --bos-a-teal-ink:     #0F766E;
+  --bos-a-teal-deep:    #115E59;
+
+  --bos-a-lime:         #65A30D;
+  --bos-a-lime-rgb:     101, 163, 13;
+  --bos-a-lime-soft:    #ECFCCB;
+  --bos-a-lime-ink:     #4D7C0F;
+  --bos-a-lime-deep:    #365314;
+
+  --bos-a-emerald:      #10B981;
+  --bos-a-emerald-rgb:  16, 185, 129;
+  --bos-a-emerald-soft: #D1FAE5;
+  --bos-a-emerald-ink:  #2A6421;
+  --bos-a-emerald-deep: #367C2B;
+
+  --bos-a-indigo:       #6366F1;
+  --bos-a-indigo-rgb:   99, 102, 241;
+  --bos-a-indigo-soft:  #E0E7FF;
+  --bos-a-indigo-ink:   #3730A3;
+  --bos-a-indigo-deep:  #4338CA;
+
+  --bos-a-amber:        #F59E0B;
+  --bos-a-amber-rgb:    245, 158, 11;
+  --bos-a-amber-soft:   #FEF3C7;
+  --bos-a-amber-ink:    #B45309;
+  --bos-a-amber-deep:   #B45309;
+
+  --bos-a-rose:         #E11D48;
+  --bos-a-rose-rgb:     225, 29, 72;
+  --bos-a-rose-soft:    #FFE4E6;
+  --bos-a-rose-ink:     #9F1239;
+  --bos-a-rose-deep:    #BE123C;
+}
+
+// ── Reset & base 
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  font-family: var(--bs-body-font-family);
+  background-color: var(--bos-bg-page);
+  color: var(--bos-text);
+  font-size: var(--bs-body-font-size);
+  line-height: 1.6;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+// Fluid root size - every rem-based value (Bootstrap utilities, --bs-body-font-size
+// above, component typography) scales smoothly with viewport width instead of
+// jumping at fixed breakpoints.
+html {
+  font-size: clamp(14px, 3.8vw, 16px);
+}
+
+body {
+  max-width: 100vw;
+}
+
+// Bootstrap only makes an <img> responsive via the opt-in .img-fluid class;
+// this makes it the default everywhere instead of adding that class to every
+// <img> in 125+ templates.
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.btn, .nav-link, a, button {
+  touch-action: manipulation;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: var(--bos-heading-font);
+  color: var(--bos-text);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+a {
+  // --bos-link, not --bos-brand directly. The brand is the right blue for a
+  // fill; as link text on a dark surface it only reaches 4.0:1, so dark mode
+  // needs a lighter value here without moving the brand everywhere else. It
+  // falls back to the brand, so light mode is unchanged.
+  color: var(--bos-link, var(--bos-brand));
+  text-decoration: none;
+  transition: color var(--bos-transition);
+  &:hover { color: var(--bos-link-hover, var(--bos-brand-hover)); }
+}
+
+// Cards 
+.card {
+  // Deliberately NOT !important. global.scss loads after bootstrap.scss, so an
+  // equal-specificity rule already beats Bootstrap's --bs-card-bg. With
+  // !important it also beat every inline `style="background-color: …"` on a
+  // .card, which silently flattened the pastel stat cards on the dashboards to
+  // white - the tint was in the markup but never rendered.
+  background: var(--bos-bg-card);
+  border: 1px solid var(--bos-border) !important;
+  border-radius: var(--bs-border-radius) !important;
+  box-shadow: var(--bos-shadow-card);
+
+  .card-header {
+    // Also not !important, and for the same reason: at 0,2,0 this rule outranks
+    // Bootstrap's .bg-transparent utility (0,1,0), so a tinted card still got a
+    // white strip across its header even when the markup asked for transparent.
+    background: #fff;
+    border-bottom: 1px solid var(--bos-border) !important;
+    padding: 1rem 1.25rem !important;
+    border-radius: var(--bs-border-radius) var(--bs-border-radius) 0 0 !important;
+    color: var(--bos-text) !important;
+  }
+
+  .card-body { padding: 1.25rem !important; }
+
+  .card-title {
+    color: var(--bos-text);
+    font-weight: 700;
+  }
+
+  .card-footer {
+    background: #FAFAFA !important;
+    border-top: 1px solid var(--bos-border) !important;
+    border-radius: 0 0 var(--bs-border-radius) var(--bs-border-radius) !important;
+    color: var(--bos-text-secondary) !important;
+  }
+}
+
+// ── Status badges ─────────────────────────────────────────
+// One component for every lifecycle state in the app, replacing the per-template
+// `text-bg-*` guessing. The pattern is a tint fill with the solid colour as text,
+// and a dot drawn from `currentColor` so it tracks the text automatically - no
+// separate dot colour to keep in sync.
+//
+// Semantic families, not one class per enum value: map a status onto whichever
+// family describes it (`.is-open` for anything in flight, `.is-done` for
+// terminal-success) in the component, so adding an enum value never needs CSS.
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.3;
+  border-radius: var(--bs-border-radius-pill);
+  white-space: nowrap;
+
+  &::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex: 0 0 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+
+  // Terminal success — completed, approved, paid, active
+  &.is-done    { background-color: var(--bos-success-soft); color: var(--bs-success); }
+  // In flight — in progress, assigned, processing
+  &.is-open    { background-color: var(--bos-brand-soft);   color: var(--bos-brand); }
+  // Waiting on someone — pending, under review, awaiting approval
+  &.is-pending { background-color: var(--bos-warning-soft); color: var(--bs-warning); }
+  // Terminal failure — rejected, cancelled, overdue, failed
+  &.is-failed  { background-color: var(--bos-danger-soft);  color: var(--bs-danger); }
+  // Informational — draft, scheduled, queued
+  &.is-info    { background-color: var(--bos-info-soft);    color: var(--bs-info); }
+  // No state / inactive / archived
+  &.is-muted   { background-color: var(--bos-neutral-soft); color: var(--bos-muted); }
+
+  &.no-dot::before { display: none; }
+}
+
+// Tinted badges for non-status labels (categories, tags, counts). Same fill
+// recipe as .status-badge but without the dot or the pill shape.
+.badge-soft-primary { background-color: var(--bos-brand-soft);   color: var(--bos-brand); }
+.badge-soft-success { background-color: var(--bos-success-soft); color: var(--bs-success); }
+.badge-soft-warning { background-color: var(--bos-warning-soft); color: var(--bs-warning); }
+.badge-soft-danger  { background-color: var(--bos-danger-soft);  color: var(--bs-danger); }
+.badge-soft-info    { background-color: var(--bos-info-soft);    color: var(--bs-info); }
+.badge-soft-muted   { background-color: var(--bos-neutral-soft); color: var(--bos-muted); }
+
+// Bootstrap's own contextual badges, repointed at the tokens so a `text-bg-success`
+// left in an old template still lands on the new palette instead of Bootstrap green.
+.badge.text-bg-success { background-color: var(--bs-success) !important; }
+.badge.text-bg-danger  { background-color: var(--bs-danger)  !important; }
+// Dark ink on the MID amber/cyan, not on the token: the tokens were darkened
+// for text-on-white duty, which would make these fills dark-on-dark. The
+// badge keeps the vivid mid fill with dark ink, as Bootstrap itself does.
+.badge.text-bg-warning { background-color: #D98A1C !important; color: #331F02 !important; }
+.badge.text-bg-info    { background-color: #17A8D4 !important; color: #04293A !important; }
+.badge.text-bg-primary { background-color: var(--bos-brand)  !important; }
+
+// ── Buttons
+.btn {
+  font-weight: 600;
+  border-radius: var(--bs-border-radius-sm);
+  padding: 0.45rem 1rem;
+  font-size: 0.875rem;
+  transition: all var(--bos-transition);
+  &:active { transform: translateY(1px); }
+  &.btn-sm { padding: 0.35rem 0.8rem; font-size: 0.8rem; }
+  &.btn-lg { padding: 0.65rem 1.4rem; font-size: 1rem; }
+}
+
+.btn-primary {
+  background: var(--bos-brand);
+  border-color: var(--bos-brand);
+  color: #fff !important;
+  box-shadow: 0 6px 14px -8px rgb(var(--bos-brand-rgb) / 0.55);
+  // Bootstrap paints DISABLED buttons from these vars, which stay factory
+  // blue (#0d6efd) unless repointed - every disabled Add/Save button in the
+  // app was Bootstrap blue while enabled ones were brand.
+  --bs-btn-disabled-bg: var(--bos-brand);
+  --bs-btn-disabled-border-color: var(--bos-brand);
+  --bs-btn-disabled-color: #fff;
+
+  &:hover, &:focus {
+    background: var(--bos-brand-hover);
+    border-color: var(--bos-brand-hover);
+    color: #fff !important;
+    box-shadow: 0 10px 20px -10px rgb(var(--bos-brand-rgb) / 0.6);
+    transform: translateY(-1px);
+  }
+  &:focus-visible { box-shadow: var(--bos-focus-ring); }
+  &:active { transform: translateY(0); }
+  &:disabled { opacity: 0.65; transform: none; }
+}
+
+.btn-outline-primary {
+  color: var(--bos-brand);
+  border-color: var(--bos-brand);
+  --bs-btn-disabled-color: var(--bos-brand);
+  --bs-btn-disabled-border-color: var(--bos-brand);
+  &:hover {
+    background: var(--bos-lavender-lt);
+    color: var(--bos-brand-hover);
+    border-color: var(--bos-brand-hover);
+    transform: translateY(-1px);
+  }
+}
+
+.btn-secondary {
+  background: #F3F4F6;
+  border-color: var(--bos-border);
+  color: var(--bos-text) !important;
+  &:hover {
+    background: #E5E7EB;
+    color: var(--bos-text) !important;
+  }
+}
+
+.btn-outline-secondary {
+  color: var(--bos-muted);
+  border-color: var(--bos-border);
+  &:hover {
+    background: var(--bos-bg-hover);
+    color: var(--bos-text);
+    border-color: #D1D5DB;
+  }
+}
+
+.btn-danger { color: #fff !important; }
+.btn-success { color: #fff !important; }
+
+//  Forms 
+.form-control, .form-select {
+  border: 1.5px solid var(--bos-border);
+  border-radius: var(--bs-border-radius-sm);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--bos-text);          // ← DARK text always
+  background-color: #fff;
+  transition: border-color var(--bos-transition), box-shadow var(--bos-transition);
+
+  &::placeholder { color: #9CA3AF; }
+
+  &:focus {
+    border-color: var(--bos-brand);
+    box-shadow: var(--bos-focus-ring);
+    outline: 0;
+    color: var(--bos-text);
+    background-color: #fff;
+  }
+
+  &.form-control-sm, &.form-select-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  &:disabled, &[readonly] {
+    background: #F9FAFB;
+    color: var(--bos-muted);
+    border-color: var(--bos-border);
+  }
+}
+
+.form-label,
+.field-label {
+  font-weight: 600;
+  font-size: clamp(0.78rem, 2.2vw, 0.9rem);
+  color: var(--bos-text);
+  margin-bottom: 0.35rem;
+}
+
+.invalid-feedback {
+  font-size: 0.78rem;
+  color: var(--bs-danger);
+}
+
+.form-text {
+  color: var(--bos-muted);
+  font-size: 0.78rem;
+}
+
+.input-group-text {
+  background: #F9FAFB;
+  border-color: var(--bos-border);
+  color: var(--bos-muted);
+  font-size: 0.82rem;
+}
+
+// Tables 
+.table {
+  --bs-table-bg: transparent;
+  color: var(--bos-text);
+  border-color: #F1F5F9;
+  margin-bottom: 0;
+  // Needed so the rounded top corners on the header actually render.
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #fff;
+    border-bottom: none;
+    padding: 0.85rem 1rem;
+    background: var(--bos-brand-dark);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    font-size: 0.875rem;
+    color: var(--bos-text); 
+    border-bottom: 1px solid #F1F5F9;
+  }
+
+  tbody tr {
+    transition: background-color var(--bos-transition);
+    &:hover { background: var(--bos-bg-hover); }
+  }
+
+  // Ensure text in table cells is always visible
+  .text-muted { color: var(--bos-muted) !important; }
+}
+
+.table-dark-header th {
+  background: var(--bos-brand-dark) !important;
+  color: #fff !important;
+}
+
+// Light sage header on every table (beats Bootstrap's .table-light on <thead>),
+// matching the leaf-green theme instead of the earlier charcoal band - the
+// near-black row read heavier than the page chrome around it. Dark mode
+// overrides this in _dark.scss.
+.table thead th,
+.table > thead > tr > th {
+  background: var(--bos-brand-soft) !important;
+  color: var(--bos-brand-dark, #14300F) !important;
+  border-color: rgba(20, 48, 15, 0.12) !important;
+}
+// Rounded top corners on the header row
+.table thead tr:first-child th:first-child { border-top-left-radius: 10px; }
+.table thead tr:first-child th:last-child { border-top-right-radius: 10px; }
+
+// Bootstrap ships these in its default blue; on a green-brand app the blue
+// reads as a foreign control. Selected list rows (roles list), checked
+// checkboxes/radios/switches (permission checklists) all take the brand.
+.list-group-item.active {
+  background-color: var(--bos-brand) !important;
+  border-color: var(--bos-brand) !important;
+  color: #fff !important;
+}
+
+.form-check-input:checked {
+  background-color: var(--bos-brand);
+  border-color: var(--bos-brand);
+}
+
+.form-check-input:focus {
+  border-color: var(--bos-brand);
+  box-shadow: var(--bos-focus-ring);
+}
+
+.form-check-input:indeterminate {
+  background-color: var(--bos-brand);
+  border-color: var(--bos-brand);
+}
+
+// Badges
+.badge {
+  font-weight: 600;
+  font-size: 0.7rem;
+  padding: 0.4em 0.75em;
+  border-radius: 50rem;
+  letter-spacing: 0.02em;
+}
+
+.badge-soft-primary {
+  background: var(--bos-lavender-lt);
+  color: var(--bos-brand);
+}
+.badge-soft-success {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803D;
+}
+.badge-soft-danger {
+  background: rgba(220, 38, 38, 0.12);
+  color: #B91C1C;
+}
+.badge-soft-warning {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400E;
+}
+.badge-soft-info {
+  background: rgba(37, 99, 235, 0.12);
+  color: #1D4ED8;
+}
+.badge-soft-secondary {
+  background: #F3F4F6;
+  color: var(--bos-muted);
+}
+
+//  Modals 
+.modal-content {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(30, 27, 75, 0.15);
+  overflow: hidden;
+}
+
+// Light header with a brand accent rule along the top, rather than the former
+// navy-to-violet gradient. A dialog is a surface the user reads and types into,
+// so it stays on the same white as the cards behind it; the 3px accent is what
+// carries the brand instead of a saturated fill.
+.modal-header {
+  background: var(--bos-bg-card);
+  border-top: 3px solid var(--bos-brand);
+  border-bottom: 1px solid var(--bos-border);
+  padding: 1.25rem 1.5rem 1rem;
+
+  .modal-title {
+    font-weight: 700;
+    color: var(--bos-text);
+    font-size: 1.05rem;
+  }
+
+  p,
+  small,
+  .modal-subtitle,
+  .text-muted,
+  .text-secondary {
+    color: var(--bos-muted) !important;
+  }
+
+  .bi { color: var(--bos-brand); }
+}
+
+.modal-body {
+  background: #fff;
+  padding: 1.5rem;
+  color: var(--bos-text);       // ← always readable
+}
+
+.modal-footer {
+  background: #FAFAFA;
+  border-top: 1px solid var(--bos-border);
+  padding: 1rem 1.5rem;
+}
+
+//  Dropdowns 
+.dropdown-menu {
+  border: 1px solid var(--bos-border);
+  border-radius: var(--bs-border-radius);
+  box-shadow: var(--bos-shadow-lg);
+  padding: 0.35rem;
+  margin-top: 0.3rem;
+
+  .dropdown-item {
+    border-radius: var(--bs-border-radius-sm);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--bos-text);
+    transition: all var(--bos-transition);
+
+    &:hover, &:focus {
+      background: var(--bos-lavender-lt);
+      color: var(--bos-brand);
+    }
+
+    &.text-danger:hover { background: rgba(220,38,38,0.08); }
+  }
+
+  .dropdown-header {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bos-muted);
+    font-weight: 700;
+    padding: 0.5rem 0.75rem 0.25rem;
+  }
+
+  .dropdown-divider { border-color: var(--bos-border); margin: 0.3rem 0; }
+}
+
+//  Alerts 
+.alert {
+  border-radius: var(--bs-border-radius);
+  font-size: 0.875rem;
+  border: 1px solid transparent;
+
+  &.alert-danger {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.25);
+    color: #991B1B;
+  }
+  &.alert-success {
+    background: rgba(22, 163, 74, 0.08);
+    border-color: rgba(22, 163, 74, 0.25);
+    color: #166534;
+  }
+  &.alert-warning {
+    background: rgba(217, 119, 6, 0.08);
+    border-color: rgba(217, 119, 6, 0.25);
+    color: #92400E;
+  }
+  &.alert-info {
+    background: rgba(37, 99, 235, 0.08);
+    border-color: rgba(37, 99, 235, 0.25);
+    color: #1E40AF;
+  }
+}
+
+//  Navigation Tabs 
+.nav-tabs {
+  border-bottom: 1px solid var(--bos-border);
+  gap: 0.2rem;
+
+  .nav-link {
+    color: var(--bos-muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.6rem 1rem;
+    border-radius: 0;
+    transition: all var(--bos-transition);
+
+    &:hover {
+      color: var(--bos-brand);
+      border-bottom-color: var(--bos-lavender);
+    }
+    &.active {
+      color: var(--bos-brand);
+      border-bottom-color: var(--bos-brand);
+      background: transparent;
+    }
+  }
+}
+
+// Pagination 
+.pagination {
+  gap: 0.25rem;
+
+  .page-link {
+    border-radius: var(--bs-border-radius-sm);
+    border-color: var(--bos-border);
+    color: var(--bos-text);
+    font-weight: 500;
+    font-size: 0.875rem;
+    min-width: 36px;
+    text-align: center;
+    transition: all var(--bos-transition);
+
+    &:hover {
+      background: var(--bos-lavender-lt);
+      color: var(--bos-brand);
+      border-color: var(--bos-lavender-mid);
+    }
+  }
+  .page-item.active .page-link {
+    background: var(--bos-brand);
+    border-color: var(--bos-brand);
+    color: #fff;
+  }
+}
+
+
+//  Shell — Appbar
+// Background, borders and per-element text colors are owned by navbar.scss
+// (white navbar design) - this block only keeps generic resets that don't
+// fight that component's own styling. It used to force every span/p inside
+// to white text for the old purple-gradient navbar; that override made all
+// text invisible once the navbar background became white, so it's gone.
+.appbar {
+  height: 58px;
+  flex-shrink: 0;
+
+  .breadcrumb {
+    margin: 0;
+    .breadcrumb-item { color: var(--bos-muted) !important; }
+    .breadcrumb-item.active { color: var(--bos-text) !important; }
+    .breadcrumb-item + .breadcrumb-item::before { color: var(--bos-border) !important; }
+  }
+
+  .notification-panel {
+    .text-dark, span, p { color: var(--bos-text) !important; }
+    .text-muted { color: var(--bos-muted) !important; }
+  }
+}
+
+//  App Layout
+.app-shell {
+  overflow: hidden;
+}
+
+.app-main {
+  background: var(--bos-bg-page);
+  min-height: 0;   // allow the main area to scroll inside the content column
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+// Active nav item foreground, global rather than component-scoped.
+//
+// The three sidebars (tenant, platform, client) share one stylesheet but each
+// compiles its own encapsulated copy, and the foreground pair has to beat
+// Bootstrap's .nav-link anchor colour. Declaring it once here - unscoped, so no
+// per-component attribute is involved - keeps white-on-blue guaranteed in all
+// three rather than depending on which copy wins.
+// The children are targeted directly, not just the row. Setting `color` on the
+// row and letting it inherit does not work here: the group parent is a <button>,
+// and a button's text colour does not inherit from the button box the way it
+// does on an anchor - the label span kept the base slate colour even against an
+// !important rule on the button itself.
+.sidebar-link.active,
+.sidebar-link.active i,
+.sidebar-link.active span,
+.sidebar-parent.is-open,
+.sidebar-parent.is-open i,
+.sidebar-parent.is-open span,
+.nav-link.active .sidebar-link,
+app-sidebar .sidebar-link.active,
+app-sidebar .sidebar-link.active span,
+app-client-sidebar .sidebar-link.active,
+app-client-sidebar .sidebar-link.active span,
+app-platform-sidebar .nav-link.active,
+app-platform-sidebar .nav-link.active span {
+  color: var(--bos-sidebar-active-fg) !important;
+}
+
+// ── Collapsed rail (desktop) ──────────────────────────────
+// The header's toggle puts `sidebar-collapsed` on <body>. Rules live here, not
+// in the sidebar component, because the width belongs to the layout column and
+// three different sidebar components sit inside it.
+//
+// Text is hidden and icons centre; the group captions keep their rule as a stub
+// so the grouping still reads at 76px instead of becoming one undifferentiated
+// column of glyphs.
+body.sidebar-collapsed {
+  .sidebar-col,
+  app-sidebar,
+  app-client-sidebar,
+  app-platform-sidebar {
+    width: 76px;
+  }
+
+  .sidebar-brand {
+    justify-content: center;
+    padding: 0 0.5rem;
+    span:not(.sidebar-brand-icon) { display: none; }
+  }
+
+  .sidebar-link,
+  .nav-link {
+    justify-content: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    gap: 0;
+
+    > span,
+    .sidebar-chevron { display: none; }
+  }
+
+  // Children are meaningless without their labels, and a flyout would be a
+  // different interaction to design - collapse hides them until re-expanded.
+  .sidebar-submenu { display: none; }
+
+  .sidebar-group-header {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    span { display: none; }
+    &::after { flex: 0 0 18px; }
+  }
+
+  // The whole upgrade block goes, not just its text: it is a two-line marketing
+  // card that cannot degrade to 76px without wrapping into a mess.
+  .upgrade-divider { display: none; }
+
+  // No room for a text input in a 76px icon rail.
+  .sidebar-search { display: none; }
+
+  // Belt and braces - the rails are fixed-width, so anything that does not fit
+  // is clipped rather than allowed to spill over the content area. Except the
+  // tooltip below: it deliberately renders outside the 76px rail, so every
+  // ancestor between the link and the rail edge (.sidebar-wrapper and
+  // .sidebar-scroll, both normally clipped for the expanded label text) has
+  // to go visible too, not just this outer rule. Collapsed mode never shows
+  // a submenu (toggleGroup() re-expands the rail first), so content height
+  // here is always the bounded icon list - dropping the scroll clip is safe.
+  .sidebar-col,
+  app-sidebar,
+  app-client-sidebar,
+  app-platform-sidebar,
+  .sidebar-wrapper,
+  .sidebar-scroll { overflow: visible; }
+
+  // Icon-only hint, since the label itself is hidden at this width. Only
+  // relevant here - at full width the label is already on-screen next to the
+  // icon, so a second copy in a popup would be redundant.
+  .sidebar-link[data-tooltip],
+  .sidebar-parent[data-tooltip] {
+    position: relative;
+    overflow: visible;
+
+    &::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%) translateX(-4px);
+      background: #1f2937;
+      color: #f9fafb;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      z-index: 1200;
+    }
+
+    &:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%) translateX(0);
+    }
+  }
+}
+
+// Sidebar column — full-height rail that owns the brand at its top. Light
+// surface separated from the page by a hairline border rather than a shadow;
+// a shadow here would imply the rail floats above content, which it doesn't.
+.sidebar-col {
+  width: 240px;
+  flex-shrink: 0;
+  height: 100%;
+  background: var(--bos-sidebar-bg);
+  border-right: 1px solid var(--bos-sidebar-border);
+
+  // The role-specific sidebar fills the space under the brand and scrolls on its own.
+  > app-sidebar,
+  > app-platform-sidebar,
+  > app-client-sidebar {
+    flex: 1 1 0;
+    min-height: 0;
+    height: auto;
+    width: 100%;
+  }
+}
+
+.sidebar-brand {
+  height: 68px;               // aligns with the navbar height
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0 1.1rem;
+  color: var(--bos-text);
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  border-bottom: 1px solid var(--bos-sidebar-border);
+  &:hover { color: var(--bos-brand); }
+
+  .sidebar-brand-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+}
+
+// Mobile sidebar drawer - the whole .sidebar-col (brand + role-specific nav)
+// slides in as one off-canvas panel. Breakpoint matches navbar.html's d-lg-none
+// hamburger toggle.
+@media (max-width: 991.98px) {
+  // The shell wrapper's overflow:hidden (needed on desktop so the inline
+  // sidebar + main row don't create a duplicate page-level scrollbar) clips
+  // position:fixed descendants in every major browser - it must be lifted
+  // here or the drawer below can never visually escape it.
+  .app-shell {
+    overflow: visible;
+  }
+
+  // Animates via transform (GPU-composited) rather than left - animating a
+  // layout property like left on a fixed-position element is both slower and,
+  // in some browser engines, prone to compositor-layer invalidation bugs.
+  .sidebar-col {
+    position: fixed !important;
+    top: 0 !important;
+    height: 100vh !important;
+    left: 0 !important;
+    width: min(240px, 80vw) !important;
+    z-index: 1045 !important;
+    transform: translateX(-110%) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 6px 0 24px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  body.sidebar-open {
+    overflow: hidden;
+    .sidebar-col { transform: translateX(0) !important; }
+  }
+
+  .app-main {
+    padding: clamp(0.75rem, 2.5vw, 1rem);
+  }
+
+  .navbar.appbar {
+    .search-wrapper {
+      width: 100%;
+      max-width: 220px;
+    }
+  }
+
+  // Generic mobile wrap guarantee for the app's most common header/toolbar
+  // patterns, so individual pages don't each need flex-wrap/flex-md-nowrap
+  // added by hand.
+  .container-fluid .d-flex:not(.flex-nowrap) {
+    flex-wrap: wrap;
+  }
+
+  .card-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .btn-group {
+    flex-wrap: wrap;
+  }
+
+  .d-flex.gap-3 {
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: clamp(0.6rem, 3vw, 1rem) clamp(0.5rem, 2.5vw, 0.75rem);
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+
+  .right-panel {
+    width: 100%;
+    max-width: 520px;
+    flex: 1 1 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: clamp(1rem, 5vw, 1.5rem) clamp(0.85rem, 4vw, 1.25rem);
+    border-radius: clamp(16px, 2vw, 20px);
+    box-sizing: border-box;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
+
+  .modal-content {
+    border-radius: 16px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+
+    .btn {
+      width: 100%;
+    }
+  }
+
+  .form-control, .form-select, .btn {
+    font-size: clamp(0.82rem, 3vw, 0.9rem);
+  }
+
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+  }
+}
+
+// Fluid typography for brand classes that aren't Bootstrap utilities (Bootstrap's
+// own rem-based .display-*/.fs-* already scale via the root clamp() above).
+.auth-title {
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
+}
+
+.hero-title {
+  font-size: clamp(1.8rem, 6vw, 3rem);
+}
+
+// Page layout helpers 
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.page-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--bos-text);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font-size: 0.85rem;
+  color: var(--bos-muted);
+  margin: 0.2rem 0 0;
+}
+
+// Search input 
+.input-search {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  > i {
+    position: absolute;
+    left: 0.8rem;
+    color: var(--bos-muted);
+    pointer-events: none;
+    font-size: 0.9rem;
+  }
+
+  .form-control {
+    padding-left: 2.2rem;
+  }
+}
+
+// KPI Cards 
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+
+.kpi-card {
+  background: #fff;
+  border: 1px solid var(--bos-border);
+  border-radius: var(--bs-border-radius);
+  box-shadow: var(--bos-shadow-card);
+  padding: 1.2rem 1.35rem;
+  transition: box-shadow var(--bos-transition), transform var(--bos-transition);
+
+  &:hover { box-shadow: var(--bos-shadow-lg); transform: translateY(-1px); }
+
+  .kpi-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--bos-muted);
+    margin: 0;
+  }
+
+  .kpi-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--bos-text);
+    margin: 0.35rem 0 0;
+    line-height: 1;
+  }
+
+  .kpi-sub {
+    font-size: 0.8rem;
+    color: var(--bos-muted);
+    margin: 0.25rem 0 0;
+  }
+}
+
+// Gradient KPI Cards — white text override
+.card-gradient-primary {
+  background: linear-gradient(135deg, var(--bos-brand), #3B82F6) !important;
+  border: none !important;
+  .card-title, .kpi-label, .kpi-value, .kpi-sub, p, span, h1, h2, h3, h4, h5, h6 {
+    color: #fff !important;
+  }
+}
+
+.card-gradient-success {
+  background: linear-gradient(135deg, #16A34A, #10B981) !important;
+  border: none !important;
+  .card-title, .kpi-label, .kpi-value, .kpi-sub, p, span { color: #fff !important; }
+}
+
+.card-gradient-info {
+  background: linear-gradient(135deg, #2563EB, #0EA5E9) !important;
+  border: none !important;
+  .card-title, .kpi-label, .kpi-value, .kpi-sub, p, span { color: #fff !important; }
+}
+
+// Action buttons in tables 
+.btn-action {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--bos-muted);
+  border: none;
+  transition: all var(--bos-transition);
+
+  &:hover { background: #F3F4F6; color: var(--bos-text); }
+  &.btn-action-primary:hover { background: var(--bos-lavender-lt); color: var(--bos-brand); }
+  &.btn-action-danger:hover { background: rgba(220,38,38,0.08); color: var(--bs-danger); }
+}
+
+// Brand button (used in employee page, and the marketing site's primary CTA)
+.btn-primary-bos {
+  background: var(--bos-gradient-accent);
+  border: none;
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: var(--bs-border-radius-sm);
+  padding: 0.45rem 1rem;
+  transition: all var(--bos-transition);
+  box-shadow: 0 6px 14px -8px rgb(var(--bos-brand-rgb) / 0.55);
+  position: relative;
+
+  &:hover {
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -12px rgb(var(--bos-brand-rgb) / 0.6);
+    filter: brightness(1.05);
+  }
+
+  &:active { transform: translateY(0); }
+}
+
+.bg-primary-bos {
+  background: var(--bos-brand) !important;
+  color: #fff !important;
+}
+
+.text-primary-bos { color: var(--bos-brand) !important; }
+
+// Bar chart helper 
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+
+  .bar-label {
+    width: 120px;
+    font-size: 0.82rem;
+    color: var(--bos-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--bos-lavender-lt);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--bos-brand), var(--bos-lavender));
+    border-radius: 6px;
+  }
+
+  .bar-value {
+    width: 48px;
+    text-align: right;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--bos-text);
+  }
+}
+
+// Lavender chip/tag 
+.lavender-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25em 0.75em;
+  background: var(--bos-lavender-lt);
+  color: var(--bos-brand);
+  border-radius: 50rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+// Hover card lift 
+.hover-card-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(30,27,75,0.1) !important;
+  }
+}
+
+// Animations 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.fade-in   { animation: fadeIn 0.4s ease-out; }
+.slide-up  { animation: slideUp 0.4s ease-out; }
+.floating  { animation: float 5s ease-in-out infinite; }
+
+// Glass panel 
+.glass-panel {
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.55);
+  box-shadow: 0 8px 32px rgba(30,27,75,0.07);
+  border-radius: 14px;
+}
+
+// Gradient text
+.gradient-text {
+  background: linear-gradient(120deg, #C4B5FD 0%, #A78BFA 35%, #7C5CFF 70%, #E9D8FF 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 6s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% center; }
+  50%      { background-position: 100% center; }
+}
+
+// Custom padding for large sections
+.py-6 {
+  padding-top: 4rem !important;
+  padding-bottom: 4rem !important;
+}
+
+.py-7 {
+  padding-top: 5rem !important;
+  padding-bottom: 5rem !important;
+}
+
+// Section title gradient - brand navy through purple to lavender
+.section-title {
+  background: var(--bos-gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+// Landing page only: distinct display typeface on headings, scoped so it never
+// leaks into the authenticated app's dashboard/admin typography.
+.landing-wrapper {
+  h1, h2, h3, h4,
+  .display-1, .display-2, .display-3, .display-4, .display-5, .display-6,
+  .section-title, .navbar-brand span {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+// Small pill "kicker" label shown above a section heading, e.g. "ENGINEERED FOR SCALE"
+.eyebrow-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35em 0.9em;
+  border-radius: 50rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bos-brand);
+  background: linear-gradient(135deg, rgba(107,70,255,0.1), rgba(167,139,250,0.14));
+  border: 1px solid rgba(107,70,255,0.18);
+
+  i, .eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--bos-brand);
+    flex: 0 0 auto;
+  }
+
+  &.on-dark {
+    color: #E9E4FF;
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.16);
+    .eyebrow-dot { background: var(--bos-lavender); }
+  }
+}
+
+// Subtle fixed-size dot grid used as a decorative section background layer
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(107,70,255,0.16) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+// These ensure text is always readable on various backgrounds
+.text-on-dark { color: #fff !important; }
+.text-lavender { color: var(--bos-lavender) !important; }
+.text-brand    { color: var(--bos-brand) !important; }
+
+// Ensure muted text is never invisible
+.text-muted { color: var(--bos-muted) !important; }
+.text-secondary { color: var(--bos-text-secondary) !important; }
+
+// ============================================================
+//  LANDING ACCENT SYSTEM
+//
+//  A section declares ONE class on its host element in landing.ts —
+//  e.g. <app-security class="accent-indigo"> — which sets the --accent
+//  channel. Recolouring a section is a one-word change in one file.
+//
+//  Why a custom property rather than a class override: Angular's emulated
+//  view encapsulation rewrites component selectors with [_ngcontent-xxx],
+//  pushing their specificity above equal-class-count global rules, so a
+//  global `.accent-teal .icon-box` would LOSE to the component's own
+//  `.icon-box`. Custom properties are inherited values, not matched
+//  declarations, so --accent crosses the encapsulation boundary cleanly.
+//  Same idea as .stat-card's --c and .coa-card's --coa-c.
+//
+//  Everything here is nested under .landing-wrapper. global.scss loads on
+//  every route, and the authenticated app must not shift.
+//
+//  NOTE: do not introduce a --bos-accent-* prefix. --bos-accent is an
+//  already-broken identifier referenced by why-business-os.scss and
+//  defined nowhere; reusing the prefix invites the assumption it exists.
+// ============================================================
+
+.landing-wrapper {
+  // Default channel: a section with no accent-* class renders in brand purple.
+  --accent:      var(--bos-brand);
+  --accent-rgb:  var(--bos-brand-rgb);
+  --accent-soft: var(--bos-lavender-lt);
+  --accent-ink:  #4C1D95;
+  --accent-deep: #4C1D95;
+
+  // ── Channel setters ───────────────────────────────────────
+  .accent-violet  { --accent: var(--bos-a-violet);  --accent-rgb: var(--bos-a-violet-rgb);  --accent-soft: var(--bos-a-violet-soft);  --accent-ink: var(--bos-a-violet-ink);  --accent-deep: var(--bos-a-violet-deep); }
+  .accent-blue    { --accent: var(--bos-a-blue);    --accent-rgb: var(--bos-a-blue-rgb);    --accent-soft: var(--bos-a-blue-soft);    --accent-ink: var(--bos-a-blue-ink);    --accent-deep: var(--bos-a-blue-deep); }
+  .accent-teal    { --accent: var(--bos-a-teal);    --accent-rgb: var(--bos-a-teal-rgb);    --accent-soft: var(--bos-a-teal-soft);    --accent-ink: var(--bos-a-teal-ink);    --accent-deep: var(--bos-a-teal-deep); }
+  .accent-lime    { --accent: var(--bos-a-lime);    --accent-rgb: var(--bos-a-lime-rgb);    --accent-soft: var(--bos-a-lime-soft);    --accent-ink: var(--bos-a-lime-ink);    --accent-deep: var(--bos-a-lime-deep); }
+  .accent-emerald { --accent: var(--bos-a-emerald); --accent-rgb: var(--bos-a-emerald-rgb); --accent-soft: var(--bos-a-emerald-soft); --accent-ink: var(--bos-a-emerald-ink); --accent-deep: var(--bos-a-emerald-deep); }
+  .accent-indigo  { --accent: var(--bos-a-indigo);  --accent-rgb: var(--bos-a-indigo-rgb);  --accent-soft: var(--bos-a-indigo-soft);  --accent-ink: var(--bos-a-indigo-ink);  --accent-deep: var(--bos-a-indigo-deep); }
+  .accent-amber   { --accent: var(--bos-a-amber);   --accent-rgb: var(--bos-a-amber-rgb);   --accent-soft: var(--bos-a-amber-soft);   --accent-ink: var(--bos-a-amber-ink);   --accent-deep: var(--bos-a-amber-deep); }
+  .accent-rose    { --accent: var(--bos-a-rose);    --accent-rgb: var(--bos-a-rose-rgb);    --accent-soft: var(--bos-a-rose-soft);    --accent-ink: var(--bos-a-rose-ink);    --accent-deep: var(--bos-a-rose-deep); }
+
+  // Explicit "this region is brand purple, not an accent" marker. Inherits
+  // the defaults above; exists so landing.ts reads uniformly.
+  .accent-brand { /* intentionally empty */ }
+
+  // ── Section surfaces ──────────────────────────────────────
+  // Replaces the per-section invented off-whites (#f8f5ff, #fbfbfe, …).
+  .accent-section {
+    position: relative;
+    background:
+      radial-gradient(ellipse 70% 55% at 12% 0%,   rgba(var(--accent-rgb), 0.10), transparent 68%),
+      radial-gradient(ellipse 60% 50% at 92% 100%, rgba(var(--accent-rgb), 0.07), transparent 66%),
+      linear-gradient(180deg, color-mix(in srgb, var(--accent) 4%, #fff) 0%, #ffffff 62%);
+  }
+
+  .accent-section-dark {
+    position: relative;
+    color: #fff;
+    background:
+      radial-gradient(ellipse 60% 50% at 15% 10%, rgba(var(--accent-rgb), 0.28), transparent 70%),
+      linear-gradient(160deg,
+        var(--bos-brand-dark) 0%,
+        color-mix(in srgb, var(--accent) 14%, #1E1B4B) 55%,
+        #1E1B4B 100%);
+  }
+
+  // ── Charcoal band (the emerald-mockup dark) ───────────────
+  // Near-black slate with a faint cast of the section's accent - not the
+  // indigo of .accent-section-dark. Titles go light here, so the section
+  // carries its own .section-title treatment.
+  .accent-section-charcoal {
+    position: relative;
+    color: #E7ECEF;
+    background:
+      radial-gradient(ellipse 55% 45% at 85% 0%,  rgba(var(--accent-rgb), 0.14), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 8% 100%, rgba(var(--accent-rgb), 0.09), transparent 66%),
+      linear-gradient(170deg, #0F1715 0%, #101720 55%, #0C1211 100%);
+
+    .section-title {
+      background: linear-gradient(135deg, #FFFFFF 0%, #ECFDF5 45%, var(--accent) 100%);
+      -webkit-background-clip: text;
+              background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .section-sub { color: #94A8A0; }
+  }
+
+  // Glass card for charcoal bands - the mockup's feature/pricing tiles.
+  .glass-card-dark {
+    position: relative;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: var(--bs-border-radius-xl);
+    color: #E7ECEF;
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      border-color: rgba(var(--accent-rgb), 0.45);
+      background: rgba(var(--accent-rgb), 0.07);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  // Solid accent CTA (the mockup's green buttons). Accent-driven, so it is
+  // emerald only because the section says so.
+  .btn-accent-solid {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    border-radius: 10px;
+    padding: 0.7rem 1.5rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent-deep) 0%, var(--accent) 100%);
+    box-shadow: 0 10px 26px rgba(var(--accent-rgb), 0.35);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    text-decoration: none;
+
+    &:hover, &:focus {
+      color: #fff;
+      transform: translateY(-2px);
+      filter: brightness(1.07);
+      box-shadow: 0 14px 32px rgba(var(--accent-rgb), 0.45);
+    }
+  }
+
+  // ── Icon tile ─────────────────────────────────────────────
+  .accent-tile {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.25rem;
+    line-height: 1;
+    background: rgba(var(--accent-rgb), 0.12);
+    color: var(--accent);
+    transition: transform var(--bos-transition), background var(--bos-transition);
+  }
+
+  // House gradient rhythm: 135deg, three stops at 0 / 55 / 100.
+  .accent-tile.solid {
+    background: linear-gradient(135deg,
+      var(--accent-deep) 0%,
+      var(--accent) 55%,
+      color-mix(in srgb, var(--accent) 45%, #fff) 100%);
+    color: #fff;
+  }
+
+  // White circular well on a pastel surface - the dashboard stat-card look.
+  .accent-tile.well {
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--accent);
+  }
+
+  // ── Card ──────────────────────────────────────────────────
+  // The 3px top accent bar is the real house convention - shared by
+  // .stat-card, .coa-card, .platform-kpi-card and the dashboard's inline
+  // pastel cards alike.
+  .accent-card {
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid rgba(var(--accent-rgb), 0.16);
+    border-radius: var(--bs-border-radius-xl);
+    box-shadow: var(--bos-shadow-card);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+    }
+
+    &:hover {
+      transform: translateY(-3px);
+      border-color: rgba(var(--accent-rgb), 0.34);
+      box-shadow: 0 14px 32px rgba(var(--accent-rgb), 0.16);
+      .accent-tile { transform: scale(1.06); }
+      .accent-tile:not(.solid) { background: rgba(var(--accent-rgb), 0.18); }
+    }
+  }
+
+  .accent-card.soft {
+    background: var(--accent-soft);
+    border-color: transparent;
+    .accent-label { color: var(--accent-ink); }
+  }
+
+  // ── Free inheritance for classes already in the templates ─
+  // These need ZERO template edits - every landing section picks them up.
+
+  // Accent-aware .section-title. Scoped here rather than editing the base
+  // rule, because subscription-plan.html (authenticated) also uses it.
+  .section-title {
+    background: linear-gradient(135deg,
+      #1E1B4B 0%,
+      var(--accent) 55%,
+      color-mix(in srgb, var(--accent) 42%, #fff) 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  // If background-clip:text ever fails the heading would be invisible.
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+    .section-title, .gradient-text {
+      -webkit-text-fill-color: currentColor;
+      background: none;
+      color: var(--accent);
+    }
+  }
+
+  .eyebrow-badge:not(.on-dark) {
+    color: var(--accent-ink);
+    background: linear-gradient(135deg,
+      rgba(var(--accent-rgb), 0.10) 0%,
+      rgba(var(--accent-rgb), 0.16) 100%);
+    border-color: rgba(var(--accent-rgb), 0.22);
+    .eyebrow-dot { background: var(--accent); }
+  }
+  .eyebrow-badge.on-dark .eyebrow-dot {
+    background: color-mix(in srgb, var(--accent) 55%, #fff);
+  }
+
+  .bg-dot-grid {
+    background-image: radial-gradient(rgba(var(--accent-rgb), 0.16) 1px, transparent 1px);
+  }
+
+  .hover-card-lift:hover {
+    box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.16) !important;
+  }
+
+  // Accent CTA for NEW markup only. .btn-primary-bos is deliberately left
+  // alone - it is the brand CTA across 23 templates, 18 of them in the
+  // authenticated app, and purple stays the brand.
+  .btn-accent {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg,
+      var(--accent-deep) 0%, var(--accent) 55%,
+      color-mix(in srgb, var(--accent) 70%, #fff) 100%);
+    border: none;
+    color: #fff !important;
+    font-weight: 600;
+    border-radius: var(--bs-border-radius-sm);
+    padding: 0.55rem 1.15rem;
+    text-decoration: none;
+    transition: all var(--bos-transition);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.25);
+
+    &:hover {
+      color: #fff !important;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(var(--accent-rgb), 0.4);
+      filter: brightness(1.05);
+    }
+    &:active { transform: translateY(0); }
+  }
+
+  .text-accent     { color: var(--accent) !important; }
+  .text-accent-ink { color: var(--accent-ink) !important; }
+  .bg-accent-soft  { background: var(--accent-soft) !important; }
+
+  // ── Utility classes the landing markup uses but nothing defines ──
+  // .fw-extrabold / .tracking-* / .max-w-* appear across these templates
+  // and silently no-op today (Bootstrap's font-weight map stops at
+  // `bolder`; there is no letter-spacing or max-width scale). Defined
+  // here rather than globally on purpose: a global definition would
+  // visibly restyle ~28 occurrences each in dashboard.component.html and
+  // the subscription pages - a real change to the authenticated app
+  // dressed up as a bug fix. Scoped, the landing gets what its markup
+  // always intended and the dashboard stays exactly as it renders today.
+  //
+  // The .landing-wrapper heading rule above sets letter-spacing at
+  // specificity 0,2,0, so these must be nested to win on h1-h4.
+  .fw-extrabold { font-weight: 800 !important; }
+  .fw-black     { font-weight: 900 !important; }
+
+  .tracking-tighter { letter-spacing: -0.04em; }
+  .tracking-tight   { letter-spacing: -0.02em; }
+  .tracking-normal  { letter-spacing: 0; }
+  .tracking-wide    { letter-spacing: 0.025em; }
+  .tracking-wider   { letter-spacing: 0.05em; }
+  .tracking-widest  { letter-spacing: 0.1em; }
+
+  .max-w-sm  { max-width: 24rem; }
+  .max-w-md  { max-width: 28rem; }
+  .max-w-lg  { max-width: 32rem; }
+  .max-w-xl  { max-width: 36rem; }
+  .max-w-2xl { max-width: 42rem; }
+  .max-w-3xl { max-width: 48rem; }
+
+  // ── Section rhythm ────────────────────────────────────────
+  // .py-6/.py-7 are global AND carry !important AND are used by the
+  // dashboard, so override scoped (same importance, higher specificity)
+  // rather than editing the base rules.
+  .py-6 {
+    padding-top:    clamp(2.5rem, 7vw, 4rem) !important;
+    padding-bottom: clamp(2.5rem, 7vw, 4rem) !important;
+  }
+  .py-7 {
+    padding-top:    clamp(3rem, 9vw, 5rem) !important;
+    padding-bottom: clamp(3rem, 9vw, 5rem) !important;
+  }
+
+  // Most sections stack py-5 on the <section> and again on the inner
+  // .container - a hard 6rem of dead space on a phone.
+  @media (max-width: 575.98px) {
+    section > .container.py-5 {
+      padding-top:    1rem !important;
+      padding-bottom: 1rem !important;
+    }
+  }
+
+  h1, .display-1, .display-2, .display-3 { line-height: 1.08; text-wrap: balance; }
+  p { text-wrap: pretty; }
+}
+
+// ============================================================
+//  WORKSPACE PAGE PATTERN
+//  Reusable list-page scaffold matching the reference design:
+//  gradient hero banner + KPI stat row + filter bar + register cards.
+//  Apply on any module list page — see finance/journal-entries as the
+//  reference implementation.
+// ============================================================
+
+// Outer page wrapper — consistent padding + entrance animation
+.workspace-page {
+  padding: clamp(0.9rem, 2.2vw, 1.6rem);
+  animation: fadeIn 0.35s ease-out;
+}
+
+// ── Gradient hero banner ──────────────────────────────────
+.page-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, #1E1B4B 0%, #2E1B7B 55%, #4C1D95 100%);
+  border-radius: var(--bs-border-radius-lg);
+  padding: clamp(1.15rem, 2.5vw, 1.6rem) clamp(1.25rem, 3vw, 1.85rem);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  box-shadow: 0 12px 30px rgba(30, 27, 75, 0.22);
+  margin-bottom: 1.25rem;
+
+  // Decorative glow, purely cosmetic
+  &::after {
+    content: '';
+    position: absolute;
+    right: -70px; top: -90px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.35), transparent 70%);
+    pointer-events: none;
+  }
+
+  .page-hero-eyebrow {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.58);
+    margin: 0 0 0.4rem;
+  }
+
+  .page-hero-title {
+    font-size: clamp(1.35rem, 3.4vw, 1.9rem);
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .page-hero-sub {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.72);
+    margin: 0.45rem 0 0;
+    max-width: 62ch;
+  }
+
+  .page-hero-actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+}
+
+// Hero action buttons — read clearly on the dark gradient
+.btn-hero {
+  background: #22C55E;
+  border: none;
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: var(--bs-border-radius-sm);
+  padding: 0.5rem 1.15rem;
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.35);
+  transition: all var(--bos-transition);
+
+  &:hover {
+    background: #16A34A;
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.45);
+  }
+}
+
+.btn-hero-light {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: var(--bs-border-radius-sm);
+  padding: 0.5rem 1.1rem;
+  backdrop-filter: blur(6px);
+  transition: all var(--bos-transition);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.24);
+    color: #fff !important;
+    transform: translateY(-1px);
+  }
+}
+
+// ── Stat row ──────────────────────────────────────────────
+// A tighter 4-up grid variant of .kpi-grid for the hero stat strip.
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+// ── Filter / toolbar bar ──────────────────────────────────
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #fff;
+  border: 1px solid var(--bos-border);
+  border-radius: var(--bs-border-radius);
+  padding: 0.6rem 0.7rem;
+  box-shadow: var(--bos-shadow-card);
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+
+  .filter-search {
+    position: relative;
+    flex: 1 1 240px;
+    display: flex;
+    align-items: center;
+
+    > i {
+      position: absolute;
+      left: 0.85rem;
+      color: var(--bos-muted);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+    .form-control {
+      border: none;
+      background: transparent;
+      padding-left: 2.15rem;
+      box-shadow: none;
+      &:focus { box-shadow: none; }
+    }
+  }
+
+  .form-select {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 130px;
+  }
+}
+
+// ── Register / list section ───────────────────────────────
+.section-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0.15rem 0.75rem;
+
+  .section-bar-title {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--bos-text);
+    margin: 0;
+  }
+  .section-bar-count {
+    font-size: 0.78rem;
+    color: var(--bos-muted);
+    font-weight: 600;
+  }
+}
+
+.register-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.register-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid var(--bos-border);
+  border-radius: var(--bs-border-radius);
+  padding: 0.9rem 1.1rem;
+  box-shadow: var(--bos-shadow-sm);
+  transition: transform var(--bos-transition), box-shadow var(--bos-transition), border-color var(--bos-transition);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--bos-shadow-lg);
+    border-color: var(--bos-lavender-mid);
+  }
+
+  .register-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    min-width: 0;
+  }
+
+  .register-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bos-lavender-lt);
+    color: var(--bos-brand);
+    font-size: 1.05rem;
+  }
+
+  .register-code {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-weight: 700;
+    color: var(--bos-text);
+    font-size: 0.9rem;
+  }
+
+  .register-desc {
+    color: var(--bos-text-secondary);
+    font-size: 0.85rem;
+    margin: 0.15rem 0 0.3rem;
+  }
+
+  .register-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.74rem;
+    color: var(--bos-muted);
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+  }
+
+  .register-end {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    text-align: right;
+  }
+
+  .register-amount-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bos-muted);
+    font-weight: 700;
+  }
+
+  .register-amount {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--bos-text);
+    line-height: 1;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .register-card {
+    flex-direction: column;
+    align-items: stretch;
+    .register-end { align-items: flex-start; text-align: left; }
+  }
+}
+
+// ============================================================
+//  CLEAN LIST PATTERN (minimal topbar + color stats + pills + register cards)
+//  Second list-page style matching the mobile reference: no gradient banner,
+//  a light topbar with a back arrow, color-coded stat tiles with one filled
+//  highlight, status filter pills, and richer register cards with a kebab menu.
+// ============================================================
+
+// ── Minimal topbar (back + title + action) ────────────────
+.page-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+
+  .page-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+  }
+
+  .page-topbar-back {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: var(--bos-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: background var(--bos-transition);
+    &:hover { background: var(--bos-bg-hover); }
+  }
+
+  .page-topbar-title {
+    font-size: clamp(1.15rem, 3vw, 1.4rem);
+    font-weight: 800;
+    color: var(--bos-text);
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+}
+
+// Dark navy action button (matches reference "New Journal")
+.btn-navy {
+  background: var(--bos-brand-dark);
+  border: none;
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: var(--bs-border-radius-sm);
+  padding: 0.5rem 1.1rem;
+  transition: all var(--bos-transition);
+  &:hover {
+    background: #2E1B7B;
+    color: #fff !important;
+    transform: translateY(-1px);
+  }
+}
+
+// ── Color-coded stat values + navy highlight tile ─────────
+.kpi-value.is-success { color: var(--bs-success) !important; }
+.kpi-value.is-danger  { color: var(--bs-danger) !important; }
+.kpi-value.is-warning { color: var(--bs-warning) !important; }
+
+.kpi-card.kpi-card-navy {
+  background: var(--bos-gradient-accent) !important;
+  border: none !important;
+  box-shadow: 0 14px 26px -16px rgb(var(--bos-brand-rgb) / 0.55);
+  .kpi-value { color: #fff !important; }
+  .kpi-label { color: rgba(255, 255, 255, 0.72) !important; }
+  .kpi-sub   { color: rgba(255, 255, 255, 0.6) !important; }
+}
+
+// ── Full-width search bar ─────────────────────────────────
+.search-bar {
+  position: relative;
+  margin-bottom: 1rem;
+
+  > i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--bos-muted);
+    font-size: 0.95rem;
+    pointer-events: none;
+  }
+  .form-control {
+    padding-left: 2.6rem;
+    border-radius: 10px;
+    background: #fff;
+  }
+}
+
+// ── Status filter pills ───────────────────────────────────
+.filter-pills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.filter-pill {
+  border: 1px solid var(--bos-border);
+  background: var(--bos-bg-card);
+  color: var(--bos-text-secondary);
+  border-radius: 50rem;
+  padding: 0.35rem 0.95rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--bos-transition);
+  &:hover { border-color: var(--bos-lavender-mid); color: var(--bos-brand); }
+  &.active {
+    background: var(--bos-brand-dark);
+    border-color: var(--bos-brand-dark);
+    color: #fff;
+  }
+}
+
+// ── Journal register card ─────────────────────────────────
+.je-card {
+  background: var(--bos-bg-card);
+  border: 1px solid var(--bos-border);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  box-shadow: var(--bos-shadow-sm);
+  margin-bottom: 0.6rem;
+  transition: box-shadow var(--bos-transition), transform var(--bos-transition), border-color var(--bos-transition);
+  &:hover {
+    box-shadow: var(--bos-shadow-lg);
+    transform: translateY(-1px);
+    border-color: var(--bos-lavender-mid);
+  }
+
+  .je-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .je-code {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-weight: 800;
+    color: var(--bos-text);
+    font-size: 0.92rem;
+  }
+
+  .je-title {
+    font-weight: 700;
+    color: var(--bos-text);
+    font-size: 0.9rem;
+    margin: 0.35rem 0;
+  }
+
+  .je-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    font-size: 0.72rem;
+    color: var(--bos-muted);
+    span { display: inline-flex; align-items: center; gap: 0.3rem; }
+  }
+
+  .je-divider {
+    border: 0;
+    border-top: 1px solid var(--bos-border);
+    margin: 0.6rem 0;
+    opacity: 1;
+  }
+
+  .je-foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .je-amount-label {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bos-muted);
+    font-weight: 700;
+  }
+
+  .je-amount {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--bos-text);
+    line-height: 1;
+    margin-top: 0.15rem;
+  }
+}
+
+// Kebab (3-dot) menu button
+.btn-kebab {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  color: var(--bos-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  &:hover { background: var(--bos-bg-hover); color: var(--bos-text); }
+  &::after { display: none; } // kill Bootstrap dropdown caret
+}
+
+// Soft action buttons for register-card footer
+.btn-soft-warning {
+  background: rgba(217, 119, 6, 0.12);
+  color: #B45309;
+  border: none;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  transition: all var(--bos-transition);
+  &:hover { background: rgba(217, 119, 6, 0.2); color: #92400E; }
+}
+
+.btn-soft-success {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803D;
+  border: none;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  transition: all var(--bos-transition);
+  &:hover { background: rgba(22, 163, 74, 0.2); color: #166534; }
+}
+
+// ============================================================
+//  CHART OF ACCOUNTS CARD GRID
+// ============================================================
+.coa-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--bos-lavender-lt);
+  border: 1px solid var(--bos-lavender-mid);
+  border-radius: var(--bs-border-radius);
+  padding: 0.75rem 1.1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--bos-text-secondary);
+
+  .coa-summary-left { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+  .coa-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--bs-success); display: inline-block; margin-right: 0.45rem;
+  }
+  .coa-net { color: var(--bos-brand-dark); font-weight: 800; }
+}
+
+.coa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.coa-card {
+  --coa-c: #64748b;
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--coa-c) 6%, var(--bos-bg-card));
+  border: 1px solid var(--bos-border);
+  border-radius: 12px;
+  padding: 1.1rem 1.15rem;
+  box-shadow: var(--bos-shadow-sm);
+  transition: box-shadow var(--bos-transition), transform var(--bos-transition), border-color var(--bos-transition);
+
+  // Top colored accent keyed to the account type
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--coa-c);
+  }
+
+  &:hover {
+    box-shadow: var(--bos-shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--bos-lavender-mid);
+    .coa-card-actions { opacity: 1; }
+  }
+
+  .coa-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+
+  .coa-code {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--bos-muted);
+    background: var(--bos-bg-hover);
+    border: 1px solid var(--bos-border);
+    border-radius: 6px;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .coa-card-actions {
+    display: flex;
+    gap: 0.2rem;
+    opacity: 0;
+    transition: opacity var(--bos-transition);
+  }
+
+  .coa-name {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--bos-text);
+    margin: 0.85rem 0 0.6rem;
+  }
+
+  .coa-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+  .coa-divider {
+    border: 0;
+    border-top: 1px solid var(--bos-border);
+    margin: 0.9rem 0 0.75rem;
+    opacity: 1;
+  }
+
+  .coa-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+
+  .coa-balance-label {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bos-muted);
+    font-weight: 700;
+  }
+
+  .coa-balance {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--bos-brand-dark);
+  }
+}
+
+// Touch devices can't hover — keep the card actions visible.
+@media (hover: none) {
+  .coa-card .coa-card-actions { opacity: 1; }
+}
+
+// ============================================================
+//  DEPARTMENT / ORG-UNIT CARD GRID
+// ============================================================
+.dept-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.dept-card {
+  --dept-c: #6b46ff;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--dept-c) 6%, var(--bos-bg-card));
+  border: 1px solid var(--bos-border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  box-shadow: var(--bos-shadow-sm);
+  transition: box-shadow var(--bos-transition), transform var(--bos-transition), border-color var(--bos-transition);
+
+  // Top colored accent (rotating palette per card)
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--dept-c);
+  }
+
+  &:hover {
+    box-shadow: var(--bos-shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--bos-lavender-mid);
+  }
+
+  .dept-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .dept-code {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #2563EB;
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: 6px;
+    padding: 0.2rem 0.55rem;
+    letter-spacing: 0.03em;
+  }
+
+  .dept-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--bos-text);
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .dept-id {
+    font-size: 0.72rem;
+    color: var(--bos-muted);
+    margin: 0.15rem 0 0.5rem;
+  }
+
+  .dept-parent {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    color: var(--bos-text-secondary);
+    background: var(--bos-bg-hover);
+    border: 1px solid var(--bos-border);
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+    margin-bottom: 0.5rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dept-desc {
+    font-size: 0.8rem;
+    color: var(--bos-muted);
+    margin: 0 0 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .dept-stats {
+    border-top: 1px solid var(--bos-border);
+    padding-top: 0.65rem;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .dept-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .dept-stat-label {
+    color: var(--bos-muted);
+    text-transform: uppercase;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .dept-stat-value {
+    font-weight: 800;
+    color: var(--bos-text);
+    font-size: 0.85rem;
+  }
+
+  .dept-actions {
+    display: flex;
+    gap: 0.35rem;
+    border-top: 1px solid var(--bos-border);
+    margin-top: 0.75rem;
+    padding-top: 0.6rem;
+  }
+}
+
+// Dashed "add new" placeholder card
+.dept-card-new {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  text-align: center;
+  min-height: 190px;
+  border: 2px dashed var(--bos-lavender-mid);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--bos-brand);
+  cursor: pointer;
+  transition: background var(--bos-transition), border-color var(--bos-transition);
+
+  &:hover { background: var(--bos-lavender-lt); border-color: var(--bos-brand); }
+
+  .dept-new-icon { font-size: 1.9rem; line-height: 1; }
+  .dept-new-title { font-weight: 700; font-size: 0.9rem; color: var(--bos-brand); }
+  .dept-new-sub { font-size: 0.72rem; color: var(--bos-muted); }
+}
+
+// Page-header bar (title + subtitle + action). Used by 33 templates, so it is
+// restyled here rather than per page. No background, border or shadow: the page
+// title is not a surface, it is type sitting directly on the page. Only the
+// heading icon carries the brand colour.
+.page-header-bar {
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+
+  h3, h4, h5, .page-title { color: var(--bos-text) !important; font-weight: 700; }
+  // Heading icons take the brand - but NOT icons inside buttons, where the
+  // bare .bi rule was painting the + brand-green on a brand-green button
+  // and making it invisible.
+  h3 i, h4 i, h5 i { color: var(--bos-brand) !important; }
+  .btn i, .btn .bi { color: inherit !important; }
+  p, .page-subtitle, .text-secondary, .text-muted { color: var(--bos-muted) !important; }
+}
+
+//  Scrollbar global
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--bos-lavender-mid);
+  border-radius: 4px;
+  &:hover { background: var(--bos-lavender); }
+}
+
+// The charcoal pages (landing, auth, contact) made the pale-lavender thumb
+// on a transparent track effectively invisible. On those routes the page
+// scrollbar goes wider, with a charcoal track and a slate thumb that reads
+// on dark.
+html:has(app-landing),
+html:has(.auth-page),
+html:has(.contact-page) {
+  scrollbar-color: rgba(148, 163, 184, 0.55) #101720;  // Firefox
+
+  &::-webkit-scrollbar { width: 10px; }
+  &::-webkit-scrollbar-track { background: #101720; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.45);
+    border-radius: 8px;
+    border: 2px solid #101720;
+    &:hover { background: rgba(148, 163, 184, 0.7); }
+  }
+}
+
+// ============================================================
+//  REDUCED MOTION
+//  The landing page ships a 6s infinite gradient shimmer, a 30s logo
+//  marquee, a floating dashboard mock and a pulsing scroll cue - none of
+//  which honoured this query.
+//
+//  Deliberately NOT a blanket `* { animation: none }`. That would also
+//  freeze .spinner-border and .progress-bar-animated in the authenticated
+//  app, which communicate state rather than decoration. Decorative
+//  animations are named; the blanket damping is scoped to the landing.
+//
+//  CSS cannot stop a requestAnimationFrame loop - navbar.ts carries the
+//  matching JS guard. (The hero's three.js field used to need one too; it
+//  was removed along with the WebGL scene.)
+// ============================================================
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+
+  .floating,
+  .gradient-text,
+  .scroll-cue-line,
+  .marquee-content,
+  .landing-wrapper .hero-orbit,
+  .landing-wrapper .hero-visual-fallback::before {
+    animation: none !important;
+  }
+
+  // Keep the gradient, drop the shimmer.
+  .gradient-text { background-position: 0% center !important; }
+
+  // .fade-in / .slide-up hold opacity:0 only inside their keyframes' `from`,
+  // never on the base class, so cancelling the animation lands elements at
+  // their natural visible state. Pinned anyway - shipping a blank page to
+  // reduced-motion users is the classic way this goes wrong.
+  .fade-in, .slide-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  // Catch-all inside the marketing page only. Pseudo-elements need their
+  // own selectors - `.landing-wrapper *` does not match ::before/::after.
+  .landing-wrapper *,
+  .landing-wrapper *::before,
+  .landing-wrapper *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+
+// ── Semantic ink on a subtle fill ───────────────────────────
+// A "-subtle" background is a pale tint of its own hue, and the matching
+// .text-* is a mid-tone of that same hue - so the two together land around
+// 2.7:1. That is the pattern behind every washed-out status pill in the app
+// ("Active" on the shifts page was the reported one).
+//
+// Bootstrap's answer is .text-*-emphasis, but the markup pairs .text-* with
+// the subtle fill directly, so the pairing is corrected here rather than in
+// every template. Only the combination is targeted: a .text-success on white
+// is untouched.
+.bg-success-subtle.text-success,   .bg-success-subtle .text-success   { color: #0A5C48 !important; }
+.bg-danger-subtle.text-danger,     .bg-danger-subtle .text-danger     { color: #8B2733 !important; }
+.bg-warning-subtle.text-warning,   .bg-warning-subtle .text-warning   { color: #7A4A0C !important; }
+.bg-info-subtle.text-info,         .bg-info-subtle .text-info         { color: #075B74 !important; }
+.bg-primary-subtle.text-primary,   .bg-primary-subtle .text-primary   { color: #2A6421 !important; }
+.bg-secondary-subtle.text-secondary, .bg-secondary-subtle .text-secondary { color: #3F4A57 !important; }
+
+// Dark theme. Last so its rules win where specificity ties with the light
+// defaults above. See _dark.scss for how it is switched on.
+@import "./dark";

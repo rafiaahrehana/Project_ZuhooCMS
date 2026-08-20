@@ -1,0 +1,269 @@
+<div class="container-fluid py-3">
+  @if (client) {
+  <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+    <h4 class="mb-0">{{ client.clientCompanyName || (client.firstName + ' ' + client.lastName) }}</h4>
+    <span class="badge text-bg-success">{{ client.status }}</span>
+
+    <!-- Portal invite. Sits in the header rather than beside the read-only
+         "Portal Access" row below, so the action is reachable without scrolling. -->
+    <button
+      class="btn btn-sm ms-auto"
+      [class.btn-outline-primary]="!client.portalAccessEnabled"
+      [class.btn-outline-secondary]="client.portalAccessEnabled"
+      [disabled]="inviting"
+      (click)="showInviteConfirm = true">
+      @if (inviting) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      } @else {
+        <i class="bi me-1" [class.bi-envelope-plus]="!client.portalAccessEnabled" [class.bi-envelope-arrow-up]="client.portalAccessEnabled"></i>
+      }
+      {{ client.portalAccessEnabled ? 'Resend Portal Invite' : 'Invite to Portal' }}
+    </button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="text-muted small text-uppercase" style="letter-spacing:.03em; font-size:0.72rem;">Open Opportunities</div>
+          <div class="fw-bold fs-4">{{ openOpportunitiesCount }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="text-muted small text-uppercase" style="letter-spacing:.03em; font-size:0.72rem;">Completed Opportunities</div>
+          <div class="fw-bold fs-4">{{ completedOpportunitiesCount }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="text-muted small text-uppercase" style="letter-spacing:.03em; font-size:0.72rem;">Last Activity</div>
+          <div class="fw-bold fs-6">{{ lastActivityDate ? (lastActivityDate | date:'MMM d, y') : 'None yet' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body py-3">
+          <div class="text-muted small text-uppercase" style="letter-spacing:.03em; font-size:0.72rem;">Account Manager</div>
+          <div class="fw-bold fs-6">{{ client.accountManagerName || '-' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header py-2 fw-semibold">Client Info</div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <tbody>
+                <tr><td class="text-muted">Email</td><td>{{ client.email || '-' }}</td></tr>
+                <tr><td class="text-muted">Phone</td><td>{{ client.phone || '-' }}</td></tr>
+                <tr><td class="text-muted">Industry</td><td>{{ client.industry || '-' }}</td></tr>
+                <tr><td class="text-muted">Website</td><td>{{ client.website || '-' }}</td></tr>
+                <tr><td class="text-muted">Tax ID</td><td>{{ client.taxId || '-' }}</td></tr>
+                <tr><td class="text-muted">Status</td><td>{{ client.status }}</td></tr>
+                <tr><td class="text-muted">Portal Access</td><td>{{ client.portalAccessEnabled ? 'Enabled' : 'Disabled' }}</td></tr>
+                <tr><td class="text-muted">Onboarded</td><td>{{ client.onboardedAt | date }}</td></tr>
+                <tr><td class="text-muted">Account Manager</td><td>{{ client.accountManagerName || '-' }}</td></tr>
+                <tr><td class="text-muted">Employee Count</td><td>{{ client.employeeCount ?? '-' }}</td></tr>
+                <tr><td class="text-muted">Annual Revenue</td><td>{{ client.annualRevenue != null ? (client.annualRevenue | bosCurrency) : '-' }}</td></tr>
+                <tr><td class="text-muted">Lifetime Value</td><td>{{ client.lifetimeValue != null ? (client.lifetimeValue | bosCurrency) : '-' }}</td></tr>
+                <tr><td class="text-muted">Total Requests</td><td>{{ client.totalRequests ?? '-' }}</td></tr>
+                <tr><td class="text-muted">Billing Address</td><td>{{ client.billingAddress || '-' }}</td></tr>
+                <tr><td class="text-muted">Shipping Address</td><td>{{ client.shippingAddress || '-' }}</td></tr>
+                <tr><td class="text-muted">Tags</td><td>
+                  @if (client.tagList?.length) {
+                    @for (t of client.tagList; track t.id) {
+                      <span class="badge rounded-pill me-1" [style.background-color]="t.color">{{ t.name }}</span>
+                    }
+                  } @else { {{ client.tags || '-' }} }
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Contacts ({{ contacts.length }})</span>
+          <button class="btn btn-outline-primary btn-sm" (click)="openAddContact()">
+            <i class="bi bi-plus-lg"></i> Add
+          </button>
+        </div>
+        <div class="card-body">
+          <!-- Contact modal -->
+          @if (showContactForm) {
+          <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header py-2">
+                  <h5 class="modal-title fs-6 fw-semibold">{{ editingContact ? 'Edit Contact' : 'New Contact' }}</h5>
+                  <button class="btn-close" (click)="closeContactForm()"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="row g-2">
+                    <div class="col-12">
+                      <label class="form-label small text-secondary mb-1">Full name <span class="text-danger">*</span></label>
+                      <input class="form-control form-control-sm" [(ngModel)]="newContact.fullName" />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small text-secondary mb-1">Email</label>
+                      <input class="form-control form-control-sm" [(ngModel)]="newContact.email" />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small text-secondary mb-1">Phone</label>
+                      <input class="form-control form-control-sm" [(ngModel)]="newContact.phone" />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small text-secondary mb-1">Job title</label>
+                      <input class="form-control form-control-sm" [(ngModel)]="newContact.jobTitle" />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label small text-secondary mb-1">Department</label>
+                      <input class="form-control form-control-sm" [(ngModel)]="newContact.department" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label small text-secondary mb-1">Notes</label>
+                      <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="newContact.notes"></textarea>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="contactPrimary" [(ngModel)]="newContact.primaryContact" />
+                        <label class="form-check-label small" for="contactPrimary">Primary contact</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer py-2">
+                  <button class="btn btn-secondary btn-sm" (click)="closeContactForm()">Cancel</button>
+                  <button class="btn btn-primary btn-sm" (click)="saveContact()">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+          @for (contact of contacts; track contact.id) {
+          <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+            <div>
+              <strong class="small">{{ contact.fullName }}</strong>
+              @if (contact.primaryContact) { <i class="bi bi-star-fill text-warning ms-1 small"></i> }
+              <div class="text-muted small">{{ contact.jobTitle }}{{ contact.email ? ' · ' + contact.email : '' }}</div>
+            </div>
+            <div class="text-nowrap">
+              @if (!contact.primaryContact) {
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="makePrimary(contact)" title="Set primary"><i class="bi bi-star"></i></button>
+              }
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="editContact(contact)" title="Edit"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-outline-danger btn-sm" (click)="deleteContactTarget = contact" title="Delete"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+          }
+          @if (!contacts.length) { <p class="text-muted small mb-0">No contacts yet.</p> }
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header py-2 fw-semibold">Opportunities ({{ opportunities.length }})</div>
+        <div class="card-body">
+          @for (opp of opportunities; track opp.id) {
+          <div class="d-flex justify-content-between border-bottom py-2 small">
+            <div>
+              <strong>{{ opp.name }}</strong>
+              <div class="text-muted">{{ opp.stage }} · {{ opp.probability }}%</div>
+            </div>
+            <span>{{ opp.amount != null ? (opp.amount | bosCurrency) : '-' }}</span>
+          </div>
+          }
+          @if (!opportunities.length) { <p class="text-muted small mb-0">No opportunities yet.</p> }
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Activity Timeline</span>
+          <button class="btn btn-outline-primary btn-sm" [disabled]="summarising" (click)="summariseActivity()">
+            @if (summarising) { <span class="spinner-border spinner-border-sm me-1"></span> } @else { <i class="bi bi-stars me-1"></i> }
+            AI Summary
+          </button>
+        </div>
+        <div class="card-body">
+          @if (summaryError) { <div class="alert alert-danger py-2 small">{{ summaryError }}</div> }
+          @if (aiSummary) { <div class="alert alert-light border small whitespace-pre-wrap">{{ aiSummary }}</div> }
+          <div class="row g-2 mb-3">
+            <div class="col-auto">
+              <select class="form-select form-select-sm" [(ngModel)]="newActivity.type">
+                <option value="NOTE">Note</option>
+                <option value="CALL">Call</option>
+                <option value="MEETING">Meeting</option>
+                <option value="EMAIL">Email</option>
+                <option value="TASK">Task</option>
+                <option value="FOLLOW_UP">Follow-up</option>
+              </select>
+            </div>
+            <div class="col"><input class="form-control form-control-sm" placeholder="Subject *" [(ngModel)]="newActivity.subject" (keyup.enter)="logActivity()" /></div>
+            <div class="col-auto"><button class="btn btn-primary btn-sm" (click)="logActivity()">Log</button></div>
+          </div>
+          @for (activity of activities; track activity.id) {
+          <div class="d-flex gap-2 border-bottom py-2">
+            <i class="bi {{ activityIcon(activity.type) }} text-secondary"></i>
+            <div class="small">
+              <span class="fw-semibold">{{ activity.subject }}</span>
+              @if (activity.systemGenerated) { <span class="badge text-bg-light border ms-1">system</span> }
+              <div class="text-muted">
+                {{ activity.activityDate | date:'medium' }}
+                @if (activity.performedByName) { · {{ activity.performedByName }} }
+                @if (activity.opportunityName) { · {{ activity.opportunityName }} }
+              </div>
+              @if (activity.description) { <div>{{ activity.description }}</div> }
+            </div>
+            @if (!activity.systemGenerated) {
+            <div class="ms-auto text-nowrap">
+              @if (!activity.completed) {
+              <button class="btn btn-outline-success btn-sm me-1" (click)="completeActivity(activity)" title="Mark completed"><i class="bi bi-check-lg"></i></button>
+              }
+              <button class="btn btn-outline-danger btn-sm" (click)="deleteActivity(activity)" title="Delete"><i class="bi bi-trash"></i></button>
+            </div>
+            }
+          </div>
+          }
+          @if (!activities.length) { <p class="text-muted small mb-0">No activity yet.</p> }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Confirmed because this sends a real email to the client. -->
+  <app-confirm-dialog
+    [visible]="showInviteConfirm"
+    [title]="client?.portalAccessEnabled ? 'Resend Portal Invite' : 'Invite to Client Portal'"
+    [message]="'Email a set-password link to ' + (client?.clientCompanyName || 'this client') + '? They choose their own password - you will not see it.'"
+    [confirmLabel]="client?.portalAccessEnabled ? 'Resend' : 'Send Invite'"
+    (confirmed)="confirmInvite()"
+    (cancelled)="showInviteConfirm = false" />
+
+  <app-confirm-dialog
+    [visible]="!!deleteContactTarget"
+    title="Delete Contact"
+    [message]="'Delete contact ' + (deleteContactTarget?.fullName || '') + '?'"
+    confirmLabel="Delete"
+    (confirmed)="confirmDeleteContact()"
+    (cancelled)="deleteContactTarget = null" />
+</div>

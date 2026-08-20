@@ -1,0 +1,173 @@
+// High Contrast Premium Variables
+$deep-slate: #0f172a;
+$secondary-slate: #334155;
+$light-bg: #f8fafc;
+$purple-primary: #8b5cf6;
+$purple-dark: #4c1d95;
+$purple-bg: #f3e8ff;
+
+.container-fluid {
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+// Platform KPI cards — soft-tint colored treatment (matches the app-wide stat cards)
+.platform-kpi-card {
+  --pk: #8b5cf6;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--pk);
+  }
+  &:hover { transform: translateY(-4px); }
+
+  // Colored value
+  .fs-2 { color: var(--pk) !important; }
+
+  &.pk-purple { --pk: #8b5cf6; background: linear-gradient(135deg, rgba(139, 92, 246, 0.10), rgba(139, 92, 246, 0.02) 60%, #fff); }
+  &.pk-green  { --pk: #059669; background: linear-gradient(135deg, rgba(5, 150, 105, 0.10), rgba(5, 150, 105, 0.02) 60%, #fff); }
+  &.pk-blue   { --pk: #0284c7; background: linear-gradient(135deg, rgba(2, 132, 199, 0.10), rgba(2, 132, 199, 0.02) 60%, #fff); }
+  &.pk-amber  { --pk: #b45309; background: linear-gradient(135deg, rgba(180, 83, 9, 0.10), rgba(180, 83, 9, 0.02) 60%, #fff); }
+}
+
+// Text Contrast Utilities
+.text-dark-contrast {
+  color: $deep-slate !important;
+  font-weight: 700;
+}
+
+.text-secondary-contrast {
+  color: $secondary-slate !important;
+  font-weight: 500;
+}
+
+// Pastel Card Color Sets (High Contrast Text)
+.text-purple-contrast {
+  color: #6b21a8 !important;
+}
+.text-purple-dark {
+  color: #3b0764 !important;
+}
+.text-purple-success {
+  color: #15803d !important;
+}
+
+.text-amber-contrast {
+  color: #b45309 !important;
+}
+
+.text-blue-contrast {
+  color: #0369a1 !important;
+}
+.text-blue-dark {
+  color: #0c4a6e !important;
+}
+.text-blue-success {
+  color: #15803d !important;
+}
+
+.text-teal-contrast {
+  color: #0f766e !important;
+}
+.text-teal-dark {
+  color: #115e59 !important;
+}
+.text-teal-success {
+  color: #15803d !important;
+}
+
+.text-lime-contrast {
+  color: #4d7c0f !important;
+}
+.text-lime-dark {
+  color: #365314 !important;
+}
+.text-lime-success {
+  color: #15803d !important;
+}
+
+// Standard Stat Card Icons
+.text-purple { color: #8b5cf6; }
+.text-blue { color: #0284c7; }
+.text-teal { color: #0d9488; }
+.text-lime { color: #65a30d; }
+.text-emerald { color: #059669; }
+.text-indigo { color: #4f46e5; }
+.text-danger { color: #dc2626; }
+
+// Bottom Stat Card Color Sets
+.text-danger-contrast { color: #991b1b !important; }
+.text-danger-dark { color: #7f1d1d !important; }
+.text-emerald-contrast { color: #065f46 !important; }
+.text-emerald-dark { color: #064e3b !important; }
+.text-indigo-contrast { color: #3730a3 !important; }
+.text-indigo-dark { color: #312e81 !important; }
+
+// Card Base Styling
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  border-radius: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  }
+}
+
+.card-header {
+  border-bottom: 1px solid #f1f5f9;
+  background-color: transparent !important;
+}
+
+// Donut Center Text
+// Progress Bars
+.progress {
+  background-color: #f1f5f9;
+  border-radius: 9999px;
+  height: 8px;
+}
+.progress-bar-indigo {
+  background-color: #6366f1;
+}
+.progress-bar-teal {
+  background-color: #14b8a6;
+}
+
+// Lists & Dividers
+.list-group-item {
+  border: none;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+// Links
+.view-all-link {
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Custom drop shadow and line path
+svg path {
+  transition: stroke-dashoffset 0.5s ease-in-out;
+}

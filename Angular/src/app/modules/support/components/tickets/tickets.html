@@ -1,0 +1,217 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h4 class="mb-0 fw-bold">
+        {{ isPlatformStaff ? 'Platform Support Desk Triage' : 'ZuhooCMS Platform Support' }}
+      </h4>
+      <div class="text-muted small">
+        {{ isPlatformStaff ? 'Triage, assign, and resolve tickets submitted by companies to ZuhooCMS Platform Support.' : 'Submit and track support requests sent to ZuhooCMS Platform Support.' }}
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      @if (isManager) {
+      <div class="form-check form-switch mb-0 d-flex align-items-center gap-1">
+        <input class="form-check-input" type="checkbox" id="slaToggle" [(ngModel)]="showSlaOnly" (change)="showCriticalOnly=false;page=0;load()" />
+        <label class="form-check-label small" for="slaToggle">SLA Breached only</label>
+      </div>
+      <div class="form-check form-switch mb-0 d-flex align-items-center gap-1">
+        <input class="form-check-input" type="checkbox" id="criticalToggle" [(ngModel)]="showCriticalOnly" (change)="showSlaOnly=false;page=0;load()" />
+        <label class="form-check-label small" for="criticalToggle">Critical open only</label>
+      </div>
+      <select class="form-select form-select-sm" style="width:160px" [(ngModel)]="statusFilter" (change)="page=0;load()" [disabled]="showSlaOnly || showCriticalOnly">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+      }
+      @if (!isPlatformStaff) {
+      <button class="btn btn-primary btn-sm rounded-pill px-3" (click)="openCreate()"><i class="bi bi-plus"></i> Raise Ticket to Platform</button>
+      }
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <!-- Submit request modal -->
+  @if (showCreate && !isPlatformStaff) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Submit Support Request to ZuhooCMS Platform</h5>
+          <button class="btn-close" (click)="showCreate = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Title <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.title" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Priority</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.priority">
+                <option value="LOW">Low Priority</option>
+                <option value="MEDIUM">Medium Priority</option>
+                <option value="HIGH">High Priority</option>
+                <option value="CRITICAL">Critical Priority</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Category</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.categoryId">
+                <option [ngValue]="undefined">Optional</option>
+                @for (c of categories; track c.id) {
+                  <option [value]="c.id">{{ c.categoryName || c.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Description <span class="text-danger">*</span></label>
+              <textarea class="form-control form-control-sm" rows="4" placeholder="Describe your issue or request" [(ngModel)]="form.description"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showCreate = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.title?.trim() || !form.description?.trim()" (click)="create()">Submit Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      @if (!loading && tickets.length) {
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Ticket #</th>
+                <th>Title</th>
+                <th>Priority</th>
+                <th>Status</th>
+                @if (isPlatformStaff) { <th>Assigned Agent</th> }
+                @if (isPlatformStaff) { <th>SLA</th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of tickets; track t.id) {
+              <tr role="button" (click)="view(t)" [class.table-danger]="t.slaBreached">
+                <td class="small fw-bold text-primary">{{ t.ticketNumber }}</td>
+                <td>{{ t.title }}</td>
+                <td><span class="badge {{ priorityClass(t.priority) }}">{{ t.priority }}</span></td>
+                <td><span class="badge {{ statusClass(t.status) }}">{{ t.status }}</span></td>
+                @if (isPlatformStaff) { <td>{{ t.assignedToAgentName || '-' }}</td> }
+                @if (isPlatformStaff) { <td>@if (t.slaBreached) { <span class="badge text-bg-danger">BREACHED</span> }</td> }
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer bg-transparent border-0 d-flex justify-content-end">
+          <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+        </div>
+      </div>
+      }
+      @if (!loading && !tickets.length && !error) {
+        <app-empty-state icon="bi-life-preserver" message="No platform support tickets found." />
+      }
+    </div>
+
+    @if (selected) {
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-transparent border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-primary">{{ selected.ticketNumber }}</span>
+          <span class="badge {{ statusClass(selected.status) }}">{{ selected.status }}</span>
+        </div>
+        <div class="card-body py-2">
+          <h6 class="fw-bold text-dark mb-1">{{ selected.title }}</h6>
+          <p class="small text-muted mb-3">{{ selected.description }}</p>
+          <dl class="row small mb-0">
+            <dt class="col-5 text-muted">Priority</dt><dd class="col-7"><span class="badge {{ priorityClass(selected.priority) }}">{{ selected.priority }}</span></dd>
+            @if (isPlatformStaff) { <dt class="col-5 text-muted">Assigned To</dt><dd class="col-7">{{ selected.assignedToAgentName || 'Unassigned' }}</dd> }
+            <dt class="col-5 text-muted">Category</dt><dd class="col-7">{{ selected.categoryName || '-' }}</dd>
+            <dt class="col-5 text-muted">Created By</dt><dd class="col-7">{{ selected.createdByName }}</dd>
+          </dl>
+        </div>
+        <div class="card-footer bg-transparent border-0 d-flex flex-column gap-2 pb-3">
+          <a class="btn btn-outline-primary btn-sm rounded-pill" [routerLink]="['/support/messages']" [queryParams]="{ticketId: selected.id}">
+            <i class="bi bi-chat-dots"></i> Direct Messages &amp; Updates
+          </a>
+
+          <!-- PLATFORM STAFF TRIAGE ACTIONS (ONLY exposed to SUPER_ADMIN, SYSTEM_ADMIN, SUPPORT_MANAGER, SUPPORT_AGENT) -->
+          @if (isPlatformStaff) {
+            @if (!selected.assignedToAgentId && agents.length && isPlatformStaff) {
+            <div class="input-group input-group-sm">
+              <select class="form-select" [(ngModel)]="assignAgentId">
+                <option [ngValue]="undefined">Select Platform Agent...</option>
+                @for (a of agents; track a.id) { <option [ngValue]="a.id">{{ a.fullName }}</option> }
+              </select>
+              <button class="btn btn-primary" (click)="assign()">Assign Agent</button>
+            </div>
+            }
+            @if (selected.status !== 'RESOLVED' && selected.status !== 'CLOSED') {
+            <textarea class="form-control form-control-sm" rows="2" placeholder="Resolution notes..." [(ngModel)]="resolutionNotes"></textarea>
+            <div class="d-flex gap-2">
+              <button class="btn btn-success btn-sm rounded-pill px-3" (click)="resolve()">Resolve Ticket</button>
+              <button class="btn btn-secondary btn-sm rounded-pill px-3" (click)="close()">Close Ticket</button>
+            </div>
+            }
+          }
+
+          <!-- REOPEN ACTION (Available if ticket is RESOLVED or CLOSED) -->
+          @if (selected.status === 'RESOLVED' || selected.status === 'CLOSED') {
+          <div class="input-group input-group-sm mt-2">
+            <input class="form-control" placeholder="Reason for reopening..." [(ngModel)]="reopenReason" />
+            <button class="btn btn-outline-warning" [disabled]="!reopenReason.trim()" (click)="reopen()">Reopen Ticket</button>
+          </div>
+          }
+
+          <!-- MANAGER ESCALATION & REASSIGN (PLATFORM MANAGERS + PLATFORM ADMINS) -->
+          @if (isManager || isPlatformAdmin) {
+          <hr class="my-2" />
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Escalate Ticket</label>
+              <div class="input-group input-group-sm">
+                <input class="form-control" placeholder="Reason *" [(ngModel)]="escalateReason" />
+                <button class="btn btn-outline-danger" [disabled]="!escalateReason.trim()" (click)="escalate()">
+                  <i class="bi bi-arrow-up-circle me-1"></i>Escalate
+                </button>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Reassign Agent</label>
+              <div class="input-group input-group-sm">
+                <select class="form-select" [(ngModel)]="reassignAgentId">
+                  <option [ngValue]="undefined">— Agent —</option>
+                  @for (a of agents; track a.id) { <option [ngValue]="a.id">{{ a.fullName }}</option> }
+                </select>
+                <input class="form-control" placeholder="Reason *" [(ngModel)]="reassignReason" />
+                <button class="btn btn-outline-primary" [disabled]="!reassignAgentId || !reassignReason.trim()" (click)="reassign()">Reassign</button>
+              </div>
+            </div>
+          </div>
+          }
+
+          <!-- SATISFACTION FEEDBACK (FOR COMPANY USER CREATOR) -->
+          @if (!isPlatformStaff && selected.status === 'RESOLVED') {
+          <hr class="my-2" />
+          <label class="form-label small text-secondary mb-1">Rate Platform Support Experience</label>
+          <div class="d-flex gap-2 align-items-start">
+            <select class="form-select form-select-sm" style="width:90px" [(ngModel)]="satisfactionRating">
+              @for (r of [5,4,3,2,1]; track r) { <option [ngValue]="r">{{ r }} ★</option> }
+            </select>
+            <input class="form-control form-control-sm" placeholder="Feedback optional..." [(ngModel)]="satisfactionFeedback" />
+            <button class="btn btn-success btn-sm text-nowrap rounded-pill px-3" (click)="submitSatisfaction()">Submit</button>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+</div>

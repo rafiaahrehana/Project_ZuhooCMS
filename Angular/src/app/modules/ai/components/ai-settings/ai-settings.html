@@ -1,0 +1,215 @@
+<div class="container-fluid py-3">
+  <h4 class="mb-3"><i class="bi bi-gear me-1"></i>AI Settings</h4>
+
+  <div class="row g-3">
+    <!-- Provider Config -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Provider Configuration</span>
+          @if (!showForm) {
+          <button class="btn btn-primary btn-sm" (click)="openAddNew()"><i class="bi bi-plus-lg me-1"></i>Configure New Model</button>
+          }
+        </div>
+        <div class="card-body">
+          @if (configError) { <div class="alert alert-danger py-2">{{ configError }}</div> }
+
+          @if (loadingConfigs) {
+          <div class="text-muted small">Loading…</div>
+          }
+
+          @if (!loadingConfigs && !showForm) {
+            @if (configs.length) {
+            <div class="list-group list-group-flush">
+              @for (c of configs; track c.id) {
+              <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-semibold small d-flex align-items-center gap-2">
+                    {{ c.provider }} · {{ c.model }}
+                    @if (c.active) { <span class="badge rounded-pill text-bg-success">Active</span> }
+                  </div>
+                  <div class="text-muted" style="font-size:.75rem">Temp {{ c.temperature }} · Max tokens {{ c.maxTokens }}</div>
+                </div>
+                <div class="d-flex gap-1">
+                  @if (!c.active) {
+                  <button class="btn btn-outline-success btn-sm" (click)="activate(c)" title="Make active"><i class="bi bi-check-lg"></i></button>
+                  }
+                  <button class="btn btn-outline-secondary btn-sm" (click)="openEdit(c)" title="Edit"><i class="bi bi-pencil"></i></button>
+                  @if (!c.active) {
+                  <button class="btn btn-outline-danger btn-sm" (click)="deleteConfig(c)" title="Delete"><i class="bi bi-trash"></i></button>
+                  }
+                </div>
+              </div>
+              }
+            </div>
+            } @else {
+            <div class="text-muted small">No models configured yet — click "Configure New Model" to add one.</div>
+            }
+          }
+
+          <!-- Model configuration modal -->
+          @if (showForm) {
+          <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+              <div class="modal-content">
+                <div class="modal-header py-2">
+                  <h5 class="modal-title fs-6 fw-semibold">{{ editingConfigId !== null ? 'Edit' : 'Configure' }} Model</h5>
+                  <button class="btn-close" (click)="cancelConfigure()"></button>
+                </div>
+                <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label small text-muted">Provider</label>
+            <select class="form-select form-select-sm" [(ngModel)]="config.aiProviderType" [disabled]="editingConfigId !== null">
+              @for (p of providers; track p) { <option [value]="p">{{ p }}</option> }
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small text-muted">Model</label>
+            <select class="form-select form-select-sm" [(ngModel)]="config.model">
+              @for (m of models; track m) { <option [value]="m">{{ m }}</option> }
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small text-muted">API Key</label>
+            <input type="password" class="form-control form-control-sm" [(ngModel)]="config.apiKey" placeholder="Leave blank to keep existing" />
+          </div>
+          <div class="row g-2">
+            <div class="col-6 mb-2">
+              <label class="form-label small text-muted">Temperature</label>
+              <input type="number" step="0.1" min="0" max="1" class="form-control form-control-sm" [(ngModel)]="config.temperature" />
+            </div>
+            <div class="col-6 mb-2">
+              <label class="form-label small text-muted">Max Tokens</label>
+              <input type="number" step="1" min="1" class="form-control form-control-sm" [(ngModel)]="config.maxTokens" />
+            </div>
+          </div>
+                </div>
+                <div class="modal-footer py-2">
+                  <button class="btn btn-secondary btn-sm" (click)="cancelConfigure()" [disabled]="savingConfig">Cancel</button>
+                  <button class="btn btn-primary btn-sm" (click)="saveConfig()" [disabled]="savingConfig">
+                    @if (savingConfig) { <span class="spinner-border spinner-border-sm me-1"></span> Saving... }
+                    @else { Save Config }
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Usage -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header py-2 fw-semibold">Usage</div>
+        <div class="card-body">
+          @if (usageError) { <div class="alert alert-danger py-2">{{ usageError }}</div> }
+          <div class="row g-2 align-items-end mb-3">
+            <div class="col">
+              <label class="form-label small text-muted">Date</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="usageDate" />
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-outline-primary btn-sm" (click)="loadUsage()" [disabled]="loadingUsage">Load</button>
+            </div>
+          </div>
+          @if (usage) {
+          <div class="row g-2 text-center">
+            <div class="col">
+              <div class="border rounded py-2">
+                <div class="h5 mb-0">{{ usage.totalRequests }}</div>
+                <div class="small text-muted">Requests</div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="border rounded py-2">
+                <div class="h5 mb-0">{{ usage.totalTokens }}</div>
+                <div class="small text-muted">Tokens</div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="border rounded py-2">
+                <div class="h5 mb-0">{{ usage.avgResponseTimeMs }}ms</div>
+                <div class="small text-muted">Avg Time</div>
+              </div>
+            </div>
+          </div>
+          @if (usage.requestsByFeature && usage.tokensByFeature) {
+          <div class="mt-3">
+            <div class="small text-muted mb-1">By Feature</div>
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr><th>Feature</th><th>Requests</th><th>Tokens</th></tr>
+                </thead>
+                <tbody>
+                  @for (key of objectKeys(usage.requestsByFeature!); track key) {
+                  <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ usage.requestsByFeature![key] }}</td>
+                    <td>{{ usage.tokensByFeature![key] }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+          }
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt Templates -->
+  <div class="card mt-3">
+    <div class="card-header py-2 fw-semibold">Prompt Templates</div>
+    <div class="card-body">
+      @if (templateError) { <div class="alert alert-danger py-2">{{ templateError }}</div> }
+
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <select class="form-select form-select-sm" [(ngModel)]="newTemplate.feature">
+            @for (f of features; track f) { <option [value]="f">{{ f }}</option> }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input class="form-control form-control-sm" [(ngModel)]="newTemplate.name" placeholder="Template name" />
+        </div>
+        <div class="col-md-4">
+          <input class="form-control form-control-sm" [(ngModel)]="newTemplate.template" placeholder="Template text" />
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary btn-sm w-100" (click)="saveTemplate()" [disabled]="savingTemplate || !newTemplate.name.trim() || !newTemplate.template.trim()">
+            @if (savingTemplate) { <span class="spinner-border spinner-border-sm me-1"></span> Add } @else { Add Template }
+          </button>
+        </div>
+      </div>
+      <div class="mb-2">
+        <input class="form-control form-control-sm" [(ngModel)]="newTemplate.changeNotes" placeholder="Change notes (optional)" />
+      </div>
+
+      @if (loadingTemplates) { <div class="text-muted small">Loading…</div> }
+      <ul class="list-group list-group-flush">
+        @for (t of templates; track t.id) {
+        <li class="list-group-item py-2">
+          <div class="d-flex justify-content-between align-items-start">
+            <span class="fw-semibold">{{ t.name }}</span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small">{{ t.feature }} · v{{ t.version }}</span>
+              @if (t.active) { <span class="badge rounded-pill text-bg-success">Active</span> }
+              <button class="btn btn-outline-danger btn-sm py-0 px-1" (click)="deleteTemplate(t)" title="Delete"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+          <div class="small text-truncate">{{ t.template }}</div>
+          @if (t.changeNotes) { <div class="small text-muted mt-1">{{ t.changeNotes }}</div> }
+        </li>
+        }
+        @if (!loadingTemplates && !templates.length) {
+        <li class="list-group-item text-muted small py-3">No templates yet.</li>
+        }
+      </ul>
+    </div>
+  </div>
+</div>

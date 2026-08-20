@@ -1,0 +1,90 @@
+// Soft-tint colored stat card — light tinted wash, colored number, icon in a
+// soft colored square, and a colored top accent. One consistent look; the
+// `variant-*` class picks the accent colour.
+.stat-card {
+  --c: #3B82F6;
+  --c-rgb: 59, 130, 246;
+
+  position: relative;
+  overflow: hidden;
+  min-height: 116px;
+  background: #fff;
+  color: var(--bos-text);
+  border: 1px solid rgba(var(--c-rgb), 0.18);
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: var(--bos-shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  // Soft diagonal tint wash
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(var(--c-rgb), 0.12), rgba(var(--c-rgb), 0.02) 60%, transparent);
+    pointer-events: none;
+  }
+  // Colored top accent bar
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--c);
+  }
+
+  // Keep content above the tint wash
+  > * { position: relative; z-index: 1; }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--bs-box-shadow-lg);
+  }
+
+  .stat-label {
+    color: var(--bos-muted);
+    letter-spacing: 0.06em;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+  }
+
+  .stat-value {
+    // 2rem overpowered the 116px card once values grew past a bare number
+    // ("12.5 hrs", "100%"); sized to sit inside the card, shrinking a touch
+    // on narrow columns, and long values wrap instead of spilling.
+    font-size: clamp(1.15rem, 1.1vw + 0.75rem, 1.45rem);
+    line-height: 1.15;
+    font-family: var(--bos-heading-font);
+    font-weight: 800;
+    color: var(--c);
+    overflow-wrap: anywhere;
+  }
+
+  .stat-sub {
+    color: var(--bos-muted);
+  }
+
+  // Icon sits in a soft colored rounded square
+  .stat-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(var(--c-rgb), 0.14);
+    color: var(--c);
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  &.variant-primary { --c: #3B82F6; --c-rgb: 59, 130, 246; }
+  &.variant-purple  { --c: #6B46FF; --c-rgb: 107, 70, 255; }
+  &.variant-success { --c: #16A34A; --c-rgb: 22, 163, 74; }
+  // #0284C7, not #0EA5E9: the value ink only reached 2.8:1 on the white card.
+  &.variant-info    { --c: #0284C7; --c-rgb: 2, 132, 199; }
+  &.variant-dark    { --c: #1E1B4B; --c-rgb: 30, 27, 75; }
+  &.variant-danger  { --c: #DC2626; --c-rgb: 220, 38, 38; }
+}

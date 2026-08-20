@@ -1,0 +1,104 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h4 class="mb-1">Platform Users</h4>
+      <div class="text-muted small">Platform-side administrative users (support, sales, ops) - not tenant employees.</div>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> Add Platform User</button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <!-- Create / Edit modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit' : 'New' }} Platform User</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label small text-muted mb-1">First name *</label>
+          <input class="form-control form-control-sm" [(ngModel)]="form.firstName" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted mb-1">Last name *</label>
+          <input class="form-control form-control-sm" [(ngModel)]="form.lastName" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted mb-1">Email *</label>
+          <input class="form-control form-control-sm" type="email" [(ngModel)]="form.email" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted mb-1">Phone</label>
+          <input class="form-control form-control-sm" [(ngModel)]="form.phone" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted mb-1">Role *</label>
+          <select class="form-select form-select-sm" [(ngModel)]="form.role">
+            @for (r of roles; track r) { <option [value]="r">{{ roleLabel(r) | titlecase }}</option> }
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small text-muted mb-1">{{ editingId ? 'New password (leave blank to keep current)' : 'Temporary password *' }}</label>
+          <input class="form-control form-control-sm" type="password" [(ngModel)]="form.password" />
+        </div>
+      </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm"
+                  [disabled]="saving || !form.firstName || !form.lastName || !form.email || (!editingId && !form.password)"
+                  (click)="save()">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            {{ editingId ? 'Save Changes' : 'Create Platform User' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && users.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light"><tr><th>Name</th><th>Email</th><th>Role</th><th>Phone</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @for (u of users; track u.id) {
+        <tr>
+          <td>{{ u.firstName }} {{ u.lastName }}</td>
+          <td class="small text-muted">{{ u.email }}</td>
+          <td><span class="badge" [ngStyle]="roleBadgeStyle(u.role)">{{ roleLabel(u.role) | titlecase }}</span></td>
+          <td>{{ u.phone || '-' }}</td>
+          <td><span class="badge" [class.text-bg-success]="u.active" [class.text-bg-secondary]="!u.active">{{ u.active ? 'Active' : 'Deactivated' }}</span></td>
+          <td class="text-end text-nowrap">
+            <button class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(u)"><i class="bi bi-pencil"></i></button>
+            @if (u.active) { <button class="btn btn-outline-danger btn-sm" (click)="deactivateTarget = u"><i class="bi bi-person-x"></i></button> }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-end"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+  </div>
+  }
+  @if (!loading && !users.length && !showForm) { <app-empty-state icon="bi-person-badge" message="No platform users yet." /> }
+
+  <app-confirm-dialog
+    [visible]="!!deactivateTarget"
+    title="Deactivate Platform User"
+    message="Deactivate this platform user? They will no longer be able to log in."
+    (confirmed)="doDeactivate()"
+    (cancelled)="deactivateTarget = null"
+  />
+
+  <div class="mt-3 text-muted small">
+    <i class="bi bi-info-circle me-1"></i>
+    Platform users have elevated access across all tenants. Only <code>SUPER_ADMIN</code> and <code>SYSTEM_ADMIN</code> can manage them.
+  </div>
+</div>

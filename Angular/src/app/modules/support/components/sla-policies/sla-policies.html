@@ -1,0 +1,125 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">SLA Policies</h4>
+    @if (canManageSla) {
+      <button class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> Add Policy</button>
+    }
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <!-- Create / Edit modal -->
+  @if (showForm && canManageSla) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">SLA Policy</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+    <div class="row g-2">
+      <div class="col-md-6">
+        <label class="form-label small text-secondary mb-1">Policy Name <span class="text-danger">*</span></label>
+        <input class="form-control form-control-sm" [(ngModel)]="form.policyName" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label small text-secondary mb-1">Applicable Priority</label>
+        <select class="form-select form-select-sm" [(ngModel)]="form.applicablePriority">
+          @for (p of priorities; track p) { <option [value]="p">{{ p }}</option> }
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label small text-secondary mb-1">Description</label>
+        <input class="form-control form-control-sm" [(ngModel)]="form.description" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small text-secondary mb-1">First Response (hrs)</label>
+        <input type="number" class="form-control form-control-sm" [(ngModel)]="form.firstResponseTimeHours" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small text-secondary mb-1">Resolution (hrs)</label>
+        <input type="number" class="form-control form-control-sm" [(ngModel)]="form.resolutionTimeHours" />
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="bhOnly" [(ngModel)]="form.businessHoursOnly" />
+          <label class="form-check-label small" for="bhOnly">Business hours only</label>
+        </div>
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="activeChk" [(ngModel)]="form.active" />
+          <label class="form-check-label small" for="activeChk">Active</label>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label small text-secondary mb-1">Notes</label>
+        <input class="form-control form-control-sm" [(ngModel)]="form.notes" />
+      </div>
+    </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.policyName.trim()" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && policies.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Policy Name</th>
+          <th>Priority</th>
+          <th>First Response</th>
+          <th>Resolution</th>
+          <th>Business Hours Only</th>
+          <th>Status</th>
+          @if (canManageSla) {
+            <th class="text-end">Actions</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of policies; track p.id) {
+        <tr>
+          <td>{{ p.policyName }}</td>
+          <td><span class="badge" [class]="priorityClass(p.applicablePriority)">{{ p.applicablePriority }}</span></td>
+          <td>{{ p.firstResponseTimeHours }}h</td>
+          <td>{{ p.resolutionTimeHours }}h</td>
+          <td>{{ p.businessHoursOnly ? 'Yes' : 'No' }}</td>
+          <td>
+            <span class="badge" [class.text-bg-success]="p.active" [class.text-bg-secondary]="!p.active">
+              {{ p.active ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          @if (canManageSla) {
+            <td class="text-end">
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="toggleActive(p)" title="Toggle status">
+                <i class="bi" [class.bi-toggle-on]="p.active" [class.bi-toggle-off]="!p.active"></i>
+              </button>
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(p)"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-outline-danger btn-sm" (click)="deleteTarget = p"><i class="bi bi-trash"></i></button>
+            </td>
+          }
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div></div>
+  }
+  @if (!loading && !policies.length) { <app-empty-state icon="bi-stopwatch" message="No SLA policies yet." /> }
+
+  <app-confirm-dialog
+    [visible]="!!deleteTarget"
+    title="Delete SLA Policy"
+    message="Delete this SLA policy?"
+    (confirmed)="doDelete()"
+    (cancelled)="deleteTarget = null"
+  />
+</div>

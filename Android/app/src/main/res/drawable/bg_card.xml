@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The one card treatment used app-wide: surface color, a hairline border, one corner radius.
+     No shadow/elevation — a flat bordered card reads as calmer and more "native Android" than
+     stacking Material elevation on top of an already-bordered look. Supersedes bg_stat_card,
+     which the redesign generalizes from "stat tile" to "any card" (see dimens.xml radius_card). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/bg_card" />
+    <corners android:radius="@dimen/radius_card" />
+    <stroke android:width="@dimen/stroke_width" android:color="@color/border" />
+</shape>

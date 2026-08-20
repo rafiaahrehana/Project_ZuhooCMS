@@ -1,0 +1,21 @@
+// "Engineered for Scale" - six glass tiles on the charcoal band. Surface,
+// title gradient and card chrome all come from the global charcoal/accent
+// machinery; only the tile internals live here.
+
+.feature-icon {
+  width: 52px;
+  height: 52px;
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--accent);
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.feature-tile:hover .feature-icon {
+  transform: scale(1.07);
+  background: rgba(var(--accent-rgb), 0.22);
+}
+
+.feature-desc {
+  color: #94A8A0;
+  font-size: 0.9rem;
+}

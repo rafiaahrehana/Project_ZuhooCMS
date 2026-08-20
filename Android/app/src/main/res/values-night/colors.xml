@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark side of the "Charcoal & Green" system — see values/colors.xml. Surfaces are neutral
+         ash-black rather than the previous green-tinted charcoal, so the brand green still reads
+         as a distinct accent instead of blending into the background. -->
+
+    <color name="chrome_black">#15171A</color>
+    <color name="chrome_black_elevated">#1E2124</color>
+
+    <color name="brand_primary">#047857</color>
+    <color name="brand_primary_hover">#059669</color>
+    <color name="brand_deep">#0A100E</color>
+
+    <color name="brand_accent">#6EE7B7</color>
+    <color name="brand_accent_soft">#16241E</color>
+    <color name="brand_accent_mid">#1E332A</color>
+
+    <color name="status_success">#34D399</color>
+    <color name="status_danger">#F87171</color>
+    <color name="status_warning">#FBBF24</color>
+    <color name="status_info">#38BDF8</color>
+
+    <!-- Soft-tint pill backgrounds — see values/colors.xml. Alpha bumped slightly (~16%) since
+         these sit on a dark field where the same 12% used in light mode reads too faint. -->
+    <color name="status_success_soft">#2934D399</color>
+    <color name="status_danger_soft">#29F87171</color>
+    <color name="status_warning_soft">#29FBBF24</color>
+    <color name="status_info_soft">#2938BDF8</color>
+    <color name="status_neutral_soft">#1D83878C</color>
+
+    <!-- Text is deliberately capped below pure white to avoid halation on the dark field. -->
+    <color name="text_primary">#E7E9EB</color>
+    <color name="text_secondary">#B7BABE</color>
+    <color name="text_muted">#83878C</color>
+    <color name="border">#2C2E32</color>
+    <color name="divider">#232527</color>
+    <color name="bg_page">#0E0F11</color>
+    <color name="bg_card">#1A1C1F</color>
+
+    <color name="text_disabled">#4A4D51</color>
+    <color name="bg_disabled">#1E2023</color>
+</resources>

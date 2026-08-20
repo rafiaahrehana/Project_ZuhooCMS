@@ -1,0 +1,224 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Expenses</h4>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm" style="width:160px" [(ngModel)]="statusFilter" (change)="page=0;load()">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+      <button class="btn btn-primary btn-sm" (click)="openForm()"><i class="bi bi-plus-lg me-1"></i>Submit Expense</button>
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (budgetWarning) {
+  <div class="alert alert-warning py-2">
+    <i class="bi bi-exclamation-triangle me-1"></i><strong>Budget:</strong> {{ budgetWarning }}
+    <a routerLink="/finance/budgets" class="ms-1">View budgets</a>
+  </div>
+  }
+  @if (loading) { <app-loader /> }
+
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Expense' : 'New Expense' }}</h5>
+          <button class="btn-close" (click)="showForm = false; editingId = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+        @if (employees.length) {
+        <div class="col-md-3">
+          <select class="form-select form-select-sm" [(ngModel)]="form.employeeId" title="Attribute this expense to an employee">
+            <option [ngValue]="undefined">On behalf of: myself</option>
+            @for (emp of employees; track emp.id) { <option [ngValue]="emp.id">On behalf of: {{ emp.firstName }} {{ emp.lastName }}</option> }
+          </select>
+        </div>
+        }
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Title *" [(ngModel)]="form.title" /></div>
+        <div class="col-md-5"><input class="form-control form-control-sm" placeholder="Description *" [(ngModel)]="form.description" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Amount *" [(ngModel)]="form.amount" /></div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="form.currency">
+            <option value="BDT">BDT</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+          </select>
+        </div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="date" [(ngModel)]="form.expenseDate" /></div>
+        <div class="col-md-3">
+          <input class="form-control form-control-sm" placeholder="Category" [(ngModel)]="form.category" list="budgetCategoryOptions" autocomplete="off" />
+          <datalist id="budgetCategoryOptions">
+            @for (c of budgetCategories; track c) { <option [value]="c"></option> }
+          </datalist>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select form-select-sm" [(ngModel)]="form.expenseAccountId" title="Which expense account this posts to in the General Ledger">
+            <option [ngValue]="undefined">Posts to: Operating Expenses (default)</option>
+            @for (a of expenseAccounts; track a.id) { <option [ngValue]="a.id">Posts to: {{ a.accountCode }} · {{ a.accountName }}</option> }
+          </select>
+        </div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Vendor" [(ngModel)]="form.vendorName" /></div>
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Receipt URL" [(ngModel)]="form.receiptUrl" /></div>
+        <div class="col-md-6"><input class="form-control form-control-sm" placeholder="Notes" [(ngModel)]="form.notes" /></div>
+        <div class="col-md-6"><input class="form-control form-control-sm" placeholder="Reference Number" [(ngModel)]="form.referenceNumber" /></div>
+        <div class="col-12">
+          <div class="border rounded-3 p-2 bg-light-subtle">
+            <label class="form-label small text-muted mb-1"><i class="bi bi-stars me-1 text-primary"></i>Not sure how to word it? Jot rough notes, AI will draft it</label>
+            <div class="d-flex gap-2">
+              <input class="form-control form-control-sm" [(ngModel)]="composeNotes"
+                     placeholder="e.g. taxi to client site and lunch with the Acme team, about 45 dollars"
+                     (keydown.enter)="$event.preventDefault(); composeWithAi()" />
+              @if (voiceSupported) {
+              <button type="button" class="btn btn-sm" [class.btn-outline-danger]="listening" [class.btn-outline-secondary]="!listening"
+                      title="Speak instead of typing" (click)="toggleVoiceInput()">
+                <i class="bi" [class.bi-mic-fill]="listening" [class.bi-mic]="!listening"></i>
+              </button>
+              }
+              <button type="button" class="btn btn-outline-primary btn-sm text-nowrap" [disabled]="!composeNotes.trim() || composing" (click)="composeWithAi()">
+                @if (composing) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-stars"></i> Compose }
+              </button>
+            </div>
+            @if (composeError) { <div class="text-danger small mt-1">{{ composeError }}</div> }
+          </div>
+        </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="save()">{{ editingId ? 'Save Changes' : 'Submit' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && expenses.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>#</th><th>Title</th><th>Category</th><th>Vendor</th><th class="text-end">Amount</th><th>Date</th><th>Receipt</th><th>Status</th><th>Submitted By</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (e of expenses; track e.id) {
+          <tr>
+            <td class="text-muted small">{{ e.expenseNumber }}</td>
+            <td>
+              <div class="fw-medium">{{ e.title || e.description }}</div>
+              @if (e.title && e.description) { <div class="text-muted small text-truncate" style="max-width: 220px">{{ e.description }}</div> }
+            </td>
+            <td>{{ e.category || '-' }}</td>
+            <td>{{ e.vendorName || '-' }}</td>
+            <td class="text-end">{{ e.amount | bosCurrency:e.currency }}</td>
+            <td>{{ e.expenseDate | date:'mediumDate' }}</td>
+            <td>
+              @if (e.receiptUrl) { <a [href]="e.receiptUrl" target="_blank" rel="noopener" title="Open receipt"><i class="bi bi-paperclip"></i></a> }
+              @else { <span class="text-muted small">-</span> }
+            </td>
+            <td><span class="badge {{ statusClass(e.status) }}">{{ e.status }}</span></td>
+            <td>{{ e.submittedByName || '-' }}</td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-outline-secondary btn-sm me-1" title="View details" (click)="viewing = e"><i class="bi bi-eye"></i></button>
+              @if (e.status === 'PENDING') {
+              <button class="btn btn-outline-secondary btn-sm me-1" title="Edit" (click)="openEdit(e)"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-outline-success btn-sm me-1" (click)="openApproval(e, 'approve')">Approve</button>
+              <button class="btn btn-outline-danger btn-sm me-1" (click)="openApproval(e, 'reject')">Reject</button>
+              }
+              @if (e.status === 'APPROVED') {
+              <button class="btn btn-outline-primary btn-sm me-1" (click)="openPay(e)">Mark as Paid</button>
+              }
+              <button class="btn btn-outline-danger btn-sm" (click)="deleteTarget = e"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !expenses.length && !showForm) { <app-empty-state icon="bi-cash-stack" message="No expenses found." /> }
+
+  @if (approvalTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">{{ approvalAction === 'approve' ? 'Approve' : 'Reject' }} Expense</h5><button class="btn-close" (click)="approvalTarget = null"></button></div>
+        <div class="modal-body"><textarea class="form-control" rows="3" [placeholder]="approvalAction === 'reject' ? 'Rejection reason (required)' : 'Notes (optional)'" [(ngModel)]="approvalNotes"></textarea></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="approvalTarget = null">Cancel</button>
+          <button class="btn btn-sm" [class.btn-success]="approvalAction === 'approve'" [class.btn-danger]="approvalAction === 'reject'" (click)="doApproval()">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  @if (payTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Mark Expense as Paid</h5><button class="btn-close" (click)="payTarget = null"></button></div>
+        <div class="modal-body">
+          <input class="form-control form-control-sm mb-2" placeholder="Payment method (e.g. BANK_TRANSFER)" [(ngModel)]="payMethod" />
+          <input class="form-control form-control-sm" placeholder="Reference number (bank tx id, etc.)" [(ngModel)]="payReference" />
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="payTarget = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="doPay()">Confirm Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  <!-- Full expense record: every field the backend tracks. -->
+  @if (viewing; as e) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)" (click)="viewing = null">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Expense {{ e.expenseNumber }} &middot; {{ e.title || e.description }}</h5>
+          <button class="btn-close" (click)="viewing = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2 small">
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Status</span><span class="badge {{ statusClass(e.status) }}">{{ e.status }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Amount</span><span class="fw-bold">{{ e.amount | bosCurrency:e.currency }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Expense Date</span><span class="fw-semibold">{{ e.expenseDate | date:'mediumDate' }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Category</span><span class="fw-semibold">{{ e.category || '-' }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Vendor</span><span class="fw-semibold">{{ e.vendorName || '-' }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Posts To</span><span class="fw-semibold">{{ e.expenseAccountName || 'Operating Expenses' }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Submitted By</span><span class="fw-semibold">{{ e.submittedByName || '-' }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Submitted At</span><span class="fw-semibold">{{ e.submittedAt ? (e.submittedAt | date:'medium') : '-' }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Approved By</span><span class="fw-semibold">{{ e.approvedByName || '-' }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Reimbursed</span><span class="fw-semibold">{{ e.reimbursedDate ? (e.reimbursedDate | date:'mediumDate') : '-' }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Method</span><span class="fw-semibold">{{ e.reimbursementMethod ? e.reimbursementMethod.replaceAll('_', ' ') : '-' }}</span></div>
+            <div class="col-6 col-md-3"><span class="text-muted d-block">Reference #</span><span class="fw-semibold">{{ e.referenceNumber || '-' }}</span></div>
+            <div class="col-12"><span class="text-muted d-block">Description</span>{{ e.description || '-' }}</div>
+            @if (e.approvalNotes) { <div class="col-12"><span class="text-muted d-block">Approval Notes</span>{{ e.approvalNotes }}</div> }
+            @if (e.notes) { <div class="col-12"><span class="text-muted d-block">Notes</span>{{ e.notes }}</div> }
+            @if (e.receiptUrl) {
+              <div class="col-12"><span class="text-muted d-block">Receipt</span>
+                <a [href]="e.receiptUrl" target="_blank" rel="noopener"><i class="bi bi-paperclip me-1"></i>{{ e.receiptUrl }}</a>
+              </div>
+            }
+            <div class="col-12 text-muted" style="font-size: 0.72rem">
+              Created {{ e.createdAt | date:'medium' }}@if (e.updatedAt) { · Updated {{ e.updatedAt | date:'medium' }} }
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="viewing = null">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Expense" message="Delete this expense?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

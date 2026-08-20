@@ -1,0 +1,342 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <h4 class="mb-0">Leads</h4>
+      @if (activeCount !== null) {
+      <span class="badge text-bg-light border">Active: <strong>{{ activeCount }}</strong></span>
+      }
+      @if (myActiveCount !== null) {
+      <span class="badge text-bg-light border">My active: <strong>{{ myActiveCount }}</strong></span>
+      }
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      @if (view === 'ALL') {
+      <input type="text" class="form-control form-control-sm" style="width: 200px" placeholder="Search leads..."
+             [(ngModel)]="keyword" (keyup.enter)="page = 0; load()" />
+      <select class="form-select form-select-sm" style="width: 150px" [(ngModel)]="statusFilter" (change)="page = 0; load()">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s.replaceAll('_', ' ') | titlecase }}</option> }
+      </select>
+      <select class="form-select form-select-sm" style="width: 140px" [(ngModel)]="sourceFilter" (change)="page = 0; load()">
+        <option value="">All sources</option>
+        @for (s of sources; track s) { <option [value]="s">{{ s.replaceAll('_', ' ') | titlecase }}</option> }
+      </select>
+      <select class="form-select form-select-sm" style="width: 140px" [(ngModel)]="priorityFilter" (change)="page = 0; load()">
+        <option value="">All priorities</option>
+        @for (p of priorities; track p) { <option [value]="p">{{ p | titlecase }}</option> }
+      </select>
+      <select class="form-select form-select-sm" style="width: 140px" [(ngModel)]="tagFilter" (change)="page = 0; load()">
+        <option [ngValue]="null">All tags</option>
+        @for (t of tags; track t.id) { <option [ngValue]="t.id">{{ t.name }}</option> }
+      </select>
+      }
+      <a routerLink="/crm/tags" class="btn btn-outline-secondary btn-sm text-nowrap" title="Manage tags">
+        <i class="bi bi-tags"></i>
+      </a>
+      <button class="btn btn-outline-secondary btn-sm text-nowrap" (click)="downloadPdf()" title="Download lead list as PDF">
+        <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
+      </button>
+      <!-- The input is hidden; the button is the whole affordance. -->
+      <input #csvInput type="file" accept=".csv,text/csv" class="d-none" (change)="onImportFile($event)" />
+      <button *appHasPermission="'LEAD_CREATE'" class="btn btn-outline-primary btn-sm text-nowrap"
+              [disabled]="importing" (click)="csvInput.click()"
+              title="CSV with a header row: name, email, phone, company, source, priority, estimated value, notes">
+        @if (importing) { <span class="spinner-border spinner-border-sm me-1"></span> }
+        @else { <i class="bi bi-upload me-1"></i> }
+        Import CSV
+      </button>
+      <!-- ms-auto: when the toolbar wraps, the primary action hugs the right
+           edge of its own line instead of dangling at the left. -->
+      <button *appHasPermission="'LEAD_CREATE'" class="btn btn-primary btn-sm text-nowrap ms-auto" (click)="openCreate()">
+        <i class="bi bi-plus-lg me-1"></i>New Lead
+      </button>
+    </div>
+  </div>
+
+  <div class="d-flex gap-1 flex-wrap mb-3">
+    @for (v of views; track v.key) {
+    <button class="btn btn-sm rounded-pill"
+            [class.btn-primary]="view === v.key"
+            [class.btn-outline-secondary]="view !== v.key"
+            (click)="setView(v.key)">{{ v.label }}</button>
+    }
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && leads.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Contact</th><th>Company</th><th>Email</th><th>Status</th>
+            <th>Source</th><th>Tags</th><th class="text-end">Est. Value</th><th>Assigned To</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (lead of leads; track lead.id) {
+          <tr>
+            <td>{{ lead.contactName }}</td>
+            <td>{{ lead.companyName || '-' }}</td>
+            <td>{{ lead.email || '-' }}</td>
+            <td><span class="badge {{ statusClass(lead.status) }}">{{ lead.status.replaceAll('_', ' ') }}</span></td>
+            <td>{{ lead.source === 'OTHER' && lead.sourceOther ? lead.sourceOther : lead.source }}</td>
+            <td>
+              @for (t of lead.tags; track t.id) {
+              <span class="badge rounded-pill me-1" [style.background-color]="t.color" style="color:#fff;">{{ t.name }}</span>
+              }
+            </td>
+            <td class="text-end">{{ lead.estimatedValue != null ? (lead.estimatedValue | bosCurrency) : '-' }}</td>
+            <td>{{ lead.assignedToName || '-' }}</td>
+            <td class="text-end text-nowrap">
+              @if (!lead.converted && lead.status === 'QUALIFIED') {
+              <!-- bi-arrow-right-circle, not a chart glyph: this button MOVES the
+                   lead into the pipeline; the chart icon read as "analytics". -->
+              <button *appHasPermission="'LEAD_UPDATE'" class="btn btn-outline-success btn-sm me-1" (click)="openConvert(lead)" title="Convert to opportunity">
+                <i class="bi bi-arrow-right-circle"></i>
+              </button>
+              }
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="openActivities(lead)" title="Activities">
+                <i class="bi bi-clock-history"></i>
+              </button>
+              <button *appHasPermission="'LEAD_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(lead)" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button *appHasPermission="'LEAD_DELETE'" class="btn btn-outline-danger btn-sm" (click)="deleteTarget = lead" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+
+  @if (!loading && !leads.length) { <app-empty-state icon="bi-person-plus" message="No leads found." /> }
+
+  <!-- Create / Edit modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editing ? 'Edit Lead' : 'New Lead' }}</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Contact Name <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.contactName" maxlength="150" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Company</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.companyName" maxlength="150" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Email</label>
+              <input type="email" class="form-control form-control-sm" [(ngModel)]="form.email" maxlength="255" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Phone</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.phone" maxlength="30" placeholder="+9665..." />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Industry</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.industry" maxlength="100" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Job Title</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.jobTitle" maxlength="100" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Status</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.status">
+                @for (s of statuses; track s) { <option [value]="s">{{ s.replaceAll('_', ' ') | titlecase }}</option> }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Source</label>
+              <select class="form-select form-select-sm" [ngModel]="form.source" (ngModelChange)="form.source = $event; onSourceChange()">
+                @for (s of sources; track s) { <option [value]="s">{{ s.replaceAll('_', ' ') | titlecase }}</option> }
+              </select>
+              @if (form.source === 'OTHER') {
+              <input class="form-control form-control-sm mt-1" [(ngModel)]="form.sourceOther"
+                     placeholder="Please specify..." maxlength="150" />
+              }
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Priority</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.priority">
+                @for (p of priorities; track p) { <option [value]="p">{{ p | titlecase }}</option> }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Estimated Value</label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" [(ngModel)]="form.estimatedValue" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Expected Close</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="form.expectedCloseDate" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Assigned To</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.assignedToId">
+                <option [ngValue]="null">— Unassigned —</option>
+                @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option> }
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Tags</label>
+              <div class="d-flex flex-wrap gap-2">
+                @for (t of tags; track t.id) {
+                <label class="form-check form-check-inline m-0 px-2 py-1 rounded-pill border small"
+                       [style.border-color]="t.color" [class.text-white]="form.tagIds.includes(t.id)"
+                       [style.background-color]="form.tagIds.includes(t.id) ? t.color : 'transparent'">
+                  <input type="checkbox" class="form-check-input d-none" [value]="t.id"
+                         [checked]="form.tagIds.includes(t.id)"
+                         (change)="form.tagIds.includes(t.id) ? form.tagIds = form.tagIds.filter(id => id !== t.id) : form.tagIds = [...form.tagIds, t.id]" />
+                  {{ t.name }}
+                </label>
+                }
+                @if (!tags.length) { <span class="text-muted small">No tags yet - <a routerLink="/crm/tags">create one</a>.</span> }
+              </div>
+              <div class="d-flex align-items-center gap-2 mt-2">
+                <input type="color" class="form-control form-control-color form-control-sm p-1" style="width: 38px" [(ngModel)]="newTagColor" title="Tag color" />
+                <input class="form-control form-control-sm" style="max-width: 220px" placeholder="Write a new tag..."
+                       [(ngModel)]="newTagName" maxlength="50" (keyup.enter)="createTag()" />
+                <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" [disabled]="!newTagName.trim() || addingTag" (click)="createTag()">
+                  @if (addingTag) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-plus-lg me-1"></i>Add Tag }
+                </button>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Notes</label>
+              <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="form.notes" maxlength="5000"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="save()" [disabled]="saving">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            {{ editing ? 'Save Changes' : 'Create Lead' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (activityTarget) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fs-6 fw-semibold">Activities · {{ activityTarget.contactName }}</h5>
+          <button type="button" class="btn-close" (click)="activityTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="border rounded-2 p-2 mb-3 bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="small fw-semibold"><i class="bi bi-stars me-1"></i>AI Summary</span>
+              <button class="btn btn-outline-primary btn-sm" [disabled]="summarising" (click)="summariseLead()">
+                @if (summarising) { <span class="spinner-border spinner-border-sm"></span> } @else { Generate }
+              </button>
+            </div>
+            @if (aiSummaryError) { <div class="text-danger small mt-2">{{ aiSummaryError }}</div> }
+            @if (aiSummary) { <div class="small mt-2 whitespace-pre-wrap">{{ aiSummary }}</div> }
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-auto">
+              <select class="form-select form-select-sm" [(ngModel)]="newLeadActivity.type">
+                @for (t of activityTypes; track t) { <option [value]="t">{{ t.replaceAll('_', ' ') | titlecase }}</option> }
+              </select>
+            </div>
+            <div class="col"><input class="form-control form-control-sm" placeholder="Subject *" [(ngModel)]="newLeadActivity.subject" (keyup.enter)="logLeadActivity()" /></div>
+            <div class="col-auto"><button class="btn btn-primary btn-sm" (click)="logLeadActivity()">Log</button></div>
+            <div class="col-12"><input class="form-control form-control-sm" placeholder="Description (optional)" [(ngModel)]="newLeadActivity.description" /></div>
+          </div>
+
+          @if (activitiesLoading) { <app-loader /> }
+          @for (activity of leadActivities; track activity.id) {
+          <div class="d-flex gap-2 border-bottom py-2">
+            <div class="small flex-grow-1">
+              <span class="badge text-bg-light border me-1">{{ activity.type.replaceAll('_', ' ') }}</span>
+              <span class="fw-semibold">{{ activity.subject }}</span>
+              @if (activity.systemGenerated) { <span class="badge text-bg-light border ms-1">system</span> }
+              <div class="text-muted">
+                {{ activity.activityDate | date:'medium' }}
+                @if (activity.performedByName) { · {{ activity.performedByName }} }
+              </div>
+              @if (activity.description) { <div>{{ activity.description }}</div> }
+            </div>
+            @if (!activity.systemGenerated) {
+            <button class="btn btn-outline-danger btn-sm align-self-start" (click)="deleteLeadActivity(activity)" title="Delete"><i class="bi bi-trash"></i></button>
+            }
+          </div>
+          }
+          @if (!activitiesLoading && !leadActivities.length) {
+          <div class="text-muted small text-center py-3">No activities logged yet.</div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog
+    [visible]="!!deleteTarget"
+    title="Delete Lead"
+    [message]="'Delete lead ' + (deleteTarget?.contactName || '') + '? This cannot be undone.'"
+    confirmLabel="Delete"
+    (confirmed)="confirmDelete()"
+    (cancelled)="deleteTarget = null" />
+
+  @if (convertTarget) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Convert "{{ convertTarget.contactName }}" to an Opportunity</h5>
+          <button class="btn-close" (click)="cancelConvert()"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small">Company, contact, phone, email and assigned employee carry over automatically. No client is created yet - that happens when this opportunity is Won.</p>
+          <div class="mb-2">
+            <label class="form-label small text-secondary mb-1">Opportunity Name <span class="text-danger">*</span></label>
+            <input class="form-control form-control-sm" [(ngModel)]="convertForm.opportunityName" />
+          </div>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Expected Value <span class="text-danger">*</span></label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" [(ngModel)]="convertForm.expectedValue" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Expected Close Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="convertForm.expectedCloseDate" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="cancelConvert()">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="converting || !convertForm.opportunityName?.trim() || !convertForm.expectedValue || !convertForm.expectedCloseDate" (click)="confirmConvert()">
+            @if (converting) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Convert to Opportunity
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-duplicate-warning-modal [match]="duplicateMatch" (dismissed)="duplicateMatch = null" />
+</div>

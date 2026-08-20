@@ -1,0 +1,238 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0"><i class="bi bi-award me-2"></i>Designations</h4>
+    <button *appHasPermission="'DESIGNATION_CREATE'" class="btn btn-primary btn-sm" (click)="openCreate()">
+      <i class="bi bi-plus-lg me-1"></i>Add Designation
+    </button>
+  </div>
+
+  @if (error) {
+    <div class="alert alert-danger py-2">{{ error }}</div>
+  }
+  @if (success) {
+    <div class="alert alert-success py-2">{{ success }}</div>
+  }
+  @if (loading) {
+    <app-loader />
+  }
+
+  @if (!loading && designations.length) {
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 80px">Level</th>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Department</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of designations; track d.id) {
+              <tr>
+                <td>
+                  <span class="badge text-bg-light border">L{{ d.level }}</span>
+                </td>
+                <td>{{ d.name }}</td>
+                <td>{{ d.code }}</td>
+                <td class="text-muted small">{{ d.departmentName || '-' }}</td>
+                <td class="text-muted small">{{ d.employmentCategory ? (d.employmentCategory | titlecase) : '-' }}</td>
+                <td class="text-muted small text-truncate" style="max-width: 220px">
+                  {{ d.description || '-' }}
+                </td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.text-bg-success]="d.active"
+                    [class.text-bg-secondary]="!d.active"
+                  >
+                    {{ d.active ? 'ACTIVE' : 'INACTIVE' }}
+                  </span>
+                </td>
+                <td class="text-end text-nowrap">
+                  <button
+                    *appHasPermission="'DESIGNATION_UPDATE'"
+                    class="btn btn-outline-secondary btn-sm py-0 me-1"
+                    title="Edit"
+                    (click)="openEdit(d)"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    *appHasPermission="'DESIGNATION_UPDATE'"
+                    class="btn btn-outline-secondary btn-sm py-0 me-1"
+                    [title]="d.active ? 'Deactivate' : 'Activate'"
+                    (click)="toggle(d)"
+                  >
+                    <i
+                      class="bi"
+                      [class.bi-toggle-on]="d.active"
+                      [class.bi-toggle-off]="!d.active"
+                    ></i>
+                  </button>
+                  <button
+                    *appHasPermission="'DESIGNATION_DELETE'"
+                    class="btn btn-outline-danger btn-sm py-0"
+                    title="Delete"
+                    (click)="deleteTarget = d"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex justify-content-end">
+        <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+      </div>
+    </div>
+  }
+
+  @if (!loading && !designations.length) {
+    <app-empty-state icon="bi-award" message="No designations yet." />
+  }
+</div>
+
+@if (showForm) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.4)">
+    <div class="modal-dialog modal-dialog-centered designation-modal-dialog">
+      <div class="modal-content designation-modal-content border-0">
+        <form #f="ngForm" (ngSubmit)="formValid && save()">
+          <div class="modal-header designation-modal-header border-0">
+            <div>
+              <h5 class="modal-title designation-modal-title mb-0">{{ editingId ? 'Edit Designation' : 'Add New Designation' }}</h5>
+              <div class="designation-modal-subtitle">Create a job designation that can be assigned to employees across your organization.</div>
+            </div>
+            <button type="button" class="btn-close" (click)="showForm = false"></button>
+          </div>
+          <div class="modal-body designation-modal-body">
+            <div class="row g-3">
+              <!-- Row 1: Name / Code -->
+              <div class="col-md-6">
+                <label class="designation-field-label">Designation Name *</label>
+                <input
+                  class="form-control designation-input"
+                  name="name"
+                  [(ngModel)]="form.name"
+                  (ngModelChange)="onNameInput()"
+                  placeholder="e.g. Senior Software Engineer"
+                  maxlength="100"
+                />
+                @if (nameError) { <div class="designation-field-error">{{ nameError }}</div> }
+              </div>
+              <div class="col-md-6">
+                <label class="designation-field-label">Code *</label>
+                <input
+                  class="form-control designation-input text-uppercase"
+                  name="code"
+                  [(ngModel)]="form.code"
+                  (ngModelChange)="onCodeInput()"
+                  placeholder="e.g. SSE"
+                  maxlength="30"
+                />
+                @if (codeError) { <div class="designation-field-error">{{ codeError }}</div> }
+              </div>
+
+              <!-- Row 2: Job Level / Department -->
+              <div class="col-md-6">
+                <label class="designation-field-label">Job Level *</label>
+                <select class="form-select designation-select" name="level" [(ngModel)]="form.level">
+                  @for (l of jobLevels; track l.value) { <option [ngValue]="l.value">{{ l.label }}</option> }
+                </select>
+                @if (levelError) { <div class="designation-field-error">{{ levelError }}</div> }
+              </div>
+              <div class="col-md-6">
+                <label class="designation-field-label">Department</label>
+                <div class="designation-combobox">
+                  <input
+                    class="form-control designation-input"
+                    name="departmentSearch"
+                    [ngModel]="departmentDropdownOpen ? departmentSearch : selectedDepartmentName"
+                    (ngModelChange)="departmentSearch = $event"
+                    (focus)="openDepartmentDropdown()"
+                    (blur)="closeDepartmentDropdown()"
+                    placeholder="Search department..."
+                    autocomplete="off"
+                  />
+                  @if (departmentDropdownOpen) {
+                  <div class="designation-combobox-menu">
+                    <div class="designation-combobox-option text-muted" (mousedown)="selectDepartment(null)">— None —</div>
+                    @for (dept of filteredDepartments; track dept.id) {
+                    <div class="designation-combobox-option" (mousedown)="selectDepartment(dept)">{{ dept.name }}</div>
+                    }
+                    @if (!filteredDepartments.length) {
+                    <div class="designation-combobox-option text-muted">No matching departments</div>
+                    }
+                  </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Row 3: Employment Category / Status -->
+              <div class="col-md-6">
+                <label class="designation-field-label">Employment Category</label>
+                <select class="form-select designation-select" name="employmentCategory" [(ngModel)]="form.employmentCategory">
+                  <option value="">— None —</option>
+                  @for (c of employmentCategories; track c.value) { <option [value]="c.value">{{ c.label }}</option> }
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="designation-field-label">Status</label>
+                <div class="d-flex align-items-center" style="height: 48px;">
+                  <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="designationActive" name="active" [(ngModel)]="form.active" style="width: 2.75rem; height: 1.5rem;" />
+                    <label class="form-check-label ms-2 fw-semibold" for="designationActive">{{ form.active ? 'Active' : 'Inactive' }}</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 4: Description -->
+              <div class="col-12">
+                <label class="designation-field-label">Description</label>
+                <textarea
+                  class="form-control designation-textarea"
+                  name="description"
+                  [(ngModel)]="form.description"
+                  rows="3"
+                  maxlength="500"
+                  placeholder="Describe the responsibilities and purpose of this designation..."
+                ></textarea>
+                <div class="d-flex justify-content-between">
+                  @if (descriptionError) { <div class="designation-field-error">{{ descriptionError }}</div> } @else { <span></span> }
+                  <div class="designation-char-counter">{{ descriptionLength }} / 500</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer designation-modal-footer border-0">
+            <button type="button" class="btn btn-outline-secondary designation-btn-outline" (click)="showForm = false">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary designation-btn-primary" [disabled]="!formValid || saving">
+              @if (saving) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              {{ editingId ? 'Save Changes' : 'Create Designation' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="!!deleteTarget"
+  title="Delete Designation"
+  [message]="'Delete designation \'' + $safeNavigationMigration(deleteTarget?.name) + '\'?'"
+  confirmLabel="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="deleteTarget = null"
+/>

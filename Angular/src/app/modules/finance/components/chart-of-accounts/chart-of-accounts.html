@@ -1,0 +1,142 @@
+<div class="workspace-page">
+  <!-- Header -->
+  <div class="page-topbar">
+    <div class="page-topbar-left">
+      <div>
+        <h1 class="page-topbar-title">Chart of Accounts</h1>
+        <p class="page-subtitle mt-1 mb-0">Manage your workspace ledger and financial classification categories.</p>
+      </div>
+    </div>
+    <button *appHasPermission="'CHART_OF_ACCOUNT_CREATE'" class="btn btn-primary-bos" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i> New Account</button>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <!-- Create / Edit modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editId ? 'Edit' : 'New' }} Account</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-3">
+              <label class="form-label small text-secondary mb-1">Code <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.accountCode" />
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small text-secondary mb-1">Name <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.accountName" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Type <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.type">
+                <option value="">Select type</option>
+                @for (t of accountTypes; track t) { <option [value]="t">{{ t }}</option> }
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Description</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.description" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Notes</label>
+              <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="form.notes"></textarea>
+            </div>
+            @if (!editId) {
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Opening balance</label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" [(ngModel)]="form.openingBalance" />
+              <div class="form-text">For migrating from a previous system - posts against Opening Balance Equity.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">As-of date</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="form.openingBalanceDate" title="As-of date for the opening balance" />
+            </div>
+            }
+            <div class="col-12 d-flex flex-wrap gap-3 pt-1">
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="active" [(ngModel)]="form.active" /><label class="form-check-label small" for="active">Active</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="headerAccount" [(ngModel)]="form.isHeaderAccount" /><label class="form-check-label small" for="headerAccount">Header/Grouping account</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="bankAccount" [(ngModel)]="form.isBankAccount" /><label class="form-check-label small" for="bankAccount">Bank account (reconcilable)</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="allowDirectPosting" [(ngModel)]="form.allowDirectPosting" /><label class="form-check-label small" for="allowDirectPosting" title="Off = entries may only post to this account's children">Allow direct posting</label></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="save()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && accounts.length) {
+  <!-- Summary bar -->
+  <div class="coa-summary">
+    <div class="coa-summary-left">
+      <span><span class="coa-dot"></span>{{ activeCount }} Accounts Active</span>
+      <span>Last entry: {{ lastEntryLabel }}</span>
+    </div>
+    <div>Net Balance Position: <span class="coa-net">{{ netBalance | bosCurrency:'BDT':'symbol-narrow':'1.2-2' }}</span></div>
+  </div>
+
+  <!-- Account cards -->
+  <div class="coa-grid">
+    @for (a of accounts; track a.id) {
+    <div class="coa-card" [style.--coa-c]="typeColor(a.type)">
+      <div class="coa-card-head">
+        <span class="coa-code">{{ a.accountCode }}</span>
+        <div class="coa-card-actions">
+          <button *appHasPermission="'CHART_OF_ACCOUNT_UPDATE'" class="btn-action btn-action-primary" (click)="openEdit(a)"><i class="bi bi-pencil"></i></button>
+          <button *appHasPermission="'CHART_OF_ACCOUNT_DELETE'" class="btn-action btn-action-danger" (click)="confirmDelete(a)"><i class="bi bi-trash"></i></button>
+        </div>
+      </div>
+
+      <h3 class="coa-name">{{ a.accountName }}</h3>
+
+      <div class="coa-badges">
+        <span class="badge {{ typeBadgeClass(a.type) }}">{{ typeLabel(a.type) }}</span>
+        <span class="badge {{ a.active ? 'badge-soft-success' : 'badge-soft-secondary' }}">{{ a.active ? 'ACTIVE' : 'INACTIVE' }}</span>
+        @if (a.isHeaderAccount) { <span class="badge badge-soft-secondary" title="Grouping account">HEADER</span> }
+        @if (a.isBankAccount) { <span class="badge badge-soft-info" title="Reconcilable bank account">BANK</span> }
+        @if (a.allowDirectPosting === false) { <span class="badge badge-soft-warning" title="Entries may only post to this account's children">NO DIRECT POSTING</span> }
+      </div>
+
+      @if (a.description || a.notes) {
+        <div class="text-muted small text-truncate" [title]="(a.description || '') + (a.notes ? ' — ' + a.notes : '')">
+          {{ a.description || a.notes }}
+        </div>
+      }
+
+      <hr class="coa-divider" />
+
+      <div class="coa-foot">
+        <span class="coa-balance-label">Current Balance</span>
+        <span class="coa-balance" [class.text-danger]="(a.balance || 0) < 0">
+          @if ((a.balance || 0) < 0) {
+            ({{ (a.balance || 0) * -1 | bosCurrency:'BDT':'symbol-narrow':'1.2-2' }})
+          } @else {
+            {{ (a.balance || 0) | bosCurrency:'BDT':'symbol-narrow':'1.2-2' }}
+          }
+        </span>
+      </div>
+    </div>
+    }
+  </div>
+
+  <div class="d-flex justify-content-end mt-3">
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+  }
+  @if (!loading && !accounts.length && !showForm) { <app-empty-state icon="bi-journal-bookmark" message="No accounts yet." /> }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Account"
+    [message]="'Delete account ' + (deleteTarget?.accountCode || '') + '?'"
+    (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

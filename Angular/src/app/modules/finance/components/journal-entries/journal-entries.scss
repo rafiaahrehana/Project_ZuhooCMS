@@ -1,0 +1,112 @@
+// Compact metric strip - one bordered bar split into cells instead of four
+// separate 116px stat-cards, so the register starts closer to the fold.
+.je-stats-strip {
+  display: flex;
+  align-items: stretch;
+  background: var(--bos-bg-card);
+  border: 1px solid var(--bos-border);
+  border-radius: 14px;
+  box-shadow: var(--bos-shadow-sm);
+  overflow: hidden;
+
+  @media (max-width: 767.98px) {
+    flex-wrap: wrap;
+  }
+}
+
+.je-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.7rem 1rem;
+  border-right: 1px solid var(--bos-border-light);
+
+  &:last-child { border-right: none; }
+
+  @media (max-width: 767.98px) {
+    flex: 1 1 50%;
+    &:nth-child(2n) { border-right: none; }
+    &:nth-child(-n+2) { border-bottom: 1px solid var(--bos-border-light); }
+  }
+}
+
+// The amount is a sum, not a count - set it apart with a tinted wash rather
+// than letting it blend into the three plain counters beside it.
+.je-stat-chip-amount {
+  background: linear-gradient(135deg, rgba(107, 70, 255, 0.08), rgba(107, 70, 255, 0.02));
+
+  .je-stat-value { color: #6B46FF; }
+}
+
+.je-stat-icon {
+  --c: #1E1B4B;
+  --c-rgb: 30, 27, 75;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--c-rgb), 0.14);
+  color: var(--c);
+  font-size: 0.95rem;
+
+  &.variant-dark    { --c: #1E1B4B; --c-rgb: 30, 27, 75; }
+  &.variant-success { --c: #16A34A; --c-rgb: 22, 163, 74; }
+  &.variant-info    { --c: #0284C7; --c-rgb: 2, 132, 199; }
+  &.variant-purple  { --c: #6B46FF; --c-rgb: 107, 70, 255; }
+}
+
+.je-stat-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--bos-text);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.je-stat-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bos-muted);
+}
+
+// Search + status pills, one row: search grows, pills stay put on the right.
+.je-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+
+  .search-bar {
+    flex: 1 1 auto;
+    min-width: 220px;
+    margin-bottom: 0;
+  }
+
+  .filter-pills {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 700px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .search-bar { min-width: 0; }
+  }
+}
+
+// Groups the date/line-count meta with the kebab menu on the right side of
+// the register-card header, opposite the entry number + status badge.
+.je-head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-shrink: 0;
+}

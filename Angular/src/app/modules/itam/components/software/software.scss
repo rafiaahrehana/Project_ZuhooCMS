@@ -1,0 +1,17 @@
+// Expired licence rows.
+//
+// Bootstrap's .table-danger paints the row red, which at any real licence count
+// turns the whole table into a wall of red and stops meaning anything. The
+// STATUS badge already states the licence is expired; the row only needs to
+// recede. Grey does that, and keeps the red badge legible on top of it.
+//
+// --bs-table-bg is the variable Bootstrap's own .table-* contextual classes set,
+// so setting it here composes with striping and hover instead of fighting them.
+.row-expired {
+  --bs-table-bg: #f1f3f5;
+  --bs-table-hover-bg: #e9ecef;
+  color: var(--bos-muted);
+
+  // Keep the primary identifier readable - the row is de-emphasised, not disabled.
+  td:first-child { color: var(--bos-text); }
+}

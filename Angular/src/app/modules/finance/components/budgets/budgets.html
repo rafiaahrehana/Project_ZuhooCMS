@@ -1,0 +1,121 @@
+<div class="container-fluid py-3">
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">Budgets</h4>
+      <div class="page-subtitle mt-1">Plan spending per category and track actuals against it</div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-light bg-white border shadow-sm btn-sm" (click)="changeYear(-1)"><i class="bi bi-chevron-left"></i></button>
+      <span class="fw-bold px-2">Fiscal Year {{ fiscalYear }}</span>
+      <button class="btn btn-light bg-white border shadow-sm btn-sm" (click)="changeYear(1)"><i class="bi bi-chevron-right"></i></button>
+      <button *appHasPermission="'BUDGET_MANAGE'" class="btn btn-primary-bos btn-sm px-3 fw-semibold" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i>New Budget</button>
+    </div>
+  </div>
+
+  @if (error && !showForm) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && budgets.length) {
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0 table-dark-header">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th class="text-end">Budget</th>
+            <th class="text-end">Actual Spend</th>
+            <th class="text-end">Remaining</th>
+            <th style="min-width:180px">Usage</th>
+            <th></th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (budget of budgets; track budget.id) {
+          <tr>
+            <td class="fw-semibold">
+              {{ budget.category }}
+              @if (budget.notes) { <div class="small text-muted fw-normal">{{ budget.notes }}</div> }
+            </td>
+            <td class="text-end">{{ budget.amount | bosCurrency }}</td>
+            <td class="text-end">{{ budget.actualSpend | bosCurrency }}</td>
+            <td class="text-end fw-semibold" [class.text-success]="budget.remaining >= 0" [class.text-danger]="budget.remaining < 0">
+              {{ budget.remaining | bosCurrency }}
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:8px">
+                  <div class="progress-bar {{ progressClass(budget) }}" role="progressbar" [style.width.%]="progressWidth(budget)"></div>
+                </div>
+                <span class="small text-muted text-nowrap">{{ budget.usedPercent | number:'1.0-1' }}%</span>
+              </div>
+            </td>
+            <td>
+              @if (budget.overBudget) { <span class="badge text-bg-danger">Over budget</span> }
+            </td>
+            <td class="text-end text-nowrap">
+              <button *appHasPermission="'BUDGET_MANAGE'" class="btn btn-outline-secondary btn-sm py-1 px-2" (click)="openEdit(budget)" title="Edit"><i class="bi bi-pencil"></i></button>
+              <button *appHasPermission="'BUDGET_MANAGE'" class="btn btn-outline-danger btn-sm py-1 px-2" (click)="deleteTarget = budget" title="Delete"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+  @if (!loading && !budgets.length) { <app-empty-state icon="bi-piggy-bank" message="No budgets for this fiscal year yet." /> }
+</div>
+
+@if (showForm) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editing ? 'Edit Budget' : 'New Budget' }}</h5>
+        <button type="button" class="btn-close" (click)="showForm = false"></button>
+      </div>
+      <form #f="ngForm" (ngSubmit)="save()">
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Category</label>
+              <input class="form-control form-control-sm" name="category" [(ngModel)]="form.category" required maxlength="100" placeholder="e.g. Marketing, Rent, Software">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fiscal Year</label>
+              <input type="number" class="form-control form-control-sm" name="fiscalYear" [(ngModel)]="form.fiscalYear" required min="2000" max="2100">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Amount</label>
+              <input type="number" min="0.01" step="0.01" class="form-control form-control-sm" name="amount" [(ngModel)]="form.amount" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notes</label>
+              <input class="form-control form-control-sm" name="notes" [(ngModel)]="form.notes" maxlength="500">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            {{ editing ? 'Save Changes' : 'Create Budget' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+}
+
+<app-confirm-dialog
+  [visible]="!!deleteTarget"
+  title="Delete Budget"
+  [message]="'Delete the ' + (deleteTarget?.category || '') + ' budget for ' + (deleteTarget?.fiscalYear || '') + '? This cannot be undone.'"
+  confirmLabel="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="deleteTarget = null"
+/>

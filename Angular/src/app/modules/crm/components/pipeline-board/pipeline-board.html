@@ -1,0 +1,321 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold mb-1">Opportunities</h3>
+      <div class="text-muted">Track and manage opportunities across your sales process.</div>
+    </div>
+    <div class="d-flex align-items-center gap-4 flex-wrap">
+      @if (summary) {
+      <div class="d-flex gap-3 flex-wrap">
+        <span>Open: <strong>{{ summary.openPipelineValue | bosCurrency }}</strong></span>
+        <span>Forecast: <strong>{{ summary.weightedForecast | bosCurrency }}</strong></span>
+        <span class="text-success">Won: <strong>{{ summary.wonValue | bosCurrency }}</strong></span>
+        <span class="text-danger">Lost: <strong>{{ lostValue | bosCurrency }}</strong></span>
+      </div>
+      }
+      <div class="btn-group" role="group" aria-label="View mode">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="viewMode === 'kanban'" [class.btn-outline-secondary]="viewMode !== 'kanban'" (click)="setViewMode('kanban')">
+          <i class="bi bi-kanban me-1"></i>Kanban
+        </button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="viewMode === 'table'" [class.btn-outline-secondary]="viewMode !== 'table'" (click)="setViewMode('table')">
+          <i class="bi bi-table me-1"></i>Table
+        </button>
+      </div>
+      <select class="form-select form-select-sm" style="width: 140px" [ngModel]="tagFilter" (ngModelChange)="setTagFilter($event)">
+        <option [ngValue]="null">All tags</option>
+        @for (t of tags; track t.id) { <option [ngValue]="t.id">{{ t.name }}</option> }
+      </select>
+      <div class="d-flex gap-2">
+        <a routerLink="/crm/tags" class="btn btn-outline-secondary btn-sm" title="Manage tags">
+          <i class="bi bi-tags"></i>
+        </a>
+        <button *appHasPermission="'OPPORTUNITY_CREATE'" class="btn btn-outline-secondary btn-sm" (click)="openCreate()">
+          <i class="bi bi-plus-lg me-1"></i>New Opportunity
+        </button>
+        <button class="btn btn-primary-bos btn-sm" (click)="viewReports()">
+          <i class="bi bi-bar-chart-line me-1"></i>View Reports
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && viewMode === 'table') {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th role="button" (click)="sortTable('name')">Name <i class="bi {{ sortIcon('name') }} small"></i></th>
+            <th role="button" (click)="sortTable('clientCompanyName')">Client <i class="bi {{ sortIcon('clientCompanyName') }} small"></i></th>
+            <th role="button" (click)="sortTable('stage')">Stage <i class="bi {{ sortIcon('stage') }} small"></i></th>
+            <th class="text-end" role="button" (click)="sortTable('amount')">Value <i class="bi {{ sortIcon('amount') }} small"></i></th>
+            <th>Tags</th>
+            <th>Owner</th>
+            <th role="button" (click)="sortTable('expectedCloseDate')">Expected Close <i class="bi {{ sortIcon('expectedCloseDate') }} small"></i></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (opportunity of allOpportunities; track opportunity.id) {
+          <tr>
+            <td>{{ opportunity.name }}</td>
+            <td>{{ opportunity.clientCompanyName || '-' }}</td>
+            <td>
+              <span class="badge rounded-pill" [style.background-color]="stageColor(opportunity.stage)" style="color:#fff;">
+                {{ stageLabel(opportunity.stage) }}
+              </span>
+            </td>
+            <td class="text-end">{{ opportunity.amount != null ? (opportunity.amount | bosCurrency) : '-' }}</td>
+            <td>
+              @for (t of opportunity.tags; track t.id) {
+              <span class="badge rounded-pill me-1" [style.background-color]="t.color" style="color:#fff;">{{ t.name }}</span>
+              }
+            </td>
+            <td>{{ opportunity.ownerName || '-' }}</td>
+            <td>{{ opportunity.expectedCloseDate ? (opportunity.expectedCloseDate | date:'mediumDate') : '-' }}</td>
+            <td class="text-end">
+              <button *appHasPermission="'OPPORTUNITY_UPDATE'" class="btn btn-outline-secondary btn-sm" (click)="openEdit(opportunity)" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </button>
+            </td>
+          </tr>
+          }
+          @if (!allOpportunities.length) {
+          <tr><td colspan="8" class="text-center text-muted py-4">No opportunities yet.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (!loading && viewMode === 'kanban') {
+  <div class="d-flex gap-3 overflow-auto align-items-start pb-2" cdkDropListGroup>
+    @for (stage of stages; track stage) {
+    <div class="card border-0 shadow-sm flex-shrink-0" style="width: 260px; border-top: 3px solid {{ stageColor(stage) }} !important">
+      <div class="card-header bg-white py-3 border-0">
+        <div class="d-flex justify-content-between align-items-start">
+          <span class="small fw-bold text-uppercase" style="letter-spacing:.04em">{{ stageLabel(stage) }}</span>
+          <span class="badge rounded-pill text-bg-light border">{{ (columns[stage] || []).length }}</span>
+        </div>
+        <div class="fw-semibold mt-1" [class.text-success]="stage === 'WON'" [class.text-danger]="stage === 'LOST'">
+          {{ columnTotal(stage) | bosCurrency }}
+        </div>
+      </div>
+      <div class="card-body p-2 pt-0" cdkDropList [cdkDropListData]="columns[stage]" (cdkDropListDropped)="onDrop($event, stage)">
+        @for (opportunity of columns[stage]; track opportunity.id) {
+        <div class="card border mb-2" [class]="stageBgClass(stage)" cdkDrag>
+          <div class="card-body p-2">
+            <div class="d-flex justify-content-between align-items-start">
+            <div class="fw-semibold small">{{ opportunity.name }}</div>
+            <button *appHasPermission="'OPPORTUNITY_UPDATE'" class="btn btn-link btn-sm p-0 text-secondary" (click)="openEdit(opportunity)" title="Edit">
+              <i class="bi bi-pencil small"></i>
+            </button>
+          </div>
+          <div class="text-muted small">{{ opportunity.clientCompanyName }}</div>
+            <div class="d-flex justify-content-between small mt-1">
+              <span>{{ opportunity.amount | bosCurrency }}</span>
+              <span class="text-muted">{{ opportunity.probability }}%</span>
+            </div>
+            @if (opportunity.tags?.length) {
+            <div class="mt-1">
+              @for (t of opportunity.tags; track t.id) {
+              <span class="badge rounded-pill me-1" [style.background-color]="t.color" style="color:#fff; font-size:0.65rem;">{{ t.name }}</span>
+              }
+            </div>
+            }
+            @if (opportunity.nextStep) { <div class="small text-primary mt-1">Next: {{ opportunity.nextStep }}</div> }
+            <select *appHasPermission="'OPPORTUNITY_UPDATE'" class="form-select form-select-sm mt-2" [ngModel]="opportunity.stage" (ngModelChange)="move(opportunity, $event)" (mousedown)="$event.stopPropagation()">
+              @for (s of stages; track s) { <option [value]="s">{{ stageLabel(s) }}</option> }
+            </select>
+          </div>
+        </div>
+        }
+        @if (!columns[stage]?.length) {
+        <div class="text-center py-4">
+          <i class="bi bi-envelope text-muted" style="font-size:1.75rem"></i>
+          <div class="fw-semibold small mt-2">No opportunities here yet</div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  @if (lostReasonFor) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Close "{{ lostReasonFor.name }}" as Lost</h5>
+          <button type="button" class="btn-close" (click)="cancelLost()"></button>
+        </div>
+        <div class="modal-body">
+          <!-- The picklist is what makes losses aggregatable in the reports;
+               the text is optional detail, required only for Other. -->
+          <label class="form-label small fw-semibold">Reason</label>
+          <select class="form-select form-select-sm mb-2" [(ngModel)]="lostReasonCode">
+            <option [ngValue]="null" disabled>Select a reason…</option>
+            @for (r of lostReasons; track r.value) { <option [ngValue]="r.value">{{ r.label }}</option> }
+          </select>
+          <textarea class="form-control" rows="3"
+                    [placeholder]="lostReasonCode === 'OTHER' ? 'Describe the reason (required)' : 'Details (optional)'"
+                    [(ngModel)]="lostReason"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="cancelLost()">Cancel</button>
+          <button class="btn btn-danger btn-sm"
+                  [disabled]="!lostReasonCode || (lostReasonCode === 'OTHER' && !lostReason.trim())"
+                  (click)="confirmLost()">Close as Lost</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (wonDuplicateFor && wonDuplicateMatch) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fs-6 fw-semibold">
+            <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Possible duplicate found
+          </h5>
+          <button type="button" class="btn-close" (click)="cancelWonDuplicate()"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-1">"{{ wonDuplicateFor.name }}" is about to become a Client. It looks similar to an existing one:</p>
+          <div class="border rounded-3 p-2 bg-light">
+            <div class="fw-semibold">{{ wonDuplicateMatch.clientCompanyName }}</div>
+            <div class="text-muted small">Matched on {{ wonDuplicateMatch.matchedOn }}</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="createNewClientAnyway()"><i class="bi bi-plus-lg me-1"></i>Create New Anyway</button>
+          <button class="btn btn-primary btn-sm" (click)="linkToExistingClient()">Link to Existing Client</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Opportunity"
+    [message]="'Delete ' + (deleteTarget?.name || 'this opportunity') + '? Its activity history goes with it. This cannot be undone.'"
+    confirmLabel="Delete" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+
+  @if (showForm) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+            <span class="rounded-2 d-flex align-items-center justify-content-center" style="width:32px;height:32px;background-color:#E4F2DA">
+              <i class="bi {{ editing ? 'bi-pencil' : 'bi-plus-lg' }}" style="color:var(--bos-brand)"></i>
+            </span>
+            {{ editing ? 'Edit Opportunity' : 'New Opportunity' }}
+          </h5>
+          <button type="button" class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Name *</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.name" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Client *</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.clientId" [disabled]="!!editing">
+                <option [ngValue]="null">— Select client —</option>
+                @for (c of clients; track c.id) { <option [ngValue]="c.id">{{ c.clientCompanyName }}</option> }
+              </select>
+            </div>
+            @if (!editing) {
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Stage</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.stage">
+                @for (s of openStages; track s) { <option [value]="s">{{ stageLabel(s) }}</option> }
+              </select>
+            </div>
+            }
+            <div class="col-md-3">
+              <label class="form-label small text-secondary mb-1">Amount</label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" [(ngModel)]="form.amount" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-secondary mb-1">Probability %</label>
+              <input type="number" min="0" max="100" class="form-control form-control-sm" [(ngModel)]="form.probability" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Expected Close</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="form.expectedCloseDate" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Next Step</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.nextStep" maxlength="255" placeholder="e.g. Follow up call, Send proposal..." />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Owner</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.ownerId">
+                <option [ngValue]="null">— Unassigned —</option>
+                @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option> }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Source</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.source" maxlength="100" placeholder="e.g. Referral, Website, Cold call..." />
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Tags</label>
+              <div class="d-flex flex-wrap gap-2">
+                @for (t of tags; track t.id) {
+                <label class="form-check form-check-inline m-0 px-2 py-1 rounded-pill border small"
+                       [style.border-color]="t.color" [class.text-white]="form.tagIds.includes(t.id)"
+                       [style.background-color]="form.tagIds.includes(t.id) ? t.color : 'transparent'">
+                  <input type="checkbox" class="form-check-input d-none" [value]="t.id"
+                         [checked]="form.tagIds.includes(t.id)"
+                         (change)="form.tagIds.includes(t.id) ? form.tagIds = form.tagIds.filter(id => id !== t.id) : form.tagIds = [...form.tagIds, t.id]" />
+                  {{ t.name }}
+                </label>
+                }
+                @if (!tags.length) { <span class="text-muted small">No tags yet - <a routerLink="/crm/tags">create one</a>.</span> }
+              </div>
+              <div class="d-flex align-items-center gap-2 mt-2">
+                <input type="color" class="form-control form-control-color form-control-sm p-1" style="width: 38px" [(ngModel)]="newTagColor" title="Tag color" />
+                <input class="form-control form-control-sm" style="max-width: 220px" placeholder="Write a new tag..."
+                       [(ngModel)]="newTagName" maxlength="50" (keyup.enter)="createTag()" />
+                <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" [disabled]="!newTagName.trim() || addingTag" (click)="createTag()">
+                  @if (addingTag) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-plus-lg me-1"></i>Add Tag }
+                </button>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Description</label>
+              <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="form.description" placeholder="Add a brief description about this opportunity..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2 justify-content-between">
+          <div>
+            @if (editing) {
+            <button *appHasPermission="'OPPORTUNITY_DELETE'" class="btn btn-outline-danger btn-sm" (click)="deleteTarget = editing; showForm = false">
+              <i class="bi bi-trash me-1"></i>Delete
+            </button>
+            }
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+            <button class="btn btn-primary btn-sm" [disabled]="saving" (click)="save()">
+              @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              {{ editing ? 'Save Changes' : 'Create' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

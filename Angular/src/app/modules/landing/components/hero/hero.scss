@@ -1,0 +1,274 @@
+.hero-section {
+  // Charcoal slate with a faint emerald cast - the mockup's dark, not navy.
+  background:
+    radial-gradient(ellipse 55% 45% at 80% 0%, rgba(16, 185, 129, 0.10), transparent 70%),
+    linear-gradient(170deg, #0F1715 0%, #101720 55%, #0C1211 100%);
+  // Pair, not a replacement: an engine without dvh support ignores the second
+  // declaration and still gets a working height from the first. dvh is what
+  // stops iOS Safari's collapsing URL bar from making the hero overflow.
+  min-height: 100vh;
+  min-height: 100dvh;
+  // The section owns its height now. Previously it stacked min-height:100vh
+  // here AND min-vh-100 + py-5 on the inner row, which overflowed short
+  // viewports; the row keeps only its gutters.
+  padding-top: clamp(6rem, 15vw, 8.5rem);   // clears the fixed-top navbar
+  padding-bottom: clamp(3rem, 9vw, 5rem);
+
+  // Faint grid backdrop for texture/depth
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 60% at 30% 30%, #000 40%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 30% 30%, #000 40%, transparent 100%);
+  }
+
+  .orbit-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(52, 211, 153, 0.14);
+    z-index: 0;
+    pointer-events: none;
+  }
+  // Fixed 620/900px blew well past a 375px viewport - invisible only because
+  // .landing-wrapper clips overflow-x, which hides the symptom, not the layout.
+  .ring-1 { width: clamp(300px, 62vw, 620px); aspect-ratio: 1; height: auto; top: 8%; right: -8%; }
+  .ring-2 { width: clamp(430px, 90vw, 900px); aspect-ratio: 1; height: auto; top: -6%; right: -16%; border-color: rgba(16,185,129,0.10); }
+
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: 0;
+    opacity: 0.45;
+  }
+
+  .glow-1 {
+    top: -10%;
+    left: -10%;
+    width: clamp(240px, 55vw, 600px);
+    aspect-ratio: 1;
+    height: auto;
+    background: radial-gradient(circle, #10B981 0%, rgba(16,185,129,0) 70%);
+  }
+
+  // Cyan rather than lavender: on a near-black field a second hue is what
+  // makes the hero read as more than one colour, and saturated mid-tones are
+  // safe here because a 100px blur at 0.45 opacity keeps them as light.
+  .glow-2 {
+    bottom: -10%;
+    right: -10%;
+    width: clamp(220px, 48vw, 500px);
+    aspect-ratio: 1;
+    height: auto;
+    background: radial-gradient(circle, #2DD4BF 0%, rgba(45,212,191,0) 70%);
+  }
+
+  .glow-3 {
+    top: 40%;
+    left: 45%;
+    width: clamp(180px, 38vw, 380px);
+    aspect-ratio: 1;
+    height: auto;
+    opacity: 0.22;
+    background: radial-gradient(circle, #A7F3D0 0%, rgba(167,243,208,0) 70%);
+  }
+
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    display: inline-block;
+  }
+
+}
+
+// ── Hero visual ──────────────────────────────────────────────
+// An aurora core, two counter-rotating orbits and a live-ops card: three
+// composited transforms and one blurred gradient, so it costs essentially
+// nothing. It started life as the mobile fallback for a WebGL particle field
+// and became the only visual once that was dropped.
+.hero-visual-col {
+  min-height: clamp(260px, 55vw, 460px);
+  height: clamp(260px, 55vw, 460px);
+}
+
+.hero-visual-fallback {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: clamp(260px, 55vw, 460px);
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: clamp(220px, 48vw, 400px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 35%, rgba(110, 231, 183, 0.55), transparent 62%),
+      radial-gradient(circle at 72% 62%, rgba(45, 212, 191, 0.45), transparent 62%),
+      radial-gradient(circle at 50% 82%, rgba(153, 246, 228, 0.28), transparent 60%);
+    filter: blur(30px);
+    animation: heroAurora 14s ease-in-out infinite alternate;
+  }
+}
+
+.hero-orbit {
+  position: absolute;
+  width: clamp(210px, 46vw, 380px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(110, 231, 183, 0.26);
+  animation: heroSpin 42s linear infinite;
+  will-change: transform;
+
+  &.orbit-b {
+    width: clamp(140px, 31vw, 258px);
+    border-color: rgba(94, 234, 212, 0.20);
+    animation-duration: 27s;
+    animation-direction: reverse;
+  }
+}
+
+// On a near-black field, accents read as light tints for strokes and dots;
+// saturated mid-tones stay inside the blurred glows. Small coloured area,
+// dark overall - colourful without muddying.
+.hero-node {
+  position: absolute;
+  width: 9px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+
+  &.n1 { top: -4px;    left: 50%;   background: #6EE7B7; box-shadow: 0 0 14px 3px rgba(110,231,183,.65); }
+  &.n2 { top: 50%;     right: -4px; background: #5EEAD4; box-shadow: 0 0 14px 3px rgba(94,234,212,.55); }
+  &.n3 { bottom: 8%;   left: 7%;    background: #A7F3D0; box-shadow: 0 0 14px 3px rgba(167,243,208,.50); }
+  &.n4 { top: 11%;     right: 9%;   background: #34D399; box-shadow: 0 0 12px 3px rgba(52,211,153,.50); }
+  &.n5 { bottom: -4px; left: 46%;   background: #99F6E4; box-shadow: 0 0 12px 3px rgba(153,246,228,.50); }
+}
+
+.hero-ops-card {
+  position: relative;
+  z-index: 2;
+  width: clamp(190px, 46vw, 248px);
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+
+  .ops-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.55);
+    margin-bottom: 0.75rem;
+  }
+  .ops-pulse {
+    width: 6px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #34D399;
+    box-shadow: 0 0 8px 2px rgba(52, 211, 153, 0.7);
+  }
+
+  .ops-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.4rem 0;
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.62);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+
+    i { font-size: 0.85rem; color: rgba(255, 255, 255, 0.42); }
+    b { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+  }
+
+  .ops-violet  { color: #A7F3D0; }
+  .ops-cyan    { color: #5EEAD4; }
+  .ops-emerald { color: #6EE7B7; }
+}
+
+@keyframes heroSpin { to { transform: rotate(360deg); } }
+@keyframes heroAurora {
+  0%   { transform: translate3d(-4%, -3%, 0) scale(1); }
+  100% { transform: translate3d(4%, 3%, 0) scale(1.08); }
+}
+
+.text-white-50 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+// Glass "Book Demo" outline button
+.btn-glass-outline {
+  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
+  color: #fff;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+}
+
+.hero-stats {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.stat-chip {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.scroll-cue {
+  position: absolute;
+  bottom: clamp(1rem, 3vw, 2rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.scroll-cue-line {
+  width: 1px;
+  height: 36px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), transparent);
+  animation: scrollCue 1.8s ease-in-out infinite;
+}
+
+@keyframes scrollCue {
+  0%   { transform: scaleY(0.3); opacity: 0.4; transform-origin: top; }
+  50%  { transform: scaleY(1); opacity: 1; transform-origin: top; }
+  100% { transform: scaleY(0.3); opacity: 0.4; transform-origin: top; }
+}
+
+// The global .gradient-text is brand purple; the emerald hero overrides it.
+.hero-section .gradient-text {
+  background: linear-gradient(135deg, #FFFFFF 0%, #A7F3D0 40%, #10B981 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

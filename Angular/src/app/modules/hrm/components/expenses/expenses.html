@@ -1,0 +1,107 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0"><i class="bi bi-receipt-cutoff me-2"></i>HR Expenses</h4>
+    <div class="d-flex gap-2 align-items-center">
+      <div class="btn-group btn-group-sm" role="group">
+        <button class="btn" [class.btn-primary]="view === 'my'" [class.btn-outline-secondary]="view !== 'my'" (click)="setView('my')">My Expenses</button>
+        <button class="btn" [class.btn-primary]="view === 'all'" [class.btn-outline-secondary]="view !== 'all'" (click)="setView('all')">All Expenses</button>
+      </div>
+      <button class="btn btn-primary btn-sm" (click)="openSubmit()"><i class="bi bi-plus-lg me-1"></i>Submit Expense</button>
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (showForm) {
+  <div class="card mb-3">
+    <div class="card-header py-2 fw-semibold">Submit Expense</div>
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Title *" [(ngModel)]="form.title" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" placeholder="Category" [(ngModel)]="form.category" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Amount *" [(ngModel)]="form.amount" /></div>
+        <div class="col-md-2">
+          <label class="form-label small text-muted mb-1">Date</label>
+          <input class="form-control form-control-sm" type="date" [(ngModel)]="form.expenseDate" />
+        </div>
+        <div class="col-md-2 pt-4"><input class="form-control form-control-sm" placeholder="Receipt URL" [(ngModel)]="form.receiptUrl" /></div>
+        <div class="col-12"><textarea class="form-control form-control-sm" rows="2" placeholder="Description" [(ngModel)]="form.description"></textarea></div>
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary btn-sm" [disabled]="!form.title || !form.amount || !form.expenseDate" (click)="submit()">Submit</button>
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && expenses.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Title</th><th>Category</th><th class="text-end">Amount</th><th>Date</th>
+            @if (view === 'all') { <th>Submitted By</th> }
+            <th>Status</th><th>Approved By</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of expenses; track e.id) {
+          <tr>
+            <td class="fw-medium">{{ e.title }}</td>
+            <td>{{ e.category || '-' }}</td>
+            <td class="text-end">{{ e.amount | bosCurrency }}</td>
+            <td>{{ e.expenseDate | date:'mediumDate' }}</td>
+            @if (view === 'all') { <td>{{ e.submittedByName || '-' }}</td> }
+            <td><span class="badge {{ statusClass(e.status) }}">{{ e.status }}</span></td>
+            <td class="text-muted small">{{ e.approvedByName || '-' }}</td>
+            <td class="text-end text-nowrap">
+              @if (e.receiptUrl) {
+              <a class="btn btn-outline-secondary btn-sm me-1" [href]="e.receiptUrl" target="_blank" rel="noopener"><i class="bi bi-receipt"></i></a>
+              }
+              @if (view === 'all' && e.status === 'PENDING') {
+              <button *appHasPermission="'EXPENSE_APPROVE'" class="btn btn-outline-success btn-sm me-1" (click)="approveTarget = e">Approve</button>
+              <button *appHasPermission="'EXPENSE_REJECT'" class="btn btn-outline-danger btn-sm me-1" (click)="rejectTarget = e; rejectionReason = ''">Reject</button>
+              }
+              @if (view === 'my' && e.status === 'PENDING') {
+              <button class="btn btn-outline-danger btn-sm" (click)="deleteTarget = e"><i class="bi bi-trash"></i></button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !expenses.length && !showForm) { <app-empty-state icon="bi-receipt-cutoff" message="No expenses found." /> }
+
+  @if (rejectTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Reject Expense</h5>
+          <button class="btn-close" (click)="rejectTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-muted small mb-2">{{ rejectTarget.title }} · {{ rejectTarget.amount | bosCurrency }}</div>
+          <textarea class="form-control form-control-sm" rows="3" placeholder="Rejection reason (required)" [(ngModel)]="rejectionReason"></textarea>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="rejectTarget = null">Cancel</button>
+          <button class="btn btn-danger btn-sm" [disabled]="!rejectionReason" (click)="doReject()">Reject</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!approveTarget" title="Approve Expense" message="Approve this expense?" (confirmed)="doApprove()" (cancelled)="approveTarget = null" />
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Expense" message="Delete this expense?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

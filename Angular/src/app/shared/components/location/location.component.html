@@ -1,0 +1,112 @@
+<!-- Loading State -->
+    <div *ngIf="isLoading()" class="d-flex justify-content-center my-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="hasError()" class="alert alert-danger" role="alert">
+      {{ errorMessage() }}
+    </div>
+
+    <!-- Form State -->
+    <form [formGroup]="locationForm" (ngSubmit)="save()" *ngIf="!isLoading()">
+      <fieldset [disabled]="readOnlyUntilEdit && !editing()">
+
+      <!-- Row 1: Country -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="country" class="form-label fw-semibold">Country <span class="text-danger">*</span></label>
+          <select id="country" class="form-select" formControlName="country" [ngClass]="{'is-invalid': hasFieldError('country')}">
+            <option [ngValue]="null">Select Country...</option>
+            <option *ngFor="let c of countries()" [value]="c.code">{{ c.name }}</option>
+          </select>
+          <div class="invalid-feedback">Please select a valid country.</div>
+        </div>
+      </div>
+
+      <!-- Row 2: Level 1 -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="level1" class="form-label fw-semibold">{{ labels().level1 }} <span class="text-danger">*</span></label>
+          <select id="level1" class="form-select" formControlName="level1" [ngClass]="{'is-invalid': hasFieldError('level1')}">
+            <option [ngValue]="null">Select {{ labels().level1 }}...</option>
+            <option *ngFor="let node of level1Nodes()" [value]="node.name">{{ node.name }}</option>
+          </select>
+          <div class="invalid-feedback">{{ labels().level1 }} is required.</div>
+        </div>
+      </div>
+
+      <!-- Row 3: Level 2 -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="level2" class="form-label fw-semibold">{{ labels().level2 }} <span class="text-danger">*</span></label>
+          <select id="level2" class="form-select" formControlName="level2" [ngClass]="{'is-invalid': hasFieldError('level2')}">
+            <option [ngValue]="null">Select {{ labels().level2 }}...</option>
+            <option *ngFor="let node of level2Nodes()" [value]="node.name">{{ node.name }}</option>
+          </select>
+          <div class="invalid-feedback">{{ labels().level2 }} is required.</div>
+        </div>
+      </div>
+
+      <!-- Row 4: Level 3 -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="level3" class="form-label fw-semibold">{{ labels().level3 }} <span class="text-danger">*</span></label>
+          <select id="level3" class="form-select" formControlName="level3" [ngClass]="{'is-invalid': hasFieldError('level3')}">
+            <option [ngValue]="null">Select {{ labels().level3 }}...</option>
+            <option *ngFor="let node of level3Nodes()" [value]="node.name">{{ node.name }}</option>
+          </select>
+          <div class="invalid-feedback">{{ labels().level3 }} is required.</div>
+        </div>
+      </div>
+
+      <!-- Row 5: Level 4 -->
+      <div class="row mb-3" *ngIf="selectedCountryCode() !== 'BD'">
+        <div class="col-12">
+          <label for="level4" class="form-label fw-semibold">{{ labels().level4 }} <span class="text-muted small">(optional)</span></label>
+          <select id="level4" class="form-select" formControlName="level4" [ngClass]="{'is-invalid': hasFieldError('level4')}">
+            <option [ngValue]="null">Select {{ labels().level4 }}...</option>
+            <option *ngFor="let node of level4Nodes()" [value]="node.name">{{ node.name }}</option>
+          </select>
+          <div class="invalid-feedback">{{ labels().level4 }} cannot be blank.</div>
+        </div>
+      </div>
+
+      <!-- Row 4: Street Address & Postal Code -->
+      <div class="row mb-3">
+        <div class="col-md-8">
+          <label for="streetAddress" class="form-label fw-semibold">Street Address <span class="text-danger">*</span></label>
+          <input type="text" id="streetAddress" class="form-control" formControlName="streetAddress" 
+                 placeholder="123 Main St" [ngClass]="{'is-invalid': hasFieldError('streetAddress')}">
+          <div class="invalid-feedback">Street Address is required.</div>
+        </div>
+
+        <div class="col-md-4 mt-3 mt-md-0">
+          <label for="postalCode" class="form-label fw-semibold">Postal / ZIP Code</label>
+          <input type="text" id="postalCode" class="form-control" formControlName="postalCode" placeholder="Postal Code">
+        </div>
+      </div>
+
+      <!-- Row 5: Apartment / Building -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="apartment" class="form-label fw-semibold">Apartment, suite, etc. (optional)</label>
+          <input type="text" id="apartment" class="form-control" formControlName="apartment" placeholder="Apt 4B">
+        </div>
+      </div>
+
+
+      </fieldset>
+
+      <div class="d-flex justify-content-end gap-2 border-top pt-3" *ngIf="showActions">
+        @if (readOnlyUntilEdit && !editing()) {
+          <button type="button" class="btn btn-primary px-4" (click)="enterEditMode()">Edit</button>
+        } @else {
+          <button type="button" class="btn btn-light border px-4" (click)="reset()">Reset</button>
+          <button type="submit" class="btn btn-primary px-4">Save Location</button>
+        }
+      </div>
+
+    </form>

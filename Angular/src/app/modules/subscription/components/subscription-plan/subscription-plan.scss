@@ -1,0 +1,116 @@
+.pricing-section {
+  background: #ffffff;
+  color: #1a103c;
+}
+
+/* Gradient heading accent */
+.text-gradient {
+  background: linear-gradient(90deg, #367C2B 0%, #8FC46B 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Card Styling */
+.pricing-card {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  z-index: 2;
+  color: #1a103c;
+}
+.pricing-card:not(.pricing-card-highlighted) h2,
+.pricing-card:not(.pricing-card-highlighted) h4 {
+  color: #120b29 !important;
+}
+
+.pricing-card-highlighted {
+  background: linear-gradient(160deg, #14300F 0%, #2A6421 100%) !important;
+  border: none;
+  transform: translateY(-12px);
+}
+.pricing-card-highlighted h2,
+.pricing-card-highlighted h4 {
+  color: #fff !important;
+}
+
+.pricing-divider {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+.pricing-divider-highlighted {
+  border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+.border-purple {
+  border: 1.5px solid var(--bos-lavender) !important;
+}
+
+.border-purple-light {
+  border: 1px solid #c9b4f7;
+}
+
+.bg-lavender {
+  background-color: #EAF4E2 !important;
+}
+
+.text-purple {
+  color: #2A6421 !important;
+}
+
+/* Buttons */
+.btn-outline-purple {
+  border: 1.5px solid var(--bos-brand);
+  color: var(--bos-brand);
+  background: transparent;
+  transition: all 0.2s;
+}
+.btn-outline-purple:hover {
+  background: var(--bos-brand);
+  color: #fff;
+}
+
+.btn-purple-solid {
+  background: linear-gradient(90deg, #367C2B 0%, #4C9A3B 100%);
+  color: #fff;
+  border: none;
+  transition: all 0.2s;
+}
+.btn-purple-solid:hover {
+  filter: brightness(1.08);
+  color: #fff;
+}
+
+/* Header */
+.badge-eyebrow {
+  color: var(--bos-brand);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.trust-badge {
+  background: #EAF4E2;
+  color: #2A6421;
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+
+  i {
+    color: var(--bos-brand);
+  }
+}
+
+/* Plan icon badge */
+.plan-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #EAF4E2;
+  color: var(--bos-brand);
+  font-size: 1.1rem;
+}
+
+/* Custom solution banner */
+.custom-solution-banner {
+  background: #f7f5ff;
+  border: 1px solid #e3d9fc;
+}

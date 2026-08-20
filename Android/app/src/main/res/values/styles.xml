@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ============================================================
+         BUTTONS — three named styles formalizing what was already the
+         app's de facto convention (unstyled = primary, OutlinedButton =
+         secondary, TextButton = tertiary), now explicit and consistent:
+         same height/radius/type everywhere, disabled state uses the
+         real disabled tokens instead of Material's default alpha guess.
+         ============================================================ -->
+
+    <style name="Widget.Zuhoo.Button.Primary" parent="Widget.MaterialComponents.Button">
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/radius_button</item>
+        <item name="android:paddingStart">@dimen/space_20</item>
+        <item name="android:paddingEnd">@dimen/space_20</item>
+        <item name="android:textAppearance">@style/TextAppearance.Zuhoo.Button</item>
+        <item name="backgroundTint">@color/btn_primary_bg_selector</item>
+        <item name="android:textColor">@color/btn_primary_text_selector</item>
+        <item name="iconTint">@color/btn_primary_text_selector</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">@dimen/space_8</item>
+    </style>
+
+    <style name="Widget.Zuhoo.Button.Secondary" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/radius_button</item>
+        <item name="android:paddingStart">@dimen/space_20</item>
+        <item name="android:paddingEnd">@dimen/space_20</item>
+        <item name="android:textAppearance">@style/TextAppearance.Zuhoo.Button</item>
+        <item name="strokeColor">@color/btn_secondary_stroke_selector</item>
+        <item name="strokeWidth">@dimen/stroke_width</item>
+        <item name="android:textColor">@color/btn_secondary_text_selector</item>
+        <item name="iconTint">@color/btn_secondary_text_selector</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">@dimen/space_8</item>
+        <item name="rippleColor">@color/brand_accent_soft</item>
+    </style>
+
+    <style name="Widget.Zuhoo.Button.Text" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/radius_button</item>
+        <item name="android:paddingStart">@dimen/space_12</item>
+        <item name="android:paddingEnd">@dimen/space_12</item>
+        <item name="android:textAppearance">@style/TextAppearance.Zuhoo.Button</item>
+        <item name="android:textColor">@color/btn_secondary_text_selector</item>
+        <item name="iconTint">@color/btn_secondary_text_selector</item>
+        <item name="rippleColor">@color/brand_accent_soft</item>
+    </style>
+
+    <!-- Destructive variant of Secondary — reject/cancel/delete confirmations. Same geometry,
+         danger-colored stroke/text instead of brand green. -->
+    <style name="Widget.Zuhoo.Button.Danger" parent="Widget.Zuhoo.Button.Secondary">
+        <item name="strokeColor">@color/status_danger</item>
+        <item name="android:textColor">@color/status_danger</item>
+        <item name="iconTint">@color/status_danger</item>
+    </style>
+
+    <!-- ============================================================
+         TEXT FIELDS
+         ============================================================ -->
+
+    <style name="Widget.Zuhoo.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">@dimen/radius_field</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/radius_field</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/radius_field</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/radius_field</item>
+        <item name="boxStrokeWidth">@dimen/stroke_width</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxStrokeColor">@color/brand_primary</item>
+        <item name="boxStrokeErrorColor">@color/status_danger</item>
+        <item name="hintTextColor">@color/brand_primary</item>
+        <item name="android:textColorHint">@color/text_muted</item>
+        <item name="errorTextAppearance">@style/TextAppearance.Zuhoo.ErrorText</item>
+        <item name="errorIconTint">@color/status_danger</item>
+    </style>
+
+    <!-- Same field chrome, used for the dropdown ("exposed dropdown menu") variant that
+         replaces raw Spinner usage. Must parent from the ExposedDropdownMenu box variant (not
+         plain OutlinedBox) — that's what gives the field its click-to-open behaviour and dropdown
+         arrow end-icon when paired with a non-editable AutoCompleteTextView (inputType="none"). -->
+    <style name="Widget.Zuhoo.TextInputLayout.Dropdown" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="boxCornerRadiusTopStart">@dimen/radius_field</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/radius_field</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/radius_field</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/radius_field</item>
+        <item name="boxStrokeWidth">@dimen/stroke_width</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxStrokeColor">@color/brand_primary</item>
+        <item name="hintTextColor">@color/brand_primary</item>
+        <item name="android:textColorHint">@color/text_muted</item>
+        <item name="endIconTint">@color/text_secondary</item>
+    </style>
+
+    <!-- Same field chrome, used for the end-icon date-picker variant that replaces the old
+         bare-TextView-as-button date fields. -->
+    <style name="Widget.Zuhoo.TextInputLayout.Date" parent="Widget.Zuhoo.TextInputLayout">
+        <item name="endIconMode">custom</item>
+        <item name="endIconDrawable">@drawable/ic_calendar</item>
+        <item name="endIconTint">@color/text_secondary</item>
+    </style>
+
+    <!-- ============================================================
+         BADGES
+         ============================================================ -->
+
+    <!-- ============================================================
+         NAVIGATION
+         ============================================================ -->
+
+    <style name="Widget.Zuhoo.BottomNavigationView" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="android:background">@color/bg_card</item>
+        <item name="itemIconTint">@color/bottom_nav_item_selector</item>
+        <item name="itemTextColor">@color/bottom_nav_item_selector</item>
+        <item name="itemRippleColor">@color/brand_accent_soft</item>
+        <item name="labelVisibilityMode">labeled</item>
+    </style>
+
+    <style name="Widget.Zuhoo.StatusBadge" parent="">
+        <item name="android:background">@drawable/bg_badge_pill</item>
+        <item name="android:textAppearance">@style/TextAppearance.Zuhoo.Badge</item>
+        <item name="android:paddingStart">@dimen/space_12</item>
+        <item name="android:paddingEnd">@dimen/space_12</item>
+        <item name="android:paddingTop">@dimen/space_4</item>
+        <item name="android:paddingBottom">@dimen/space_4</item>
+        <item name="android:gravity">center</item>
+        <item name="android:drawablePadding">@dimen/space_4</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+</resources>

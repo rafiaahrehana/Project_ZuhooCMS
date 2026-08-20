@@ -1,0 +1,14 @@
+// Competency and goal sliders. Bootstrap ships .form-range unstyled beyond the
+// basics, so the track and thumb are set here to match the app's brand colour.
+.form-range {
+  &::-webkit-slider-thumb { background: var(--bos-brand); }
+  &::-moz-range-thumb     { background: var(--bos-brand); border: none; }
+  &::-webkit-slider-runnable-track { background: var(--bos-lavender-lt); height: 6px; border-radius: 3px; }
+  &::-moz-range-track              { background: var(--bos-lavender-lt); height: 6px; border-radius: 3px; }
+}
+
+// Tag pickers - keep the unselected state quiet so the selected ones read first.
+.btn.rounded-pill {
+  font-size: 0.78rem;
+  transition: all var(--bos-transition);
+}

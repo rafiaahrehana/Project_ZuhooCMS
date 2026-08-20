@@ -1,0 +1,30 @@
+<section id="faq" class="accent-section-charcoal py-6">
+  <div class="container py-5">
+    <div class="row">
+      <div class="col-lg-4 mb-5 mb-lg-0 slide-up">
+        <h2 class="display-6 fw-bold section-title mb-4">Frequently Asked Questions</h2>
+        <p class="section-sub mb-4">Can't find the answer you're looking for? Reach out to our customer support team.</p>
+        <a routerLink="/contact" class="btn faq-ghost-btn rounded-pill px-4">Contact Support</a>
+      </div>
+      <div class="col-lg-7 offset-lg-1 slide-up" style="animation-delay: 0.1s;">
+        <div class="accordion accordion-flush" id="faqAccordion">
+          <div class="accordion-item bg-transparent faq-item py-3" *ngFor="let item of faqs(); let i = index">
+            <h2 class="accordion-header">
+              <button class="accordion-button bg-transparent shadow-none fw-semibold fs-5 text-white px-0 transition-all"
+                      [ngClass]="{ 'collapsed': !item.open }"
+                      type="button" 
+                      (click)="toggle(i)">
+                {{ item.q }}
+              </button>
+            </h2>
+            <div class="accordion-collapse collapse" [ngClass]="{ 'show': item.open }">
+              <div class="accordion-body px-0 pt-2 pb-4 section-sub">
+                {{ item.a }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

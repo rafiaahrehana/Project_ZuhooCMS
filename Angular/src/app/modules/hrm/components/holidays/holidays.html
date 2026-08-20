@@ -1,0 +1,104 @@
+<div class="container-fluid py-3">
+  <!-- Header Bar -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-calendar-event me-2"></i>Holidays Calendar</h4>
+      <p class="small mb-0 page-subtitle">Review and schedule company-wide holidays and off days</p>
+    </div>
+    <button *appHasPermission="'HOLIDAY_CREATE'" class="btn btn-primary btn-sm px-3 rounded-2 fw-medium" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i> Add Holiday</button>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2 rounded-2 shadow-sm mb-3">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2 rounded-2 shadow-sm mb-3">{{ success }}</div> }
+
+  @if (loading) { <app-loader /> }
+
+  <!-- Add/Edit modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold"><i class="bi bi-plus-circle me-2"></i>{{ isEdit ? 'Edit' : 'Add' }} Holiday</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label small fw-semibold text-secondary mb-1">Name <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="text" [(ngModel)]="form.name" placeholder="New Year's Day, etc." />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold text-secondary mb-1">Holiday Date <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="date" [(ngModel)]="form.holidayDate" />
+        </div>
+        <div class="col-md-5">
+          <label class="form-label small fw-semibold text-secondary mb-1">Type</label>
+          <select class="form-select form-select-sm border-light-subtle rounded-2" [(ngModel)]="form.holidayType">
+            @for (type of holidayTypes; track type) { <option [value]="type">{{ type }}</option> }
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold text-secondary mb-1">Description</label>
+          <textarea class="form-control form-control-sm border-light-subtle rounded-2" rows="2" [(ngModel)]="form.description" placeholder="Optional description..."></textarea>
+        </div>
+      </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.name || !form.holidayDate || saving" (click)="save()">
+            @if (saving) { Saving... } @else { Save }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Holidays List Display -->
+  @if (!loading && holidays.length) {
+  <div class="row g-3 mb-4">
+    @for (h of holidays; track h.id) {
+    <div class="col-md-6 col-lg-4">
+      <div class="card border border-light-subtle rounded-3 bg-white shadow-sm h-100 transition-hover">
+        <div class="card-body p-4 d-flex gap-3">
+          <!-- Calendar Date Icon Badge -->
+          <div class="d-flex flex-column align-items-center justify-content-center bg-primary-subtle text-primary rounded-3 text-center" style="width: 60px; height: 60px; min-width: 60px;">
+            <span class="fw-bold fs-5 mb-0 lh-1">{{ h.holidayDate | date:'d' }}</span>
+            <span class="small text-uppercase fw-semibold" style="font-size: 10px;">{{ h.holidayDate | date:'MMM' }}</span>
+          </div>
+
+          <div class="d-flex flex-column justify-content-between w-100">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                <span class="badge text-bg-light border text-secondary" style="font-size: 10px;">{{ h.holidayType || 'COMPANY' }}</span>
+              </div>
+              <h6 class="fw-bold text-dark mb-1">{{ h.name }}</h6>
+              <p class="text-muted small mb-3 text-truncate-2" style="max-height: 38px;">{{ h.description || 'No description provided.' }}</p>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
+              <span class="small text-muted">{{ h.holidayDate | date:'EEEE' }}</span>
+              <div class="d-flex gap-1">
+                <button *appHasPermission="'HOLIDAY_UPDATE'" class="btn btn-outline-secondary btn-sm border-light-subtle px-2 py-1 rounded-2" (click)="openEdit(h)"><i class="bi bi-pencil small"></i></button>
+                <button *appHasPermission="'HOLIDAY_DELETE'" class="btn btn-outline-danger btn-sm border-danger-subtle px-2 py-1 rounded-2" style="background-color: #fff5f5;" (click)="deleteTarget = h"><i class="bi bi-trash small"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+
+  <div class="d-flex justify-content-end p-3 bg-white rounded-3 shadow-sm mb-4">
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+  }
+
+  @if (!loading && !holidays.length && !showForm) {
+    <app-empty-state icon="bi-calendar-x" message="No holidays scheduled." />
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Holiday" message="Are you sure you want to delete this holiday?" (confirmed)="confirmDelete()" (cancelled)="deleteTarget = null" />
+</div>

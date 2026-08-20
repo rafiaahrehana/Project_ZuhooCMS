@@ -1,0 +1,100 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="mb-0">Support Tickets</h4>
+      <p class="text-secondary small mb-0">Raise something that doesn't fit an existing service request.</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i>New Ticket</button>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && tickets.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Ticket #</th><th>Title</th><th>Priority</th><th>Status</th><th>Updated</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (t of tickets; track t.id) {
+          <tr class="cursor-pointer" [routerLink]="['/client/tickets', t.id]" style="cursor:pointer">
+            <td class="text-muted small">{{ t.ticketNumber }}</td>
+            <td>{{ t.title }}</td>
+            <td><span class="badge {{ priorityClass(t.priority) }}">{{ t.priority }}</span></td>
+            <td><span class="badge {{ statusClass(t.status) }}">{{ t.status }}</span></td>
+            <td class="text-muted small">{{ (t.updatedAt || t.createdAt) | date: 'MMM d, h:mm a' }}</td>
+            <td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (!loading && !tickets.length) {
+    <app-empty-state icon="bi-life-preserver" message="No support tickets yet. Raise one if something isn't working." />
+  }
+</div>
+
+@if (showCreate) {
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1050;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">New Support Ticket</h5>
+        <button type="button" class="btn-close" (click)="closeCreate()"></button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary">Title</label>
+            <input type="text" class="form-control" formControlName="title" placeholder="Briefly describe the issue"
+                   [class.is-invalid]="form.controls.title.touched && form.controls.title.invalid" />
+            <div class="invalid-feedback">A title is required</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary">Description</label>
+            <textarea class="form-control" rows="4" formControlName="description" placeholder="What's happening? Steps to reproduce, if relevant."
+                      [class.is-invalid]="form.controls.description.touched && form.controls.description.invalid"></textarea>
+            <div class="invalid-feedback">A description is required</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary">Priority</label>
+            <select class="form-select" formControlName="priority">
+              <option value="LOW">Low - Minor issue</option>
+              <option value="MEDIUM">Medium - Normal issue</option>
+              <option value="HIGH">High - Major feature broken</option>
+              <option value="CRITICAL">Critical - System down</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            @if (!attachment) {
+              <app-file-upload label="Attach a screenshot (optional)" accept="image/*" [imagesOnly]="true" [maxSizeMB]="10" (uploaded)="onAttachmentUploaded($event)" />
+            } @else {
+              <label class="form-label small fw-bold text-secondary d-block">Attachment</label>
+              <div class="d-flex align-items-center gap-2 small border rounded-3 px-2 py-1">
+                <i class="bi bi-paperclip"></i>
+                <span class="text-truncate flex-grow-1">{{ attachment.fileName }}</span>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" (click)="removeAttachment()"><i class="bi bi-x-lg"></i></button>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeCreate()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="creating">
+            @if (creating) {
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Submitting...
+            } @else {
+              Submit Ticket
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+}

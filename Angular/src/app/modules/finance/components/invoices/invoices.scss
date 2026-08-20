@@ -1,0 +1,66 @@
+.table-responsive {
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+  }
+}
+
+.table {
+  font-size: 0.8rem !important;
+
+  td {
+    padding: 0.5rem 0.5rem !important;
+    vertical-align: middle;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+  }
+}
+
+.invoice-number-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #1e1b4b;
+  white-space: nowrap;
+}
+
+.client-col {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.amount-col {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table td.amount-total {
+  color: #15803D;
+}
+
+.table td.due-date {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 0.68rem;
+  padding: 0.25em 0.6em;
+  font-weight: 600;
+}
+
+tr[role="button"] {
+  transition: background-color 0.15s ease;
+  &:hover {
+    background-color: var(--bos-bg-hover) !important;
+  }
+}

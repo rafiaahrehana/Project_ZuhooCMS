@@ -1,0 +1,26 @@
+<div class="container-fluid py-3">
+  <h4 class="mb-3">Asset Assignment History</h4>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+  @if (!loading && assignments.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light"><tr><th>Asset</th><th>Employee</th><th>Assigned</th><th>Returned</th><th>Notes</th></tr></thead>
+      <tbody>
+        @for (a of assignments; track a.id) {
+        <tr>
+          <td>{{ a.assetName }}</td>
+          <td>{{ a.employeeName }}</td>
+          <td>{{ a.assignedAt | date:'mediumDate' }}</td>
+          <td>{{ a.returnedAt ? (a.returnedAt | date:'mediumDate') : '-' }}</td>
+          <td class="text-muted small">{{ a.notes || '-' }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-end"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+  </div>
+  }
+  @if (!loading && !assignments.length) { <app-empty-state icon="bi-clipboard-data" message="No assignment history." /> }
+</div>

@@ -1,0 +1,141 @@
+<div class="container-fluid py-3">
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">Vendors</h4>
+      <div class="page-subtitle mt-1">Manage suppliers and payables contacts</div>
+    </div>
+    <div class="d-flex gap-2">
+      <div class="input-group input-group-sm shadow-sm rounded-3" style="width:240px">
+        <input class="form-control border-0" placeholder="Search vendors..." [(ngModel)]="search" (keyup.enter)="onSearch()">
+        <button class="btn btn-light border-0" type="button" (click)="onSearch()" title="Search"><i class="bi bi-search"></i></button>
+      </div>
+      <button *appHasPermission="'VENDOR_CREATE'" class="btn btn-primary-bos btn-sm px-3 fw-semibold" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i>New Vendor</button>
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && vendors.length) {
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0 table-dark-header">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Tax ID</th>
+            <th>Payment Terms</th>
+            <th class="text-end">Outstanding</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of vendors; track v.id) {
+          <tr>
+            <td class="fw-semibold">{{ v.name }}</td>
+            <td>
+              <div class="small">{{ v.contactPerson || '-' }}</div>
+              @if (v.email || v.phone) {
+              <div class="small text-muted">
+                @if (v.email) { <span>{{ v.email }}</span> }
+                @if (v.email && v.phone) { <span> &middot; </span> }
+                @if (v.phone) { <span>{{ v.phone }}</span> }
+              </div>
+              }
+            </td>
+            <td class="small">{{ v.taxId || '-' }}</td>
+            <td class="small">{{ v.paymentTerms || '-' }}</td>
+            <td class="text-end fw-bold" [class.text-danger]="v.outstandingBalance > 0">{{ v.outstandingBalance | bosCurrency }}</td>
+            <td>
+              @if (v.active) { <span class="badge text-bg-success">Active</span> }
+              @else { <span class="badge text-bg-secondary">Inactive</span> }
+            </td>
+            <td class="text-end text-nowrap">
+              <button *appHasPermission="'VENDOR_UPDATE'" class="btn btn-outline-secondary btn-sm py-1 px-2" (click)="openEdit(v)" title="Edit"><i class="bi bi-pencil"></i></button>
+              <button *appHasPermission="'VENDOR_UPDATE'" class="btn btn-sm py-1 px-2" [class.btn-outline-warning]="v.active" [class.btn-outline-success]="!v.active" (click)="toggle(v)" [title]="v.active ? 'Disable vendor' : 'Enable vendor'">
+                @if (v.active) { <i class="bi bi-slash-circle"></i> } @else { <i class="bi bi-check-circle"></i> }
+              </button>
+              <button *appHasPermission="'VENDOR_DELETE'" class="btn btn-outline-danger btn-sm py-1 px-2" (click)="deleteTarget = v" title="Delete"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !vendors.length) { <app-empty-state icon="bi-shop" message="No vendors found." /> }
+</div>
+
+@if (showForm) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editing ? 'Edit Vendor' : 'New Vendor' }}</h5>
+        <button type="button" class="btn-close" (click)="showForm = false"></button>
+      </div>
+      <form #f="ngForm" (ngSubmit)="save()">
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Name <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" name="name" [(ngModel)]="form.name" required maxlength="150">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Contact Person</label>
+              <input class="form-control form-control-sm" name="contactPerson" [(ngModel)]="form.contactPerson" maxlength="150">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control form-control-sm" name="email" [(ngModel)]="form.email" maxlength="150">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone</label>
+              <input class="form-control form-control-sm" name="phone" [(ngModel)]="form.phone" maxlength="50">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Tax ID</label>
+              <input class="form-control form-control-sm" name="taxId" [(ngModel)]="form.taxId" maxlength="100">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Payment Terms</label>
+              <input class="form-control form-control-sm" name="paymentTerms" [(ngModel)]="form.paymentTerms" maxlength="100" placeholder="e.g. NET 30">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address</label>
+              <input class="form-control form-control-sm" name="address" [(ngModel)]="form.address" maxlength="255">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control form-control-sm" rows="2" name="notes" [(ngModel)]="form.notes" maxlength="500"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            {{ editing ? 'Save Changes' : 'Create Vendor' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+}
+
+<app-confirm-dialog
+  [visible]="!!deleteTarget"
+  title="Delete Vendor"
+  [message]="'Delete vendor ' + (deleteTarget?.name || '') + '? This cannot be undone. Vendors with existing bills cannot be deleted.'"
+  confirmLabel="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="deleteTarget = null"
+/>

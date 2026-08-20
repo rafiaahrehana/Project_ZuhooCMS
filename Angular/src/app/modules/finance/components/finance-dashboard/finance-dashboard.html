@@ -1,0 +1,294 @@
+<div class="container-fluid py-3">
+  <div class="page-header-bar d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+    <div>
+      <h4 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Finance Dashboard</h4>
+      <p class="mb-0 small">Revenue, spend and collections for the month.</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <select class="form-select form-select-sm" style="width:150px" [(ngModel)]="month" (change)="load()">
+        @for (m of months; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
+      </select>
+      <select class="form-select form-select-sm" style="width:110px" [(ngModel)]="year" (change)="load()">
+        @for (y of years; track y) { <option [value]="y">{{ y }}</option> }
+      </select>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && data) {
+  <!-- ── Headline figures ─────────────────────────────────── -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-xl-3">
+      <div class="card fin-kpi h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fin-kpi-value">{{ data.totalRevenue | bosCurrency }}</div>
+              <div class="fin-kpi-label">Total Revenue</div>
+            </div>
+            <span class="fin-kpi-icon" style="background: var(--bos-brand-soft); color: var(--bos-brand);">
+              <i class="bi bi-currency-dollar"></i>
+            </span>
+          </div>
+          <div class="fin-kpi-change {{ changeClass(data.revenueChangePercent, true) }}">
+            <i class="bi {{ changeIcon(data.revenueChangePercent) }}"></i>
+            @if (data.revenueChangePercent != null) {
+              {{ data.revenueChangePercent }}% vs last month
+            } @else { no prior month to compare }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-xl-3">
+      <div class="card fin-kpi h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fin-kpi-value">{{ data.totalExpenses | bosCurrency }}</div>
+              <div class="fin-kpi-label">Total Expenses</div>
+            </div>
+            <span class="fin-kpi-icon" style="background: var(--bos-danger-soft); color: var(--bs-danger);">
+              <i class="bi bi-wallet2"></i>
+            </span>
+          </div>
+          <!-- Rising expenses read as bad here, unlike rising revenue. -->
+          <div class="fin-kpi-change {{ changeClass(data.expenseChangePercent, false) }}">
+            <i class="bi {{ changeIcon(data.expenseChangePercent) }}"></i>
+            @if (data.expenseChangePercent != null) {
+              {{ data.expenseChangePercent }}% vs last month
+            } @else { no prior month to compare }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-xl-3">
+      <div class="card fin-kpi h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fin-kpi-value" [class.text-danger]="data.netProfit < 0">
+                {{ data.netProfit | bosCurrency }}
+              </div>
+              <div class="fin-kpi-label">Net Profit</div>
+            </div>
+            <span class="fin-kpi-icon" style="background: var(--bos-success-soft); color: var(--bs-success);">
+              <i class="bi bi-graph-up-arrow"></i>
+            </span>
+          </div>
+          <div class="fin-kpi-change text-muted">Revenue less approved spend</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-xl-3">
+      <div class="card fin-kpi h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fin-kpi-value">{{ data.cashCollected | bosCurrency }}</div>
+              <div class="fin-kpi-label">Cash Collected</div>
+            </div>
+            <span class="fin-kpi-icon" style="background: var(--bos-info-soft); color: var(--bs-info);">
+              <i class="bi bi-arrow-left-right"></i>
+            </span>
+          </div>
+          <div class="fin-kpi-change text-muted">
+            {{ data.outstanding | bosCurrency }} outstanding
+            @if (data.overdue > 0) {
+              <span class="text-danger">· {{ data.overdue | bosCurrency }} overdue</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Second KPI row: payables, payroll, quick actions ── -->
+    <div class="col-6 col-xl-3">
+      <div class="card fin-kpi h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fin-kpi-value">{{ data.payables | bosCurrency }}</div>
+              <div class="fin-kpi-label">Accounts Payable</div>
+            </div>
+            <span class="fin-kpi-icon" style="background: var(--bos-warning-soft); color: var(--bs-warning);">
+              <i class="bi bi-receipt"></i>
+            </span>
+          </div>
+          <div class="fin-kpi-change text-muted">
+            @if (data.payablesOverdue > 0) {
+              <span class="text-danger">{{ data.payablesOverdue | bosCurrency }} overdue</span>
+            } @else { open vendor bills }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-xl-3">
+      <div class="card fin-kpi h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fin-kpi-value">{{ data.payrollCost | bosCurrency }}</div>
+              <div class="fin-kpi-label">Payroll Cost</div>
+            </div>
+            <span class="fin-kpi-icon" style="background: var(--bos-brand-soft); color: var(--bos-brand);">
+              <i class="bi bi-people"></i>
+            </span>
+          </div>
+          <div class="fin-kpi-change text-muted">net payroll for the month</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-6">
+      <div class="card fin-kpi h-100">
+        <div class="card-body">
+          <div class="fin-kpi-label mb-2">Quick Actions</div>
+          <div class="d-flex flex-wrap gap-2">
+            <a routerLink="/finance/invoices" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-plus me-1"></i>Create Invoice</a>
+            <a routerLink="/finance/expenses" class="btn btn-outline-primary btn-sm"><i class="bi bi-cash me-1"></i>Record Expense</a>
+            <a routerLink="/finance/journal-entries" class="btn btn-outline-primary btn-sm"><i class="bi bi-journal-plus me-1"></i>Journal Entry</a>
+            <a routerLink="/hrm/payroll" class="btn btn-outline-primary btn-sm"><i class="bi bi-people me-1"></i>Process Payroll</a>
+            <a routerLink="/finance/reports" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-bar-graph me-1"></i>Reports</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- ── Revenue vs Expenses ─────────────────────────────── -->
+    <div class="col-lg-7">
+      <div class="card h-100">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Revenue vs Expenses</span>
+          <span class="small text-muted">Last 6 months</span>
+        </div>
+        <div class="card-body">
+          @if (trendMax > 0) {
+          <div class="trend-chart">
+            @for (p of data.trend; track p.label + p.year) {
+            <div class="trend-col">
+              <div class="trend-bars">
+                <div class="trend-bar trend-revenue" [style.height.%]="barHeight(p.revenue)"
+                     [title]="'Revenue: ' + p.revenue"></div>
+                <div class="trend-bar trend-expense" [style.height.%]="barHeight(p.expenses)"
+                     [title]="'Expenses: ' + p.expenses"></div>
+              </div>
+              <div class="trend-label">{{ p.label }}</div>
+            </div>
+            }
+          </div>
+          <div class="d-flex gap-3 justify-content-center mt-3 small">
+            <span><span class="legend-dot trend-revenue"></span> Revenue</span>
+            <span><span class="legend-dot trend-expense"></span> Expenses</span>
+          </div>
+          } @else {
+          <p class="text-muted small mb-0">No invoiced revenue or approved spend in this window yet.</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Budget consumption ──────────────────────────────── -->
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Budget Overview</span>
+          <a routerLink="/finance/budgets" class="small text-decoration-none">View all</a>
+        </div>
+        <div class="card-body">
+          @if (!data.budgets.length) {
+          <p class="text-muted small mb-0">No budgets set for {{ data.payYear }}.</p>
+          }
+          @for (b of data.budgets; track b.category) {
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <div>
+                <span class="fw-semibold small">{{ b.category }}</span>
+                <span class="text-muted small ms-1">{{ b.spent | bosCurrency }} of {{ b.budgeted | bosCurrency }}</span>
+              </div>
+              <span class="small fw-semibold" [class.text-danger]="b.usedPercent >= 100">{{ b.usedPercent }}%</span>
+            </div>
+            <div class="progress mt-1" style="height: 6px;">
+              <!-- Capped at 100 so an overspend does not overflow the track;
+                   the percentage label still shows the true figure. -->
+              <div class="progress-bar {{ budgetClass(b.usedPercent) }}"
+                   [style.width.%]="b.usedPercent > 100 ? 100 : b.usedPercent"></div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Expense by category ─────────────────────────────── -->
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Expense by Category</span>
+          <a routerLink="/finance/expenses" class="small text-decoration-none">View all</a>
+        </div>
+        <div class="card-body">
+          @if (!data.expenseByCategory.length) {
+            <p class="text-muted small mb-0">No approved spend this month.</p>
+          }
+          @for (c of data.expenseByCategory; track c.category) {
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <span class="fw-semibold small">{{ c.category.replaceAll('_', ' ') }}</span>
+              <span class="small">{{ c.amount | bosCurrency }} <span class="text-muted">· {{ c.percent }}%</span></span>
+            </div>
+            <div class="progress mt-1" style="height: 6px;">
+              <div class="progress-bar" [style.width.%]="c.percent"></div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Recent invoices ─────────────────────────────────── -->
+    <div class="col-lg-7">
+      <div class="card h-100">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Recent Invoices</span>
+          <a routerLink="/finance/invoices" class="small text-decoration-none">View all</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Invoice</th><th>Client</th><th>Due</th>
+                <th class="text-end">Amount</th><th class="text-end">Balance</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (i of data.recentInvoices; track i.id) {
+              <tr>
+                <td class="fw-semibold">{{ i.invoiceNumber }}</td>
+                <td>{{ i.clientName || '-' }}</td>
+                <td class="small" [class.text-danger]="i.overdue">
+                  {{ i.dueDate ? (i.dueDate | date:'mediumDate') : '-' }}
+                </td>
+                <td class="text-end">{{ i.totalAmount | bosCurrency }}</td>
+                <td class="text-end" [class.text-danger]="i.balanceAmount > 0">{{ i.balanceAmount | bosCurrency }}</td>
+                <td><span class="status-badge {{ statusClass(i.status) }}">{{ i.status }}</span></td>
+              </tr>
+              }
+              @if (!data.recentInvoices.length) {
+              <tr><td colspan="6" class="text-muted small py-3">No invoices in this period.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

@@ -1,0 +1,528 @@
+<div class="container-fluid py-3">
+  <!-- Page Header & Filters -->
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div class="flex-shrink-0">
+      <h4 class="page-title mb-0">Employees</h4>
+      <div class="page-subtitle mt-1 text-nowrap">Manage your workforce</div>
+    </div>
+    
+    <div class="d-flex flex-wrap align-items-center gap-2 w-100 w-lg-auto justify-content-lg-end">
+      <!-- Search Input -->
+      <div class="position-relative flex-grow-1 flex-sm-grow-0" style="min-width: 220px;">
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+        <input 
+          type="text" 
+          class="form-control form-control-sm ps-5 pe-4 rounded-3 shadow-sm border-0" 
+          placeholder="Search name, ID, department..." 
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+          (keyup.enter)="onSearch()"
+        />
+        @if (searchQuery) {
+          <button type="button" class="btn btn-sm btn-link position-absolute top-50 end-0 translate-middle-y pe-2 text-muted text-decoration-none" (click)="searchQuery = ''; onSearch()">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        }
+      </div>
+
+      <!-- Department Filter -->
+      <select 
+        class="form-select form-select-sm rounded-3 shadow-sm border-0 fw-medium text-dark"
+        style="width: auto; min-width: 170px;" 
+        [(ngModel)]="departmentFilter" 
+        (change)="onFilterChange()"
+      >
+        <option value="">All Departments</option>
+        @for (dept of departments; track dept.id) {
+          <option [value]="dept.id">{{ dept.name }} (ID: {{ dept.id }})</option>
+        }
+      </select>
+
+      <!-- Status Filter -->
+      <select 
+        class="form-select form-select-sm rounded-3 shadow-sm border-0 fw-medium text-dark"
+        style="width: auto; min-width: 150px;" 
+        [(ngModel)]="statusFilter" 
+        (change)="onFilterChange()"
+      >
+        <option value="">All Statuses</option>
+        @for (st of statuses; track st) {
+          <option [value]="st">{{ st }}</option>
+        }
+      </select>
+
+      <!-- Reset Filters Button -->
+      @if (searchQuery || departmentFilter || statusFilter) {
+        <button class="btn btn-outline-secondary btn-sm rounded-3 px-2 shadow-sm" (click)="clearFilters()" title="Reset search & filters">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+        </button>
+      }
+
+      <!-- Download PDF Button -->
+      <button class="btn btn-light bg-white border shadow-sm btn-sm px-3 fw-semibold text-dark text-nowrap rounded-3" (click)="downloadPdf()" title="Download employee list as PDF">
+        <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF
+      </button>
+
+      <!-- Add Employee Button -->
+      <button *appHasPermission="'EMPLOYEE_CREATE'" class="btn btn-primary-bos btn-sm px-3 fw-semibold text-nowrap rounded-3 shadow-sm" (click)="showForm = true">
+        <i class="bi bi-plus-lg me-2"></i>Add Employee
+      </button>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="alert alert-danger py-2">{{ error }}</div>
+  }
+  @if (success) {
+    <div class="alert alert-success py-2">{{ success }}</div>
+  }
+  @if (loading) {
+    <app-loader />
+  }
+
+  @if (!loading && employees.length) {
+    <div class="row g-4 mb-4">
+      @for (emp of employees; track emp.id) {
+        <div class="col-12 col-md-6 col-xl-4">
+          <!-- One accent per employee drives the wash, the avatar ring and the
+               panel edges. See employees.scss for why it mixes against a token
+               rather than white. -->
+          <div class="employee-card h-100 d-flex flex-column" [style.--card-accent]="accentFor(emp)">
+
+            <!-- Identity -->
+            <div class="ec-head">
+              @if (emp.profileImageUrl) {
+                <img [src]="emp.profileImageUrl" alt="" class="ec-avatar" />
+              } @else {
+                <span class="ec-avatar ec-avatar-fallback">{{ initials(emp) }}</span>
+              }
+
+              <div class="ec-identity">
+                <a [routerLink]="['/hrm/employees', emp.id]" class="ec-name">{{ emp.firstName }} {{ emp.lastName }}</a>
+                <div class="ec-role">{{ emp.designationName || emp.jobTitle || 'Unassigned' }}</div>
+              </div>
+
+              <div class="dropdown ec-menu">
+                <button class="btn btn-sm text-muted px-1 py-0" data-bs-toggle="dropdown" aria-label="Actions">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                  <li><a class="dropdown-item" [routerLink]="['/hrm/employees', emp.id]"><i class="bi bi-person me-2"></i>Profile</a></li>
+                  @if (emp.employmentStatus !== 'TERMINATED') {
+                    <li *appHasPermission="'EMPLOYEE_DELETE'"><a class="dropdown-item text-danger" href="javascript:void(0)" (click)="terminateTarget = emp"><i class="bi bi-person-x me-2"></i>Terminate</a></li>
+                  }
+                </ul>
+              </div>
+            </div>
+
+            <!-- Two panels: who they sit with, and the employment facts -->
+            <div class="ec-panels">
+              <div class="ec-panel">
+                <div class="ec-panel-title"><i class="bi bi-building"></i>{{ emp.departmentName || 'No Department' }}</div>
+                <div class="ec-line" [title]="emp.officialEmail || 'No official email'">
+                  <i class="bi bi-envelope-check"></i><span>{{ emp.officialEmail || '-' }}</span>
+                </div>
+                <div class="ec-line" [title]="emp.email">
+                  <i class="bi bi-envelope"></i><span>{{ emp.email }}</span>
+                </div>
+                <div class="ec-line" [title]="emp.workPhone || 'No phone number'">
+                  <i class="bi bi-telephone"></i><span>{{ emp.workPhone || '-' }}</span>
+                </div>
+              </div>
+
+              <div class="ec-panel">
+                <div class="ec-panel-title"><i class="bi bi-briefcase"></i>Job Details</div>
+                <div class="ec-line" title="Employee ID">
+                  <i class="bi bi-hash"></i><span>{{ emp.employeeNumber || ('ID: ' + emp.id) }}</span>
+                </div>
+                <div class="ec-line" [title]="emp.customRoleName || 'No system role'">
+                  <i class="bi bi-shield-check"></i><span>{{ emp.customRoleName || emp.jobTitle || '-' }}</span>
+                </div>
+                <div class="ec-line" title="Hire date">
+                  <i class="bi bi-calendar3"></i><span>{{ emp.hireDate ? (emp.hireDate | date: 'MMM d, y') : '-' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Salary and standing -->
+            <div class="ec-foot">
+              @if (emp.basicSalary) {
+                <span class="ec-salary">{{ emp.basicSalary | bosCurrency:'BDT ':'symbol':'1.0-0' }}</span>
+              } @else {
+                <span class="ec-salary ec-salary-empty" title="No salary structure on file">No salary set</span>
+              }
+              <span class="ec-pill {{ statusPill(emp.employmentStatus) }}">{{ statusLabel(emp.employmentStatus) }}</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-center mt-4 mb-5">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  }
+
+  @if (!loading && !employees.length) {
+    <app-empty-state 
+      icon="bi-people" 
+      [title]="(searchQuery || departmentFilter || statusFilter) ? 'No matching employees' : 'No employees found'"
+      [message]="(searchQuery || departmentFilter || statusFilter) ? 'No employees matched your current search query or filter criteria. Try resetting filters.' : 'No employees have been added yet.'" 
+    />
+  }
+</div>
+
+<!-- Create employee modal -->
+@if (showForm) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); overflow-y: auto; overflow-x: hidden;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 900px;">
+      <div class="modal-content">
+        <form #f="ngForm" (ngSubmit)="f.valid && form.password === confirmPassword && save()">
+          <div class="modal-header" style="background:#1B2126; color:#fff;">
+            <h5 class="modal-title" style="color:#fff;">
+              <i class="bi bi-person-plus me-2"></i>Add Employee
+            </h5>
+            <button type="button" class="btn-close btn-close-white" (click)="showForm = false"></button>
+          </div>
+          <div class="modal-body">
+
+            <!-- ── Section: Basic Info ─────────────────────────── -->
+            <div class="section-label">Personal Information</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">First Name *</label>
+                <input class="form-control form-control-sm" name="firstName" [(ngModel)]="form.firstName" required minlength="2" maxlength="50" placeholder="Enter First name."/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Last Name *</label>
+                <input class="form-control form-control-sm" name="lastName" [(ngModel)]="form.lastName" required minlength="2" maxlength="50" placeholder="Enter Last name."/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Gender</label>
+                <select class="form-select form-select-sm" name="gender" [(ngModel)]="form.gender">
+                  <option [ngValue]="undefined">- Select -</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" class="form-control form-control-sm" name="dateOfBirth" [(ngModel)]="form.dateOfBirth"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Father's Name</label>
+                <input class="form-control form-control-sm" name="fatherName" [(ngModel)]="form.fatherName" maxlength="100" placeholder="Father's Name"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Mother's Name</label>
+                <input class="form-control form-control-sm" name="motherName" [(ngModel)]="form.motherName" maxlength="100" placeholder="Mother's Name"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">National ID</label>
+                <input class="form-control form-control-sm" name="nationalId" [(ngModel)]="form.nationalId" maxlength="50" placeholder="National ID"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Tax ID</label>
+                <input class="form-control form-control-sm" name="taxId" [(ngModel)]="form.taxId" maxlength="50" placeholder="Tax ID / TIN"/>
+              </div>
+
+            </div>
+
+            <!-- ── Section: Contact & Auth ────────────────────── -->
+            <div class="section-label mt-4">Contact & Account</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Login Email *</label>
+                <input type="email" class="form-control form-control-sm" name="email" [(ngModel)]="form.email" required email placeholder="name@email.com"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Official Email</label>
+                <input type="email" class="form-control form-control-sm" name="officialEmail" [(ngModel)]="form.officialEmail" email placeholder="name@email.com"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Work Phone</label>
+                <input class="form-control form-control-sm" name="workPhone" [(ngModel)]="form.workPhone" maxlength="30" placeholder="+880 1XXX XXXXXX"/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Password *</label>
+                <div class="input-group input-group-sm">
+                  <input [type]="showPassword ? 'text' : 'password'" class="form-control" name="password" [(ngModel)]="form.password" required minlength="8" placeholder="Min 8 chars"/>
+                  <button class="btn btn-outline-secondary" type="button" (click)="showPassword = !showPassword">
+                    <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Confirm Password *</label>
+                <div class="input-group input-group-sm">
+                  <input [type]="showConfirmPassword ? 'text' : 'password'" class="form-control" name="confirmPassword" [(ngModel)]="confirmPassword" required minlength="8" placeholder="Confirm password"/>
+                  <button class="btn btn-outline-secondary" type="button" (click)="showConfirmPassword = !showConfirmPassword">
+                    <i class="bi" [class.bi-eye]="!showConfirmPassword" [class.bi-eye-slash]="showConfirmPassword"></i>
+                  </button>
+                </div>
+                @if (form.password && confirmPassword && form.password !== confirmPassword) {
+                  <div class="text-danger small mt-1">Passwords do not match</div>
+                }
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Profile Picture</label>
+                <div class="d-flex align-items-center gap-2">
+                  @if (form.profileImageUrl) {
+                    <img [src]="form.profileImageUrl" alt="Profile picture" class="rounded-circle" style="width:36px;height:36px;object-fit:cover" />
+                  }
+                  <div class="flex-grow-1">
+                    <app-file-upload label="Upload from computer" accept="image/*" variant="avatar" [maxSizeMB]="5" (uploaded)="onAvatarUploaded($event)" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Section: Job Info ──────────────────────────── -->
+            <!-- Employee No. is auto-generated server-side (EMP-0001, ...) - not entered here. -->
+            <div class="section-label mt-4">Job Information</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Job Title</label>
+                <input class="form-control form-control-sm" name="jobTitle" [(ngModel)]="form.jobTitle" maxlength="100" placeholder="Senior Engineer"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Cost Center</label>
+                <input class="form-control form-control-sm" name="costCenter" [(ngModel)]="form.costCenter" maxlength="100" placeholder="CC-ENG"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Office Location</label>
+                <input class="form-control form-control-sm" name="officeLocation" [(ngModel)]="form.officeLocation" maxlength="150" placeholder="HQ - Floor 3"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Employment Type *</label>
+                <select class="form-select form-select-sm" name="employmentType" [(ngModel)]="form.employmentType" required>
+                  @for (t of types; track t) { <option [value]="t">{{ t }}</option> }
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Employment Status</label>
+                <select class="form-select form-select-sm" name="employmentStatus" [(ngModel)]="form.employmentStatus">
+                  <option [ngValue]="undefined">- Select Employment Status -</option>
+                  <option value="PROBATION">Probation</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="ON_LEAVE">On Leave</option>
+                  <option value="TERMINATED">Terminated</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Department</label>
+                <select class="form-select form-select-sm" name="departmentId" [(ngModel)]="form.departmentId">
+                  <option [ngValue]="undefined">- None -</option>
+                  @for (d of departments; track d.id) { <option [ngValue]="d.id">{{ d.name }}</option> }
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Designation</label>
+                <select class="form-select form-select-sm" name="designationId" [(ngModel)]="form.designationId">
+                  <option [ngValue]="undefined">- None -</option>
+                  @for (d of designations; track d.id) { <option [ngValue]="d.id">{{ d.name }}</option> }
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Custom Role <span class="text-muted">(permissions)</span></label>
+                <select class="form-select form-select-sm" name="assignRoleId" [(ngModel)]="assignRoleId">
+                  <option [ngValue]="null">- None -</option>
+                  @for (r of customRoles; track r.id) { <option [ngValue]="r.id">{{ r.name }}</option> }
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Reporting Manager</label>
+                <select class="form-select form-select-sm" name="reportingManagerId" [(ngModel)]="form.reportingManagerId">
+                  <option [ngValue]="undefined">- None -</option>
+                  @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }}</option> }
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Shift</label>
+                <select class="form-select form-select-sm" name="shiftId" [(ngModel)]="form.shiftId">
+                  <option [ngValue]="undefined">- None -</option>
+                  @for (s of shifts; track s.id) { <option [ngValue]="s.id">{{ s.name }} ({{s.startTime}} - {{s.endTime}})</option> }
+                </select>
+              </div>
+            </div>
+
+            <!-- ── Section: Dates ─────────────────────────────── -->
+            <div class="section-label mt-4">Important Dates</div>
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label">Hire Date</label>
+                <input type="date" class="form-control form-control-sm" name="hireDate" [(ngModel)]="form.hireDate"/>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Confirmation Date</label>
+                <input type="date" class="form-control form-control-sm" name="confirmationDate" [(ngModel)]="form.confirmationDate"/>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Probation End Date</label>
+                <input type="date" class="form-control form-control-sm" name="probationEndDate" [(ngModel)]="form.probationEndDate"/>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Contract End Date</label>
+                <input type="date" class="form-control form-control-sm" name="contractEndDate" [(ngModel)]="form.contractEndDate"/>
+              </div>
+            </div>
+
+            <!-- ── Section: Education Qualifications ────────────── -->
+            <div class="d-flex justify-content-between align-items-center mt-4">
+              <div class="section-label m-0">Education Qualifications</div>
+              <button type="button" class="btn btn-sm btn-light border text-primary" (click)="addQualification()">
+                <i class="bi bi-plus-lg me-1"></i>Add
+              </button>
+            </div>
+            
+            @for (qual of qualifications; track $index) {
+              <div class="border rounded p-3 bg-light mt-3 position-relative">
+                <button type="button" class="btn btn-sm btn-link text-danger position-absolute top-0 end-0 mt-2 me-2" (click)="removeQualification($index)">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Degree / Qualification Level *</label>
+                    <input class="form-control form-control-sm" [name]="'qualDegree'+$index" [(ngModel)]="qual.degree" required placeholder="BSc Computer Science">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Institution *</label>
+                    <input class="form-control form-control-sm" [name]="'qualInst'+$index" [(ngModel)]="qual.institution" required placeholder="University Name">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Field of Study</label>
+                    <input class="form-control form-control-sm" [name]="'qualField'+$index" [(ngModel)]="qual.fieldOfStudy" placeholder="Software Engineering">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Passing Year</label>
+                    <input type="number" class="form-control form-control-sm" [name]="'qualYear'+$index" [(ngModel)]="qual.passingYear" placeholder="2020">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Result / Grade</label>
+                    <input class="form-control form-control-sm" [name]="'qualResult'+$index" [(ngModel)]="qual.result" placeholder="CGPA 3.8">
+                  </div>
+                </div>
+              </div>
+            }
+            @if (qualifications.length === 0) {
+              <div class="text-muted small mt-2">No education qualifications added.</div>
+            }
+
+            <!-- ── Section: Compensation ──────────────────────── -->
+            <div class="section-label mt-4">Compensation</div>
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label">Basic Salary</label>
+                <input type="number" class="form-control form-control-sm" name="basicSalary" [(ngModel)]="form.basicSalary" min="0" placeholder="0.00"/>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">House Rent</label>
+                <input type="number" class="form-control form-control-sm" name="houseRent" [(ngModel)]="form.houseRent" min="0" placeholder="0.00"/>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Medical Allowance</label>
+                <input type="number" class="form-control form-control-sm" name="medicalAllowance" [(ngModel)]="form.medicalAllowance" min="0" placeholder="0.00"/>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Transport Allowance</label>
+                <input type="number" class="form-control form-control-sm" name="transportAllowance" [(ngModel)]="form.transportAllowance" min="0" placeholder="0.00"/>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Billable Rate <span class="text-muted">(per hour)</span></label>
+                <input type="number" class="form-control form-control-sm" name="billableRate" [(ngModel)]="form.billableRate" min="0" placeholder="0.00"/>
+              </div>
+            </div>
+
+            <!-- ── Section: Bank Details ──────────────────────── -->
+            <div class="section-label mt-4">Bank Details</div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Bank Name</label>
+                <input class="form-control form-control-sm" name="bankName" [(ngModel)]="form.bankName" maxlength="100" placeholder="First National Bank"/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Bank Account Number</label>
+                <input class="form-control form-control-sm" name="bankAccountNumber" [(ngModel)]="form.bankAccountNumber" maxlength="100" placeholder="IBAN / Account No."/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Bank Routing Number</label>
+                <!-- inputmode="numeric" brings up the number pad on mobile without
+                     using type="number", which would strip a leading zero - and
+                     plenty of bank codes start with one (e.g. 060, 090). -->
+                <input
+                  class="form-control form-control-sm"
+                  [class.is-invalid]="routingInvalid"
+                  name="bankRoutingNumber"
+                  [(ngModel)]="form.bankRoutingNumber"
+                  inputmode="numeric"
+                  maxlength="9"
+                  placeholder="9 digits, e.g. 125260115" />
+                @if (routingInvalid) {
+                  <div class="invalid-feedback d-block">
+                    Routing number must be exactly 9 digits.
+                  </div>
+                } @else {
+                  <div class="form-text small">
+                    Bank (3) + district (2) + branch (3) + check digit (1). Found on the employee's cheque book.
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- ── Section: Emergency Contact ────────────────── -->
+            <div class="section-label mt-4">Emergency Contact</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Contact Name</label>
+                <input class="form-control form-control-sm" name="emergencyContactName" [(ngModel)]="form.emergencyContactName" maxlength="100" placeholder="Enter Contact Name"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Contact Phone</label>
+                <input class="form-control form-control-sm" name="emergencyContactPhone" [(ngModel)]="form.emergencyContactPhone" maxlength="30" placeholder="+880 1XXX XXXXXX"/>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Relation</label>
+                <input class="form-control form-control-sm" name="emergencyContactRelation" [(ngModel)]="form.emergencyContactRelation" maxlength="50" placeholder="Spouse / Parent"/>
+              </div>
+            </div>
+            
+            <!-- ── Section: Location Details ────────────────── -->
+            <div class="section-label mt-4 mb-3">Address</div>
+            <div class="row g-3">
+              <div class="col-12 mt-1">
+                <app-location [showActions]="false"></app-location>
+              </div>
+            </div>
+
+          </div><!-- /modal-body -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving">
+              @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Create Employee
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+
+
+<app-confirm-dialog
+  [visible]="!!terminateTarget"
+  title="Terminate Employee"
+  [message]="
+    'Terminate ' +
+    $safeNavigationMigration(terminateTarget?.firstName) +
+    ' ' +
+    $safeNavigationMigration(terminateTarget?.lastName) +
+    '? This cannot be undone.'
+  "
+  confirmLabel="Terminate"
+  (confirmed)="confirmTerminate()"
+  (cancelled)="terminateTarget = null"
+/>

@@ -1,0 +1,181 @@
+<div class="container-fluid py-3">
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">Vendor Bills</h4>
+      <div class="page-subtitle mt-1">Record and pay supplier bills</div>
+    </div>
+    <div class="d-flex gap-2">
+      <select class="form-select form-select-sm shadow-sm border-0 rounded-3" style="width:180px" [(ngModel)]="statusFilter" (change)="page=0;load()">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+      <button *appHasPermission="'VENDOR_BILL_CREATE'" class="btn btn-primary-bos btn-sm px-3 fw-semibold" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i>New Bill</button>
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && bills.length) {
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0 table-dark-header">
+        <thead>
+          <tr>
+            <th>Bill #</th>
+            <th>Vendor</th>
+            <th>Bill Date</th>
+            <th>Due Date</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">Paid</th>
+            <th class="text-end">Balance</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of bills; track b.id) {
+          <tr>
+            <td class="small font-monospace">{{ b.billNumber }}</td>
+            <td class="text-truncate" style="max-width:180px" [title]="b.vendorName || ''">{{ b.vendorName }}</td>
+            <td class="small text-nowrap">{{ b.billDate | date:'mediumDate' }}</td>
+            <td class="small text-nowrap">{{ b.dueDate | date:'mediumDate' }}</td>
+            <td class="text-end">{{ b.totalAmount | bosCurrency }}</td>
+            <td class="text-end text-success">{{ b.paidAmount | bosCurrency }}</td>
+            <td class="text-end fw-bold">{{ b.balanceAmount | bosCurrency }}</td>
+            <td><span class="badge {{ statusClass(b.status) }}">{{ b.status }}</span></td>
+            <td class="text-end text-nowrap">
+              @if (b.status === 'DRAFT') {
+                <button *appHasPermission="'VENDOR_BILL_APPROVE'" class="btn btn-outline-primary btn-sm py-1 px-2" [disabled]="approvingId === b.id" (click)="approve(b)">
+                  @if (approvingId === b.id) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                  Approve
+                </button>
+                <button *appHasPermission="'VENDOR_BILL_CANCEL'" class="btn btn-outline-danger btn-sm py-1 px-2" (click)="cancelTarget = b" title="Cancel bill"><i class="bi bi-x-circle"></i></button>
+              }
+              @if (b.status === 'APPROVED' || b.status === 'PARTIALLY_PAID') {
+                <button *appHasPermission="'VENDOR_BILL_PAYMENT'" class="btn btn-outline-success btn-sm py-1 px-2" (click)="openPay(b)">Pay</button>
+                <button *appHasPermission="'VENDOR_BILL_CANCEL'" class="btn btn-outline-danger btn-sm py-1 px-2" (click)="cancelTarget = b" title="Cancel bill (blocked once payments exist)"><i class="bi bi-x-circle"></i></button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !bills.length) { <app-empty-state icon="bi-receipt-cutoff" message="No vendor bills found." /> }
+</div>
+
+@if (showForm) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">New Vendor Bill</h5>
+        <button type="button" class="btn-close" (click)="showForm = false"></button>
+      </div>
+      <form #f="ngForm" (ngSubmit)="save()">
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Vendor <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" name="vendorId" [(ngModel)]="form.vendorId" required>
+                <option [ngValue]="null" disabled>Select a vendor</option>
+                @for (v of vendors; track v.id) { <option [ngValue]="v.id">{{ v.name }}</option> }
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Bill Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm" name="billDate" [(ngModel)]="form.billDate" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Due Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm" name="dueDate" [(ngModel)]="form.dueDate" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Subtotal <span class="text-danger">*</span></label>
+              <input type="number" min="0.01" step="0.01" class="form-control form-control-sm" name="subtotal" [(ngModel)]="form.subtotal" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Tax Amount</label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" name="taxAmount" [(ngModel)]="form.taxAmount">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Vendor Reference</label>
+              <input class="form-control form-control-sm" name="vendorReference" [(ngModel)]="form.vendorReference" maxlength="100" placeholder="Vendor's invoice #">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Posts To (Expense Account)</label>
+              <select class="form-select form-select-sm" name="expenseAccountId" [(ngModel)]="form.expenseAccountId">
+                <option [ngValue]="null">Operating Expenses (default)</option>
+                @for (a of expenseAccounts; track a.id) { <option [ngValue]="a.id">{{ a.accountCode }} · {{ a.accountName }}</option> }
+              </select>
+              <div class="form-text">Which expense account this bill hits in the General Ledger on approval.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <input class="form-control form-control-sm" name="description" [(ngModel)]="form.description" maxlength="255">
+            </div>
+            <div class="col-12 text-end">
+              <div class="small text-muted">Subtotal: {{ (form.subtotal || 0) | bosCurrency }} &nbsp;+&nbsp; Tax: {{ (form.taxAmount || 0) | bosCurrency }}</div>
+              <div class="fw-bold">Total: {{ formTotal() | bosCurrency }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving || !form.vendorId">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Create Bill
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+}
+
+@if (payTarget) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pay Bill - {{ payTarget.billNumber }}</h5>
+        <button type="button" class="btn-close" (click)="payTarget = null"></button>
+      </div>
+      <div class="modal-body">
+        @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+        <p class="small text-muted mb-2">
+          {{ payTarget.vendorName }} &middot; Outstanding balance: {{ payTarget.balanceAmount | bosCurrency }}
+        </p>
+        <label class="form-label small">Amount</label>
+        <input type="number" min="0.01" step="0.01" class="form-control form-control-sm"
+               [max]="payTarget.balanceAmount" [(ngModel)]="payAmount" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="payTarget = null">Cancel</button>
+        <button type="button" class="btn btn-success btn-sm"
+                [disabled]="!payAmount || payAmount <= 0 || payAmount > payTarget.balanceAmount || paying"
+                (click)="confirmPay()">
+          @if (paying) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Record Payment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<app-confirm-dialog
+  [visible]="!!cancelTarget"
+  title="Cancel Bill"
+  [message]="'Cancel bill ' + (cancelTarget?.billNumber || '') + '? This cannot be undone. Bills with recorded payments cannot be cancelled.'"
+  confirmLabel="Cancel Bill"
+  (confirmed)="confirmCancel()"
+  (cancelled)="cancelTarget = null"
+/>

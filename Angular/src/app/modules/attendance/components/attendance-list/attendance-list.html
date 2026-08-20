@@ -1,0 +1,358 @@
+<div class="container-fluid py-3">
+  <!-- Page Header & Filters -->
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">Attendance Records</h4>
+      <div class="page-subtitle mt-1">Track and manage employee daily check-ins and check-outs</div>
+    </div>
+    
+    <div class="d-flex flex-wrap align-items-center gap-2 w-100 w-lg-auto justify-content-lg-end">
+      <!-- Search Employee Box -->
+      <div class="position-relative flex-grow-1 flex-sm-grow-0" style="min-width: 200px;">
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+        <input 
+          type="text" 
+          class="form-control form-control-sm ps-5 pe-4 rounded-3 shadow-sm border-0" 
+          placeholder="Search employee..." 
+          [(ngModel)]="searchQuery"
+          (input)="onFilterChange()"
+          (keyup.enter)="onFilterChange()"
+        />
+        @if (searchQuery) {
+          <button type="button" class="btn btn-sm btn-link position-absolute top-50 end-0 translate-middle-y pe-2 text-muted text-decoration-none" (click)="searchQuery = ''; onFilterChange()">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        }
+      </div>
+
+      <!-- Date Filter Picker -->
+      <div class="d-flex align-items-center gap-1 bg-white rounded-3 shadow-sm border-0 px-2 py-1">
+        <i class="bi bi-calendar3 text-muted small ms-1"></i>
+        <input 
+          type="date" 
+          class="form-control form-control-sm border-0 shadow-none bg-transparent" 
+          style="width: 135px;" 
+          [(ngModel)]="dateFilter"
+          (change)="onFilterChange()"
+          title="Filter by Attendance Date"
+        />
+      </div>
+
+      <!-- Status Filter Dropdown -->
+      <select 
+        class="form-select form-select-sm rounded-3 shadow-sm border-0 fw-medium text-secondary" 
+        style="width: auto; min-width: 140px;" 
+        [(ngModel)]="statusFilter" 
+        (change)="onFilterChange()"
+      >
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+
+      <!-- Reset Filters Button -->
+      @if (searchQuery || dateFilter || statusFilter) {
+        <button class="btn btn-outline-secondary btn-sm rounded-3 px-2 shadow-sm" (click)="clearFilters()" title="Reset all filters">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+        </button>
+      }
+
+      <!-- Backfill Absentees Button (owner only) -->
+      @if (isOwner) {
+        <button class="btn btn-outline-secondary btn-sm px-3 fw-semibold text-nowrap rounded-3 shadow-sm" (click)="openBackfill()" title="Create ABSENT records for working days with no check-in">
+          <i class="bi bi-calendar-x me-2"></i>Backfill Absentees
+        </button>
+      }
+
+      <!-- Add Attendance Button -->
+      <button *appHasPermission="'ATTENDANCE_MARK'" class="btn btn-primary-bos btn-sm px-3 fw-semibold text-nowrap rounded-3 shadow-sm" (click)="openAdd()">
+        <i class="bi bi-plus-lg me-2"></i>Add Attendance
+      </button>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+  
+  @if (!loading && consolidatedRecords.length) {
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>Employee</th><th>Date</th><th>Shift</th><th>In</th><th>Out</th><th>Hours</th><th>OT</th><th>Status</th><th>Late</th><th>Early Out</th><th>Approved</th><th></th></tr></thead>
+        <tbody>
+          @for (r of consolidatedRecords; track (r.id + '_' + r.attendanceDate)) {
+          <tr>
+            <td>
+              <div class="fw-medium text-dark">{{ r.employeeName }}</div>
+              @if (r.employeeNumber) { <div class="text-muted small">{{ r.employeeNumber }}</div> }
+            </td>
+            <td class="small">{{ r.attendanceDate | date:'mediumDate' }}</td>
+            <td class="small">{{ r.shiftType ? r.shiftType.replaceAll('_', ' ') : '-' }}</td>
+            <td class="small font-monospace">
+              {{ r.checkInTime || '-' }}
+              @if (r.checkInMethod) { <div class="text-muted" style="font-size: 0.68rem">{{ r.checkInMethod.replaceAll('_', ' ') }}</div> }
+            </td>
+            <td class="small font-monospace">
+              {{ r.checkOutTime || '-' }}
+              @if (r.checkOutMethod) { <div class="text-muted" style="font-size: 0.68rem">{{ r.checkOutMethod.replaceAll('_', ' ') }}</div> }
+            </td>
+            <td class="small fw-semibold">{{ r.totalWorkingHours || '-' }}</td>
+            <td class="small">@if (r.isOvertime && r.overtimeHours) { <span class="badge text-bg-info">{{ r.overtimeHours | number:'1.0-2' }}h</span> } @else { - }</td>
+            <td><span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span></td>
+            <!-- Just the duration. The column is already headed "Late", so
+                 "5 min late" repeats itself, and it was also being shown a
+                 second time beside the status badge. -->
+            <td>@if (showsLate(r)) { <span class="badge text-bg-warning">{{ lateLabel(r.lateMinutes) }}</span> } @else { <span class="small">-</span> }</td>
+            <td>@if (r.leftEarly && r.earlyMinutes) { <span class="badge text-bg-warning">{{ lateLabel(r.earlyMinutes) }}</span> } @else { <span class="small">-</span> }</td>
+            <td><span class="badge" [class.text-bg-success]="r.approved" [class.text-bg-light]="!r.approved">{{ r.approved ? 'Yes' : 'No' }}</span></td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-outline-secondary btn-sm py-0 me-1" title="View full record" (click)="viewing = r"><i class="bi bi-eye"></i></button>
+              @if (!r.approved) { <button *appHasPermission="'ATTENDANCE_APPROVE'" class="btn btn-outline-success btn-sm py-0" (click)="approve(r)">Approve</button> }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end bg-transparent border-top-0 py-3"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+  </div>
+  }
+  @if (!loading && !consolidatedRecords.length) { 
+    <app-empty-state icon="bi-calendar-check" [message]="(searchQuery || dateFilter || statusFilter) ? 'No attendance records match your search or date filter.' : 'No attendance records.'" /> 
+  }
+</div>
+
+@if (showForm) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Attendance</h5>
+        <button type="button" class="btn-close" (click)="showForm = false"></button>
+      </div>
+      <form #f="ngForm" (ngSubmit)="save()">
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Employee</label>
+              <select class="form-select form-select-sm" name="employeeId" [(ngModel)]="form.employeeId" required>
+                <option [ngValue]="undefined" disabled>Select an employee</option>
+                @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }} ({{ e.employeeNumber }})</option> }
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control form-control-sm" name="attendanceDate" [(ngModel)]="form.attendanceDate" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Status</label>
+              <select class="form-select form-select-sm" name="status" [(ngModel)]="form.status" required>
+                @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Check In</label>
+              <div class="input-group input-group-sm">
+                <input type="time" class="form-control form-control-sm" name="checkInTime" [(ngModel)]="form.checkInTime">
+                <button type="button" class="btn btn-outline-secondary" (click)="setNow('checkInTime')">Now</button>
+              </div>
+              <div class="form-text">If the employee has an assigned shift, late is detected automatically from this time.</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Check Out</label>
+              <div class="input-group input-group-sm">
+                <input type="time" class="form-control form-control-sm" name="checkOutTime" [(ngModel)]="form.checkOutTime">
+                <button type="button" class="btn btn-outline-secondary" (click)="setNow('checkOutTime')">Now</button>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Shift Type</label>
+              <select class="form-select form-select-sm" name="shiftType" [(ngModel)]="form.shiftType">
+                <option [ngValue]="undefined">From assignment</option>
+                @for (s of shiftTypes; track s) { <option [value]="s">{{ s.replaceAll('_', ' ') }}</option> }
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Overtime Hours</label>
+              <input type="number" min="0" step="0.25" class="form-control form-control-sm" name="overtimeHours" [(ngModel)]="form.overtimeHours" placeholder="0">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="isLate" name="isLate" [(ngModel)]="form.isLate">
+                <label class="form-check-label small" for="isLate">Mark late manually</label>
+              </div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="leftEarly" name="leftEarly" [(ngModel)]="form.leftEarly">
+                <label class="form-check-label small" for="leftEarly">Left early</label>
+              </div>
+            </div>
+            @if (form.isLate) {
+            <div class="col-md-3">
+              <label class="form-label">Late Minutes</label>
+              <input type="number" min="0" class="form-control form-control-sm" name="lateMinutes" [(ngModel)]="form.lateMinutes">
+            </div>
+            <div class="col-md-9">
+              <label class="form-label">Late Reason</label>
+              <input class="form-control form-control-sm" name="lateReason" [(ngModel)]="form.lateReason" maxlength="255" placeholder="Traffic, medical appointment…">
+            </div>
+            }
+            @if (form.leftEarly) {
+            <div class="col-md-3">
+              <label class="form-label">Early Minutes</label>
+              <input type="number" min="0" class="form-control form-control-sm" name="earlyMinutes" [(ngModel)]="form.earlyMinutes">
+            </div>
+            <div class="col-md-9">
+              <label class="form-label">Early Departure Reason</label>
+              <input class="form-control form-control-sm" name="earlyDepartureReason" [(ngModel)]="form.earlyDepartureReason" maxlength="255">
+            </div>
+            }
+            <div class="col-12">
+              <div class="form-text mb-2">Manual "late" only applies if the employee has no assigned shift to compare against - otherwise the shift's start time + grace period decides it.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control form-control-sm" rows="2" name="adminNotes" [(ngModel)]="form.adminNotes" maxlength="500"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Full attendance record: every field the backend tracks for the day. -->
+@if (viewing; as r) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)" (click)="viewing = null">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Attendance — {{ r.employeeName }} · {{ r.attendanceDate | date:'mediumDate' }}</h5>
+        <button type="button" class="btn-close" (click)="viewing = null"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 small mb-3">
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Employee ID</span><span class="fw-semibold">{{ r.employeeNumber || '-' }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Status</span><span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Shift</span><span class="fw-semibold">{{ r.shiftType ? r.shiftType.replaceAll('_', ' ') : '-' }}</span></div>
+          <div class="col-6 col-md-3"><span class="text-muted d-block">Working Hours</span><span class="fw-semibold">{{ r.totalWorkingHours ?? '-' }}</span></div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <h6 class="text-uppercase small fw-bold text-success mb-2"><i class="bi bi-box-arrow-in-right me-1"></i>Check-In</h6>
+            <table class="table table-sm mb-0 small">
+              <tbody>
+                <tr><td class="text-muted">Time</td><td class="text-end font-monospace">{{ r.checkInTime || '-' }}</td></tr>
+                <tr><td class="text-muted">Method</td><td class="text-end">{{ r.checkInMethod ? r.checkInMethod.replaceAll('_', ' ') : '-' }}</td></tr>
+                <tr><td class="text-muted">Location</td><td class="text-end">{{ r.checkInLocation || '-' }}</td></tr>
+                <tr><td class="text-muted">Coordinates</td><td class="text-end">{{ r.checkInLatitude && r.checkInLongitude ? (r.checkInLatitude + ', ' + r.checkInLongitude) : '-' }}</td></tr>
+                <tr><td class="text-muted">Reason</td><td class="text-end">{{ r.checkInReason || '-' }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-uppercase small fw-bold text-danger mb-2"><i class="bi bi-box-arrow-right me-1"></i>Check-Out</h6>
+            <table class="table table-sm mb-0 small">
+              <tbody>
+                <tr><td class="text-muted">Time</td><td class="text-end font-monospace">{{ r.checkOutTime || '-' }}</td></tr>
+                <tr><td class="text-muted">Method</td><td class="text-end">{{ r.checkOutMethod ? r.checkOutMethod.replaceAll('_', ' ') : '-' }}</td></tr>
+                <tr><td class="text-muted">Location</td><td class="text-end">{{ r.checkOutLocation || '-' }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="col-md-6">
+            <h6 class="text-uppercase small fw-bold text-warning mb-2"><i class="bi bi-clock-history me-1"></i>Late & Early Departure</h6>
+            <table class="table table-sm mb-0 small">
+              <tbody>
+                <tr><td class="text-muted">Late</td><td class="text-end">{{ r.isLate ? (lateLabel(r.lateMinutes) || 'Yes') : 'No' }}</td></tr>
+                <tr><td class="text-muted">Late Reason</td><td class="text-end">{{ r.lateReason || '-' }}</td></tr>
+                <tr><td class="text-muted">Left Early</td><td class="text-end">{{ r.leftEarly ? (lateLabel(r.earlyMinutes) || 'Yes') : 'No' }}</td></tr>
+                <tr><td class="text-muted">Early Departure Reason</td><td class="text-end">{{ r.earlyDepartureReason || '-' }}</td></tr>
+                <tr><td class="text-muted">Overtime</td><td class="text-end">{{ r.isOvertime && r.overtimeHours ? ((r.overtimeHours | number:'1.0-2') + ' h') : 'No' }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-uppercase small fw-bold text-info mb-2"><i class="bi bi-shield-check me-1"></i>Verification & Approval</h6>
+            <table class="table table-sm mb-0 small">
+              <tbody>
+                <tr><td class="text-muted">Biometric Verified</td><td class="text-end">{{ r.isVerified ? 'Yes' : 'No' }}</td></tr>
+                <tr><td class="text-muted">Verification Score</td><td class="text-end">{{ r.verificationScore ? (r.verificationScore | number:'1.0-2') : '-' }}</td></tr>
+                <tr><td class="text-muted">Approved</td><td class="text-end">{{ r.approved ? 'Yes' : 'No' }}</td></tr>
+                <tr><td class="text-muted">Approved By</td><td class="text-end">{{ r.approvedBy || '-' }}</td></tr>
+                <tr><td class="text-muted">Approved At</td><td class="text-end">{{ r.approvedDateTime ? (r.approvedDateTime | date:'medium') : '-' }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        @if (r.notes) {
+          <div class="small text-muted mt-3"><i class="bi bi-sticky me-1"></i>{{ r.notes }}</div>
+        }
+        <div class="text-muted mt-3" style="font-size: 0.72rem">
+          Recorded {{ r.createdAt | date:'medium' }}@if (r.updatedAt) { · Updated {{ r.updatedAt | date:'medium' }} }
+        </div>
+      </div>
+      <div class="modal-footer">
+        @if (!r.approved) {
+          <button *appHasPermission="'ATTENDANCE_APPROVE'" type="button" class="btn btn-success btn-sm" (click)="approve(r); viewing = null">
+            <i class="bi bi-check-lg me-1"></i>Approve
+          </button>
+        }
+        <button type="button" class="btn btn-secondary btn-sm" (click)="viewing = null">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+@if (showBackfill) {
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Backfill Absentees</h5>
+        <button type="button" class="btn-close" (click)="showBackfill = false"></button>
+      </div>
+      <div class="modal-body">
+        @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+        <p class="text-secondary small mb-3">
+          Creates <strong>ABSENT</strong> records for every employee who had no check-in on a
+          working day in this range. Company holidays, weekly-off days, approved leave and
+          pre-hire dates are skipped, and days that already have a record are left untouched — so
+          it's safe to run more than once.
+        </p>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">From</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="backfillStart" [max]="backfillEnd">
+          </div>
+          <div class="col-6">
+            <label class="form-label">To</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="backfillEnd" [min]="backfillStart">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showBackfill = false">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="backfilling || !backfillStart || !backfillEnd" (click)="runBackfill()">
+          @if (backfilling) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Run Backfill
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

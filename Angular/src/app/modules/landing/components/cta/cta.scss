@@ -1,0 +1,42 @@
+// The band itself is painted by .accent-section-dark (global.scss, LANDING
+// ACCENT SYSTEM). Only what layers on top of it lives here.
+//
+// The old 800x800 inline-styled .glow-bg div is gone: it overflowed every
+// phone viewport and was invisible only because .landing-wrapper clips
+// overflow-x. Two ::before ellipses do the same job without a fixed size.
+.cta-section {
+  isolation: isolate;
+  padding-block: clamp(3rem, 9vw, 6rem);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -30% -10% auto -10%;
+    height: 140%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 50% at 18% 0%,   rgba(103, 232, 249, 0.30), transparent 62%),
+      radial-gradient(ellipse 55% 45% at 86% 100%, rgba(244, 114, 182, 0.26), transparent 62%);
+    filter: blur(70px);
+  }
+
+  // The global .landing-wrapper .section-title gradient is tuned for light
+  // surfaces (it starts at #1E1B4B). On this dark band that reads as a hole,
+  // so the stops flip to light.
+  .section-title {
+    background: linear-gradient(120deg, #FFFFFF 0%, #E9D8FF 55%, #A5F3FC 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .lead { color: rgba(255, 255, 255, 0.78) !important; }
+}
+
+@media (max-width: 575.98px) {
+  .cta-section .btn {
+    width: 100%;
+    padding-inline: 1rem !important;
+  }
+}

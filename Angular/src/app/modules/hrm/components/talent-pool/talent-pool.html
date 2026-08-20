@@ -1,0 +1,165 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="bi bi-people me-2"></i>Talent Pool</h4>
+      <p class="small mb-0 page-subtitle">Qualified candidates kept warm for future openings</p>
+    </div>
+    <div class="d-flex gap-2">
+      <div class="position-relative">
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted small"></i>
+        <input class="form-control form-control-sm ps-4" style="width: 220px" placeholder="Search name, skill, role..."
+               [(ngModel)]="keyword" (keyup.enter)="page = 0; load()" />
+      </div>
+      <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-primary btn-sm text-nowrap" (click)="openAdd()">
+        <i class="bi bi-plus-lg me-1"></i>Add Candidate
+      </button>
+    </div>
+  </div>
+
+  @if (error && !showForm) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && candidates.length) {
+  <div class="row g-3">
+    @for (c of candidates; track c.id) {
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 border-0 shadow-sm rounded-4">
+        <div class="card-body">
+          <div class="d-flex align-items-start gap-2 mb-2">
+            <span class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold text-white"
+                  style="width: 40px; height: 40px; background: var(--bos-brand); font-size: 0.85rem">{{ initials(c) }}</span>
+            <div class="min-w-0 flex-grow-1">
+              <div class="fw-bold text-truncate">{{ c.name }}</div>
+              <div class="text-muted small text-truncate">{{ c.desiredRole || 'Open to roles' }}</div>
+            </div>
+            @if (c.rating) {
+              <span class="text-warning small text-nowrap"><i class="bi bi-star-fill me-1"></i>{{ c.rating }}/5</span>
+            }
+          </div>
+
+          <div class="small text-muted mb-2">
+            <div class="text-truncate"><i class="bi bi-envelope me-1"></i>{{ c.email }}</div>
+            @if (c.phone) { <div><i class="bi bi-telephone me-1"></i>{{ c.phone }}</div> }
+          </div>
+
+          @if (skillList(c).length) {
+          <div class="d-flex flex-wrap gap-1 mb-2">
+            @for (s of skillList(c); track s) { <span class="badge badge-soft-primary">{{ s }}</span> }
+          </div>
+          }
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge {{ reasonBadge(c.reason) }}">{{ reasonLabel(c.reason) }}</span>
+            @if (c.sourceJobTitle) { <span class="text-muted" style="font-size: 0.72rem">from {{ c.sourceJobTitle }}</span> }
+          </div>
+          @if (c.notes) { <div class="text-muted small mt-2 text-truncate" [title]="c.notes"><i class="bi bi-sticky me-1"></i>{{ c.notes }}</div> }
+        </div>
+        <div class="card-footer bg-transparent d-flex justify-content-between align-items-center py-2">
+          <div class="d-flex gap-2">
+            @if (c.resumeUrl) { <a [href]="c.resumeUrl" target="_blank" rel="noopener" class="small" title="Resume"><i class="bi bi-file-earmark-person"></i> CV</a> }
+            @if (c.linkedInUrl) { <a [href]="c.linkedInUrl" target="_blank" rel="noopener" class="small" title="LinkedIn"><i class="bi bi-linkedin"></i></a> }
+          </div>
+          <div class="text-nowrap">
+            <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-secondary btn-sm py-0 me-1" (click)="openEdit(c)"><i class="bi bi-pencil"></i></button>
+            <button *appHasPermission="'APPLICATION_UPDATE'" class="btn btn-outline-danger btn-sm py-0" (click)="deleteTarget = c"><i class="bi bi-trash"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+  <div class="d-flex justify-content-end mt-3">
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+  }
+  @if (!loading && !candidates.length) {
+    <app-empty-state icon="bi-people" [message]="keyword ? 'No candidates match your search.' : 'The talent pool is empty — pool a strong candidate from a closed application, or add one directly.'" />
+  }
+
+  <!-- Add / edit modal -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Candidate' : 'Add to Talent Pool' }}</h5>
+          <button class="btn-close" (click)="showForm = false; editingId = null"></button>
+        </div>
+        <div class="modal-body">
+          @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+          <div class="row g-2">
+            @if (!editingId) {
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">From a closed application <span class="text-muted fw-normal">(optional — copies their details)</span></label>
+              <select class="form-select form-select-sm" [(ngModel)]="poolFromApplicationId">
+                <option [ngValue]="null">— Add manually —</option>
+                @for (a of closedApplications; track a.id) { <option [ngValue]="a.id">{{ a.applicantName }} ({{ a.status }})</option> }
+              </select>
+            </div>
+            }
+            @if (!poolFromApplicationId) {
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Name <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.name" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control form-control-sm" [(ngModel)]="form.email" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Phone</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.phone" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Desired Role</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.desiredRole" placeholder="e.g. Senior Backend Engineer" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Resume / CV Link</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.resumeUrl" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">LinkedIn</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.linkedInUrl" />
+            </div>
+            <div class="col-md-8">
+              <label class="form-label small text-secondary mb-1">Skills <span class="text-muted fw-normal">(comma-separated)</span></label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.skills" placeholder="Java, Angular, PostgreSQL" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Rating</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.rating">
+                <option [ngValue]="undefined">—</option>
+                @for (n of [1,2,3,4,5]; track n) { <option [ngValue]="n">{{ n }} / 5</option> }
+              </select>
+            </div>
+            }
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Why pooled</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.reason">
+                @for (r of reasons; track r) { <option [value]="r">{{ reasonLabel(r) }}</option> }
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label small text-secondary mb-1">Notes</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.notes" placeholder="Strong technically, revisit when a senior role opens..." />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="saving" (click)="save()">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            {{ editingId ? 'Save Changes' : 'Add to Pool' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Remove from Pool"
+    [message]="'Remove ' + (deleteTarget?.name || '') + ' from the talent pool?'"
+    confirmLabel="Remove" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

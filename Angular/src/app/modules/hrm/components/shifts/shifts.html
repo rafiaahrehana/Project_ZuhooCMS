@@ -1,0 +1,150 @@
+<div class="container-fluid py-3">
+  <!-- Header Bar -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-clock text-primary me-2"></i>Shifts</h4>
+      <p class="text-muted small mb-0">Configure working hours, timings, and grace periods</p>
+    </div>
+    <button *appHasPermission="'SHIFT_CREATE'" class="btn btn-primary btn-sm px-3 rounded-2 fw-medium" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i> Create Shift</button>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2 rounded-2 shadow-sm mb-3">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2 rounded-2 shadow-sm mb-3">{{ success }}</div> }
+
+  @if (loading) { <app-loader /> }
+
+  <!-- Create/Edit Form Card -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold"><i class="bi bi-plus-circle me-2"></i>{{ isEdit ? 'Edit' : 'Create' }} Shift</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label small fw-semibold text-secondary mb-1">Shift Name <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="text" [(ngModel)]="form.name" placeholder="General, Night, Morning etc." />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold text-secondary mb-1">Shift Type</label>
+          <select class="form-select form-select-sm border-light-subtle rounded-2" [(ngModel)]="form.shiftType">
+            @for (type of shiftTypes; track type) { <option [value]="type">{{ type }}</option> }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold text-secondary mb-1">Start Time <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="text" [(ngModel)]="form.startTime" placeholder="09:00" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold text-secondary mb-1">End Time <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="text" [(ngModel)]="form.endTime" placeholder="18:00" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold text-secondary mb-1">Grace Period (Minutes)</label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="number" [(ngModel)]="form.gracePeriodMinutes" min="0" />
+        </div>
+        <div class="col-md-5">
+          <label class="form-label small fw-semibold text-secondary mb-1">Weekly Off Days</label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="text" [(ngModel)]="form.weeklyOffDays" placeholder="Saturday, Sunday" />
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-4 pb-1">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="flexible" [(ngModel)]="form.flexible" />
+            <label class="form-check-label small fw-semibold text-secondary" for="flexible">Flexible Timing</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="nightShift" [(ngModel)]="form.nightShift" />
+            <label class="form-check-label small fw-semibold text-secondary" for="nightShift">Night Shift</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold text-secondary mb-1">Description</label>
+          <textarea class="form-control form-control-sm border-light-subtle rounded-2" rows="2" [(ngModel)]="form.description" placeholder="Optional description..."></textarea>
+        </div>
+      </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.name || !form.startTime || !form.endTime || saving" (click)="save()">
+            @if (saving) { Saving... } @else { Save }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Shifts Grid Layout -->
+  @if (!loading && shifts.length) {
+  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+    @for (s of shifts; track s.id) {
+    <div class="col">
+      <div class="card h-100 border border-light-subtle rounded-3 bg-white shadow-sm transition-hover" [style.border-top]="'3px solid ' + shiftColor(s.shiftType)">
+        <div class="card-body p-4 d-flex flex-column">
+          
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h5 class="fw-bold text-dark mb-0">{{ s.name }}</h5>
+              <span class="badge text-bg-light border text-secondary mt-1 fw-semibold">{{ s.shiftType }}</span>
+            </div>
+            <!-- Status switch switch button representation -->
+            <!-- Deliberately NOT .btn-success. That class is a solid green fill
+                 with white ink (global.scss forces `color: #fff !important`),
+                 and pairing it with .bg-success-subtle left white text on a pale
+                 green pill - the label was invisible. The subtle background and
+                 the matching text colour are the whole treatment. -->
+            <button *appHasPermission="'SHIFT_UPDATE'" class="btn btn-sm rounded-pill px-3 py-1 fw-semibold text-capitalize border"
+                    [class.bg-success-subtle]="s.active" [class.text-success]="s.active"
+                    [class.btn-light]="!s.active" [class.text-secondary]="!s.active"
+                    (click)="toggleActive(s)" title="Toggle Status">
+              {{ s.active ? 'Active' : 'Inactive' }}
+            </button>
+          </div>
+
+          <!-- Timing Grid -->
+          <div class="bg-light p-3 rounded-2 mb-3 d-flex align-items-center justify-content-between text-dark fw-bold">
+            <span class="fs-6"><i class="bi bi-clock-fill text-primary me-2"></i>{{ s.startTime }}</span>
+            <span class="text-secondary small">&rarr;</span>
+            <span class="fs-6">{{ s.endTime }}</span>
+          </div>
+
+          <!-- Shift details -->
+          <div class="row g-2 small text-secondary mb-4">
+            <div class="col-6"><i class="bi bi-calendar-check me-1"></i>Off: {{ s.weeklyOffDays || 'None' }}</div>
+            <div class="col-6"><i class="bi bi-hourglass-split me-1"></i>Grace: {{ s.gracePeriodMinutes || 0 }} min</div>
+            <div class="col-6">
+              <i class="bi" [class.bi-check-circle-fill]="s.flexible" [class.text-success]="s.flexible" [class.bi-dash-circle]="!s.flexible" [class.text-muted]="!s.flexible"></i> Flexible timing
+            </div>
+            <div class="col-6">
+              <i class="bi" [class.bi-check-circle-fill]="s.nightShift" [class.text-warning]="s.nightShift" [class.bi-dash-circle]="!s.nightShift" [class.text-muted]="!s.nightShift"></i> Night Shift
+            </div>
+          </div>
+
+          <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+            <span class="text-muted small text-truncate" style="max-width: 180px;">{{ s.description || 'No description provided.' }}</span>
+            <div class="d-flex gap-1">
+              <button *appHasPermission="'SHIFT_UPDATE'" class="btn btn-outline-secondary btn-sm border-light-subtle px-2 py-1 rounded-2" (click)="openEdit(s)"><i class="bi bi-pencil small"></i></button>
+              <button *appHasPermission="'SHIFT_DELETE'" class="btn btn-outline-danger btn-sm border-danger-subtle px-2 py-1 rounded-2" style="background-color: #fff5f5;" (click)="deleteTarget = s"><i class="bi bi-trash small"></i></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+
+  <div class="d-flex justify-content-end p-3 bg-white rounded-3 shadow-sm mb-4">
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+  }
+
+  @if (!loading && !shifts.length && !showForm) {
+    <app-empty-state icon="bi-clock" message="No shifts found." />
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Shift" message="Are you sure you want to delete this shift?" (confirmed)="confirmDelete()" (cancelled)="deleteTarget = null" />
+</div>

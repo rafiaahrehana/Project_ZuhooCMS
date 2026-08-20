@@ -1,0 +1,19 @@
+<div class="sidebar-nav py-3">
+  <ul class="nav flex-column">
+    <li class="nav-item">
+      <!-- Labels are wrapped so the collapsed rail can hide them; a bare text
+           node cannot be targeted by CSS. -->
+      <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
+      </a>
+    </li>
+    @for (group of visibleGroups; track group.label) {
+      <div class="nav-group-label"><span>{{ group.label }}</span></div>
+      @for (item of group.items; track item.link) {
+        <a class="nav-link" [routerLink]="item.link" routerLinkActive="active">
+          <i class="bi {{ item.icon }}"></i><span>{{ item.label }}</span>
+        </a>
+      }
+    }
+  </ul>
+</div>

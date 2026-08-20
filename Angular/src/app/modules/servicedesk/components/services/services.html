@@ -1,0 +1,186 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-1 fw-bold">Services</h4>
+      <p class="text-muted small mb-0">Explore all available services and request the one you need.</p>
+    </div>
+    <button *appHasPermission="'SERVICE_CATALOG_CREATE'" class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> New Service</button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Service' : 'New Service' }}</h5>
+          <button class="btn-close" (click)="showForm = false; editingId = null"></button>
+        </div>
+        <div class="modal-body">
+      <div class="row g-2">
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Name *" [(ngModel)]="form.name" /></div>
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Name (Bangla)" [(ngModel)]="form.nameBn" /></div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="form.categoryId">
+            <option [ngValue]="undefined">Category</option>
+            @for (c of categories; track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="form.workflowTemplateId">
+            <option [ngValue]="undefined">Workflow</option>
+            @for (w of workflows; track w.id) { <option [ngValue]="w.id">{{ w.name }}</option> }
+          </select>
+        </div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Price" [(ngModel)]="form.price" /></div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="form.priceType">
+            @for (t of priceTypes; track t) { <option [value]="t">{{ priceTypeLabel(t) }}</option> }
+          </select>
+        </div>
+        <div class="col-md-2"><input class="form-control form-control-sm" placeholder="Currency" [(ngModel)]="form.currency" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Est. days" [(ngModel)]="form.estimatedDays" /></div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="form.defaultPriority">
+            <option [ngValue]="undefined">Priority</option>
+            @for (p of priorities; track p) { <option [value]="p">{{ p | titlecase }}</option> }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="form.visibility">
+            @for (v of visibilities; track v) { <option [value]="v">{{ v | titlecase }}</option> }
+          </select>
+        </div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Max orders" [(ngModel)]="form.maximumOrders" /></div>
+        <div class="col-12">
+          <textarea class="form-control form-control-sm" rows="2" placeholder="Description" [(ngModel)]="form.description"></textarea>
+        </div>
+        <div class="col-12 d-flex flex-wrap gap-3 pt-1">
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="svc-featured" [(ngModel)]="form.featured" /><label class="form-check-label small" for="svc-featured">Featured</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="svc-remote" [(ngModel)]="form.remote" /><label class="form-check-label small" for="svc-remote">Remote</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="svc-onsite" [(ngModel)]="form.onSite" /><label class="form-check-label small" for="svc-onsite">On-site</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="svc-online" [(ngModel)]="form.online" /><label class="form-check-label small" for="svc-online">Online</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="svc-auto" [(ngModel)]="form.autoApproval" /><label class="form-check-label small" for="svc-auto">Auto-approval</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="svc-quote" [(ngModel)]="form.requiresQuotation" /><label class="form-check-label small" for="svc-quote">Requires quotation</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="svc-docs" [(ngModel)]="form.requiresDocuments" /><label class="form-check-label small" for="svc-docs">Requires documents</label></div>
+        </div>
+      </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.name" (click)="save()">{{ editingId ? 'Update' : 'Save' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && services.length) {
+  <div class="input-group mb-3" style="max-width: 320px;">
+    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+    <input class="form-control border-start-0 ps-0" placeholder="Search services..." [(ngModel)]="searchTerm" />
+  </div>
+
+  @if (!filteredServices.length) {
+    <app-empty-state icon="bi-search" [message]="'No services match \'' + searchTerm + '\'.'" />
+  }
+
+  @for (group of groupedServices; track group.categoryName; let gi = $index) {
+  <div class="d-flex align-items-center gap-2 mb-3" [class.mt-4]="gi > 0">
+    <h5 class="mb-0 fw-bold">{{ group.categoryName }}</h5>
+    <span class="badge bg-light text-secondary border rounded-pill">{{ group.services.length }} Service{{ group.services.length === 1 ? '' : 's' }}</span>
+  </div>
+  <div class="row g-3 mb-2">
+    @for (s of group.services; track s.id) {
+    <div class="col-md-6 col-lg-4 col-xl-3">
+      <!-- One accent per card drives the top bar, the background wash, the icon
+           tile, the price and the Edit button. -->
+      <div class="service-card rounded-4 p-4 h-100 d-flex flex-column position-relative"
+           [style.--card-accent]="getIconColor(s, gi)">
+        
+        <!-- Status & Featured Badges -->
+        <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+          @if (s.featured) {
+            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill" style="font-size: 0.7rem;">Featured</span>
+          }
+          <span class="badge rounded-pill" 
+                [class.bg-success-subtle]="s.active" [class.text-success]="s.active" 
+                [class.bg-secondary-subtle]="!s.active" [class.text-secondary]="!s.active"
+                style="font-size: 0.7rem;">
+            {{ s.active ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+
+        <!-- Icon Wrapper -->
+        <div class="icon-wrapper rounded-3 d-inline-flex align-items-center justify-content-center mb-3 flex-shrink-0"
+             [style.background]="getIconBg(s, gi)"
+             [style.color]="getIconColor(s, gi)"
+             style="width: 48px; height: 48px;">
+          <i class="bi fs-5" [ngClass]="getServiceIcon(s.name)"></i>
+        </div>
+
+        <!-- Card Content -->
+        <div class="flex-grow-1">
+          <h5 class="fw-bold mb-2 fs-6 text-dark">{{ s.name }}</h5>
+          @if (s.description) {
+            <p class="text-muted small mb-3 service-desc">{{ s.description }}</p>
+          }
+        </div>
+
+        <!-- Meta info (Price, Days, and Location Tags) -->
+        <div class="mt-auto pt-3 card-divider">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="fw-bold service-price">
+              @if (s.price != null && !s.requiresQuotation) {
+                {{ s.price | bosCurrency: (s.currency || 'BDT ') : 'symbol' : '1.0-0' }}
+              } @else {
+                <span class="text-muted small fw-medium">Quoted per request</span>
+              }
+            </div>
+            @if (s.estimatedDays) {
+              <div class="text-muted small fw-semibold"><i class="bi bi-clock me-1"></i>{{ s.estimatedDays }} Days</div>
+            }
+          </div>
+
+          <!-- Tags -->
+          <div class="d-flex flex-wrap gap-1 mb-3">
+            @if (s.onSite) { <span class="badge bg-light text-secondary border rounded-pill" style="font-size: 0.7rem;">On-site</span> }
+            @if (s.online) { <span class="badge bg-light text-secondary border rounded-pill" style="font-size: 0.7rem;">Online</span> }
+            @if (s.remote) { <span class="badge bg-light text-secondary border rounded-pill" style="font-size: 0.7rem;">Remote</span> }
+          </div>
+
+          <!-- Admin Actions -->
+          <div class="d-flex gap-1 pt-2 card-divider">
+            <button *appHasPermission="'SERVICE_CATALOG_UPDATE'" class="btn btn-outline-secondary btn-xs flex-grow-1 bg-white" (click)="toggle(s)">
+              {{ s.active ? 'Disable' : 'Enable' }}
+            </button>
+            <a *appHasPermission="'SERVICE_CATALOG_UPDATE'" class="btn btn-outline-secondary btn-xs bg-white" [routerLink]="['/servicedesk/services', s.id, 'form-fields']" title="Form fields">
+              <i class="bi bi-input-cursor-text"></i>
+            </a>
+            <a *appHasPermission="'SERVICE_CATALOG_UPDATE'" class="btn btn-outline-secondary btn-xs bg-white" [routerLink]="['/servicedesk/services', s.id, 'required-documents']" title="Required documents">
+              <i class="bi bi-file-earmark-text"></i>
+            </a>
+            <a *appHasPermission="'SERVICE_CATALOG_UPDATE'" class="btn btn-outline-secondary btn-xs bg-white" [routerLink]="['/servicedesk/services', s.id, 'prerequisites']" title="Prerequisites">
+              <i class="bi bi-diagram-3"></i>
+            </a>
+            <button *appHasPermission="'SERVICE_CATALOG_UPDATE'" class="btn btn-accent-outline btn-xs" (click)="openEdit(s)" title="Edit">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button *appHasPermission="'SERVICE_CATALOG_DELETE'" class="btn btn-outline-danger btn-xs" (click)="deleteTarget = s">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    }
+  </div>
+  }
+  }
+  @if (!loading && !services.length && !showForm) { <app-empty-state icon="bi-grid" message="No services in the catalog yet." /> }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Service" message="Delete this service from the catalog?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

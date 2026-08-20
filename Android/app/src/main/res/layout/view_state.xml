@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Internal layout for com.raf.zuhoo.ui.common.StateView — inflated into itself, not used
+     directly in any activity_*.xml. See StateView.java for the show*() API. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/stateLoading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        app:indicatorColor="@color/brand_primary"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/stateMessageGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/space_32"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/stateIcon"
+            android:layout_width="@dimen/icon_size_empty_state"
+            android:layout_height="@dimen/icon_size_empty_state"
+            android:importantForAccessibility="no"
+            app:tint="@color/text_muted" />
+
+        <TextView
+            android:id="@+id/stateTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_16"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleSmall" />
+
+        <TextView
+            android:id="@+id/stateSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_4"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.Zuhoo.BodyMedium"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/stateAction"
+            style="@style/Widget.Zuhoo.Button.Secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_20"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</merge>

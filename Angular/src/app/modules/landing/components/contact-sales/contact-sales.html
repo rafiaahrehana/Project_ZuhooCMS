@@ -1,0 +1,106 @@
+<div class="contact-page min-vh-100 py-6 position-relative overflow-hidden">
+
+  <div class="glow-bg position-absolute top-0 start-0 translate-middle rounded-circle z-0" style="width: 600px; height: 600px; background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(255,255,255,0) 70%);"></div>
+
+  <div class="container py-5 position-relative z-1 contact-head">
+
+    <!-- Header. The back link sits on its own row, left-aligned - inline
+         before the centred h1 it visually collided with the heading. -->
+    <div class="mb-3">
+      <a routerLink="/home" class="back-link text-decoration-none"><i class="bi bi-arrow-left"></i> Back to Home</a>
+    </div>
+    <div class="text-center mb-5">
+      <h1 class="display-4 fw-bold section-title">Contact our Sales Team</h1>
+      <p class="lead max-w-2xl mx-auto mt-3">
+        Discover how ZuhooCMS can help your enterprise scale securely and efficiently. We're here to answer any questions you have.
+      </p>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="row g-0">
+            <!-- Left Info Panel -->
+            <div class="col-md-5 contact-info-panel text-white p-5 d-flex flex-column justify-content-between">
+              <div>
+                <h3 class="fw-bold mb-4">Get in touch</h3>
+                <p class="text-white-50 mb-5">Fill out the form and our team will get back to you within 24 hours.</p>
+                
+                <div class="d-flex align-items-center gap-3 mb-4">
+                  <i class="bi bi-telephone-fill fs-5 text-lavender"></i>
+                  <span>+880 1712-345678</span>
+                </div>
+                <div class="d-flex align-items-center gap-3 mb-4">
+                  <i class="bi bi-envelope-fill fs-5 text-lavender"></i>
+                  <span>sales@businessos.com.bd</span>
+                </div>
+                <div class="d-flex align-items-center gap-3 mb-4">
+                  <i class="bi bi-geo-alt-fill fs-5 text-lavender"></i>
+                  <span>Banani, Road 11<br>Dhaka 1213, Bangladesh</span>
+                </div>
+              </div>
+              
+              <div class="d-flex gap-3 mt-5">
+                <a href="#" class="text-white opacity-75 text-white-hover fs-5"><i class="bi bi-twitter-x"></i></a>
+                <a href="#" class="text-white opacity-75 text-white-hover fs-5"><i class="bi bi-linkedin"></i></a>
+              </div>
+            </div>
+            
+            <!-- Right Form Panel -->
+            <div class="col-md-7 bg-white p-5">
+              @if (sent) {
+                <div class="text-center py-5">
+                  <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                  <h4 class="fw-bold mt-3 text-dark">Thanks - message received</h4>
+                  <p class="text-muted">Our team will get back to you within 24 hours.</p>
+                </div>
+              } @else {
+              <form (submit)="submitForm($event)">
+                <div class="row g-3">
+                  @if (error) { <div class="col-12"><div class="alert alert-danger py-2 mb-0">{{ error }}</div></div> }
+                  <div class="col-md-6">
+                    <label class="form-label text-dark fw-bold">Name</label>
+                    <input type="text" name="name" class="form-control form-control-lg bg-light border-0" required
+                           placeholder="John Doe" [(ngModel)]="form.name">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-dark fw-bold">Company</label>
+                    <input type="text" name="companyName" class="form-control form-control-lg bg-light border-0"
+                           placeholder="Company Ltd." [(ngModel)]="form.companyName">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-dark fw-bold">Work Email</label>
+                    <input type="email" name="email" class="form-control form-control-lg bg-light border-0" required
+                           placeholder="john@company.com" [(ngModel)]="form.email">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-dark fw-bold">Phone <span class="fw-normal text-muted">(optional)</span></label>
+                    <input type="tel" name="phone" class="form-control form-control-lg bg-light border-0"
+                           placeholder="01XXXXXXXXX" [(ngModel)]="form.phone">
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-dark fw-bold">How can we help you?</label>
+                    <textarea name="message" class="form-control form-control-lg bg-light border-0" rows="4"
+                              placeholder="Tell us about your project or needs..." [(ngModel)]="form.message"></textarea>
+                  </div>
+                  <!-- Honeypot: invisible to humans, filled by form bots, checked server-side. -->
+                  <div class="visually-hidden" aria-hidden="true">
+                    <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off" [(ngModel)]="form.website"></label>
+                  </div>
+                  <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-contact-solid btn-lg w-100 py-3 shadow-sm rounded-3"
+                            [disabled]="sending || !form.name.trim() || !form.email.trim()">
+                      @if (sending) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                      Send Message
+                    </button>
+                  </div>
+                </div>
+              </form>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

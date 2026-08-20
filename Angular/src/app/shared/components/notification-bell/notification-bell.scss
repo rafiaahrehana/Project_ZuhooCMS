@@ -1,0 +1,57 @@
+// The bell is a header action and has to be the same 40px circle as the ones
+// beside it, or the row's spacing goes uneven. It cannot inherit that from
+// navbar.scss - view encapsulation stops the navbar's rules at this
+// component's boundary - so the size lives here.
+.btn-nav-action {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--bos-muted);
+  cursor: pointer;
+  transition: background-color var(--bos-transition), color var(--bos-transition);
+
+  &:hover {
+    background-color: var(--bos-bg-hover);
+    color: var(--bos-brand);
+  }
+}
+
+// Unread count. Matched to the reference: rose #FB7185, 10px/800, pinned 2px
+// inside the button's top-right corner.
+//
+// It is pinned rather than centred on the corner. The previous version used
+// Bootstrap's .top-0.start-100.translate-middle, which puts the badge's centre
+// on the corner point so half of it hangs outside the 40px button - that is
+// what made it look misplaced, and it was also what forced the extra gap
+// before the avatar.
+//
+// The ring is the other half of the trick: a 2px border in the header's own
+// colour cuts the badge away from the bell glyph underneath, so the two read as
+// separate objects instead of overlapping shapes. It follows --bos-navbar-bg,
+// so it stays correct in both themes with no dark-mode rule.
+.notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  border: 2px solid var(--bos-navbar-bg);
+  background-color: #FB7185;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 14px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.notification-item:hover {
+  background-color: #f8fafc;
+}

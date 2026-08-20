@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/screen_padding_h"
+        android:paddingTop="@dimen/screen_padding_v"
+        android:paddingBottom="@dimen/space_32">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/title_company_overview"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleLarge" />
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/space_16"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:indicatorColor="@color/brand_primary" />
+
+        <TextView
+            android:id="@+id/label_finance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:text="@string/label_finance_this_month"
+            android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+
+        <GridLayout
+            android:id="@+id/financeGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_8"
+            android:columnCount="2">
+
+            <include
+                android:id="@+id/statRevenue"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statExpenses"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statNetProfit"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statCashCollected"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statOutstanding"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statOverdue"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+        </GridLayout>
+
+        <TextView
+            android:id="@+id/label_hr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:text="@string/label_hr_today"
+            android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+
+        <GridLayout
+            android:id="@+id/hrGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_8"
+            android:columnCount="2">
+
+            <include
+                android:id="@+id/statTotalEmployees"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statPresentToday"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statOnLeaveToday"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statAbsentToday"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statOpenPositions"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+            <include
+                android:id="@+id/statPendingApprovals"
+                layout="@layout/item_overview_stat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4" />
+
+        </GridLayout>
+
+    </LinearLayout>
+
+</ScrollView>

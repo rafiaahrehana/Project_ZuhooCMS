@@ -1,0 +1,118 @@
+// Mirrors the palette in modules/dashboard/components/dashboard.component.scss so the
+// client portal reads as the same product. Both are component-scoped, hence the copy.
+$deep-slate: #0f172a;
+$secondary-slate: #334155;
+
+.container-fluid {
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.text-dark-contrast {
+  color: $deep-slate !important;
+  font-weight: 700;
+}
+
+.text-secondary-contrast {
+  color: $secondary-slate !important;
+  font-weight: 500;
+}
+
+// Pastel stat card text sets
+.text-amber-contrast { color: #b45309 !important; }
+.text-amber-dark { color: #78350f !important; }
+.text-blue-contrast { color: #0369a1 !important; }
+.text-blue-dark { color: #0c4a6e !important; }
+.text-teal-contrast { color: #0f766e !important; }
+.text-teal-dark { color: #115e59 !important; }
+.text-danger-contrast { color: #991b1b !important; }
+.text-danger-dark { color: #7f1d1d !important; }
+
+// Stat card icons
+.text-amber { color: #f59e0b; }
+.text-blue { color: #0284c7; }
+.text-teal { color: #0d9488; }
+.text-rose { color: #e11d48; }
+
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  border-radius: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  }
+}
+
+.stat-card {
+  min-height: 110px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08) !important;
+  }
+}
+
+.card-header {
+  border-bottom: 1px solid #f1f5f9;
+  background-color: transparent !important;
+}
+
+.view-all-link {
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+// Quick action tiles — colored icon chip on a white card
+.quick-action-card {
+  --qa: #8b5cf6;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--qa);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  }
+
+  .qa-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--qa);
+    background: color-mix(in srgb, var(--qa) 14%, #fff);
+  }
+
+  .qa-title {
+    color: $deep-slate;
+    font-weight: 700;
+  }
+
+  &.qa-purple { --qa: #8b5cf6; }
+  &.qa-blue   { --qa: #0284c7; }
+  &.qa-teal   { --qa: #0d9488; }
+  &.qa-indigo { --qa: #4f46e5; }
+}
+
+.list-group-item {
+  border: none;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child { border-bottom: none; }
+}

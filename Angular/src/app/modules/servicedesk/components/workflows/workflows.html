@@ -1,0 +1,224 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0"><i class="bi bi-diagram-2 me-2"></i>Workflows</h4>
+    <div class="d-flex gap-2">
+      <button *appHasPermission="'WORKFLOW_CREATE'" class="btn btn-outline-secondary btn-sm" (click)="openSuggest()">
+        <i class="bi bi-stars me-1"></i>Suggest with AI
+      </button>
+      <button *appHasPermission="'WORKFLOW_CREATE'" class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i>New Workflow</button>
+    </div>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <!-- AI suggestion modal: goal in, parsed stage list out, one-click create. -->
+  @if (showSuggestModal) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold"><i class="bi bi-stars me-1"></i>Suggest a Workflow with AI</h5>
+          <button class="btn-close" [disabled]="suggesting || creatingSuggestion" (click)="showSuggestModal = false"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label small text-secondary mb-1">What should the workflow manage?</label>
+          <div class="d-flex gap-2">
+            <input class="form-control form-control-sm" type="text"
+                   placeholder="e.g. A workflow for onboarding new enterprise clients"
+                   [(ngModel)]="suggestGoal" [disabled]="suggesting" (keyup.enter)="suggestWorkflow()" />
+            <button class="btn btn-primary btn-sm text-nowrap" [disabled]="!suggestGoal.trim() || suggesting" (click)="suggestWorkflow()">
+              @if (suggesting) { <span class="spinner-border spinner-border-sm"></span> } @else { Suggest }
+            </button>
+          </div>
+          <div class="text-muted small mt-1">Grounded in your existing workflow templates.</div>
+          @if (suggestError) { <div class="text-danger small mt-2">{{ suggestError }}</div> }
+
+          <!-- Structured suggestion: the parsed workflow, creatable in one click. -->
+          @if (suggestedName) {
+          <div class="border-top mt-3 pt-3">
+            <div class="fw-semibold mb-2"><i class="bi bi-diagram-2 me-1 text-primary"></i>{{ suggestedName }}</div>
+            <ol class="small mb-0 ps-3">
+              @for (s of suggestedStages; track $index) {
+              <li class="mb-1">
+                <span class="fw-semibold">{{ s.name }}</span>
+                @if (s.needsApproval) { <span class="badge text-bg-warning ms-1" style="font-size: 0.62rem">APPROVAL</span> }
+                @if (s.purpose) { <div class="text-muted">{{ s.purpose }}</div> }
+              </li>
+              }
+            </ol>
+          </div>
+          }
+
+          <!-- Fallback: unparseable model output, shown verbatim with newlines kept. -->
+          @if (suggestion) { <div class="small mt-3 border-top pt-2" style="white-space: pre-wrap">{{ suggestion }}</div> }
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" [disabled]="creatingSuggestion" (click)="showSuggestModal = false">Close</button>
+          @if (suggestedName) {
+          <button *appHasPermission="'WORKFLOW_CREATE'" class="btn btn-primary btn-sm" [disabled]="creatingSuggestion" (click)="createFromSuggestion()">
+            @if (creatingSuggestion) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            @else { <i class="bi bi-plus-lg me-1"></i> }
+            Create this workflow
+          </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Workflow' : 'New Workflow' }}</h5>
+          <button class="btn-close" (click)="showForm = false; editingId = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12"><input class="form-control form-control-sm" placeholder="Name *" [(ngModel)]="form.name" /></div>
+            <div class="col-12"><textarea class="form-control form-control-sm" rows="3" placeholder="Description" [(ngModel)]="form.description"></textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false; editingId = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!form.name" (click)="save()">{{ editingId ? 'Update' : 'Save' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && templates.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Name</th><th>Description</th><th class="text-center">Version</th><th class="text-center">Stages</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (t of templates; track t.id) {
+          <tr>
+            <td class="fw-medium">{{ t.name }}</td>
+            <td class="text-muted small text-truncate" style="max-width:400px">{{ t.description || '-' }}</td>
+            <td class="text-center">v{{ t.version }}</td>
+            <td class="text-center">{{ t.stages?.length || 0 }}</td>
+            <td><span class="badge" [class.text-bg-success]="t.active" [class.text-bg-secondary]="!t.active">{{ t.active ? 'Active' : 'Inactive' }}</span></td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-outline-primary btn-sm me-1" (click)="openStages(t)"><i class="bi bi-list-ol"></i> Stages</button>
+              <button *appHasPermission="'WORKFLOW_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="toggle(t)">{{ t.active ? 'Disable' : 'Enable' }}</button>
+              <button *appHasPermission="'WORKFLOW_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(t)"><i class="bi bi-pencil"></i></button>
+              <button *appHasPermission="'WORKFLOW_DELETE'" class="btn btn-outline-danger btn-sm" (click)="deleteTarget = t"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !templates.length && !showForm) { <app-empty-state icon="bi-diagram-2" message="No workflows yet. Workflows define the stages a service request goes through." /> }
+
+  @if (stageTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Stages · {{ stageTarget.name }}</h5>
+          <button class="btn-close" (click)="closeStages()"></button>
+        </div>
+        <div class="modal-body">
+          @if (stageTarget.stages?.length) {
+          <div class="table-responsive mb-3">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr><th class="text-center">Order</th><th>Name</th><th>Description</th><th class="text-center">Est. Days</th><th class="text-center">SLA (h)</th><th>Assignee</th><th class="text-center">Approval</th><th class="text-center">Payment</th><th></th></tr>
+              </thead>
+              <tbody>
+                @for (s of stageTarget.stages; track s.id) {
+                <tr>
+                  <td class="text-center">{{ s.stageOrder }}</td>
+                  <td class="fw-medium">{{ s.name }}</td>
+                  <td class="text-muted small text-truncate" style="max-width:200px">{{ s.description || '-' }}</td>
+                  <td class="text-center">{{ s.estimatedDays || '-' }}</td>
+                  <td class="text-center">{{ s.slaHours || '-' }}</td>
+                  <td class="text-muted small">{{ s.assigneeRole || '-' }}</td>
+                  <td class="text-center">
+                    @if (s.requiresApproval) { <i class="bi bi-check-lg text-success"></i> } @else { - }
+                  </td>
+                  <td class="text-center">
+                    @if (s.requiresPayment) { <span class="badge text-bg-light border">{{ s.paymentPercent }}%</span> } @else { - }
+                  </td>
+                  <td class="text-end text-nowrap">
+                    <button *appHasPermission="'WORKFLOW_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="openEditStage(s)"><i class="bi bi-pencil"></i></button>
+                    <button *appHasPermission="'WORKFLOW_UPDATE'" class="btn btn-outline-danger btn-sm" (click)="deleteStageId = s.id!"><i class="bi bi-trash"></i></button>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          } @else {
+          <div class="text-muted small mb-3">No stages defined yet.</div>
+          }
+
+          <div class="border-top pt-3">
+            <div class="fw-semibold small mb-2">{{ editingStageId ? 'Edit Stage' : 'Add Stage' }}</div>
+            <div class="row g-2">
+              <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Stage name *" [(ngModel)]="stageForm.name" /></div>
+              <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Order" [(ngModel)]="stageForm.stageOrder" /></div>
+              <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Est. days" [(ngModel)]="stageForm.estimatedDays" /></div>
+              <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="SLA hours" [(ngModel)]="stageForm.slaHours" /></div>
+              <div class="col-md-2">
+                <!-- Fed by the company's roles (Roles & Permissions). Falls back
+                     to free text if the role list isn't readable for this user. -->
+                @if (companyRoles.length) {
+                <select class="form-select form-select-sm" [(ngModel)]="stageForm.assigneeRole"
+                        title="Which role handles this stage - shown as the intended approver on approval requests">
+                  <option [ngValue]="undefined">Assignee role: any</option>
+                  @for (r of companyRoles; track r) { <option [value]="r">{{ r }}</option> }
+                </select>
+                } @else {
+                <input class="form-control form-control-sm" placeholder="Assignee role" [(ngModel)]="stageForm.assigneeRole" />
+                }
+              </div>
+              <div class="col-12"><textarea class="form-control form-control-sm" rows="2" placeholder="Description" [(ngModel)]="stageForm.description"></textarea></div>
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="stage-approval" [(ngModel)]="stageForm.requiresApproval" />
+                  <label class="form-check-label small" for="stage-approval">Requires approval</label>
+                </div>
+              </div>
+              <div class="col-md-6 d-flex align-items-center gap-2">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="stage-payment" [(ngModel)]="stageForm.requiresPayment" />
+                  <label class="form-check-label small" for="stage-payment">Milestone payment due on completion</label>
+                </div>
+                @if (stageForm.requiresPayment) {
+                <input class="form-control form-control-sm" style="max-width: 90px;" type="number" min="1" max="100"
+                       placeholder="%" title="% of agreed price" [(ngModel)]="stageForm.paymentPercent" />
+                }
+              </div>
+              <div class="col-12 d-flex gap-2" *appHasPermission="'WORKFLOW_UPDATE'">
+                <button class="btn btn-primary btn-sm" [disabled]="!stageForm.name" (click)="saveStage()">{{ editingStageId ? 'Update stage' : 'Add stage' }}</button>
+                @if (editingStageId) { <button class="btn btn-secondary btn-sm" (click)="editingStageId = null; stageForm = { name: '' }">Cancel edit</button> }
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="closeStages()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Workflow" message="Delete this workflow?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+  <app-confirm-dialog [visible]="deleteStageId != null" title="Remove Stage" message="Remove this stage from the workflow?" (confirmed)="removeStage(deleteStageId!)" (cancelled)="deleteStageId = null" />
+</div>

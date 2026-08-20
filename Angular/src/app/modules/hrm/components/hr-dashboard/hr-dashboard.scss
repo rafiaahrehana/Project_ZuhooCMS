@@ -1,0 +1,40 @@
+// Donut is a plain SVG circle with a dashed stroke - no chart library pulled in
+// for a single visual. Rotated so segments start at 12 o'clock rather than 3.
+.donut-svg {
+  transform: rotate(-90deg);
+}
+
+.donut-segment {
+  transition: stroke-width 0.2s ease;
+  &:hover { stroke-width: 22; }
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.quick-action-tile {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  padding: 0.75rem 0.5rem;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--bos-border);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(30, 27, 75, 0.1);
+  }
+
+  .qa-label {
+    display: block;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    color: var(--bos-text);
+  }
+}

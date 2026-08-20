@@ -1,0 +1,221 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0">Service Requests</h4>
+    <div class="d-flex gap-2 align-items-center">
+      @if (!isClient) {
+      <ul class="nav nav-pills nav-sm">
+        @for (t of tabs; track t.key) {
+        <li class="nav-item"><a class="nav-link py-1" role="button" [class.active]="tab === t.key" (click)="setTab(t.key)">{{ t.label }}</a></li>
+        }
+      </ul>
+      }
+      @if (isClient) {
+      <button class="btn btn-primary btn-sm text-nowrap" (click)="openCreate()">
+        <i class="bi bi-rocket-takeoff me-1"></i>Initialize Project
+      </button>
+      }
+    </div>
+  </div>
+
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && requests.length) {
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Request</th><th>Service</th><th>Client</th><th>Status</th>
+            <th>Priority</th><th>SLA</th><th>Tasks</th><th>Assigned To</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (request of requests; track request.id) {
+          <tr [class.table-danger]="request.slaBreach">
+            <td><a [routerLink]="[detailBasePath, request.id]">{{ request.title }}</a></td>
+            <td>{{ request.hubServiceName || '-' }}</td>
+            <td>{{ request.clientName || '-' }}</td>
+            <td><span class="badge {{ statusClass(request.status) }}">{{ request.status }}</span></td>
+            <td><span class="badge {{ priorityClass(request.priority) }}">{{ request.priority }}</span></td>
+            <td>
+              @if (request.slaBreach) { <span class="badge text-bg-danger">BREACHED</span> }
+              @else { {{ request.slaDeadline ? (request.slaDeadline | date:'short') : '-' }} }
+            </td>
+            <td>{{ request.completedTaskCount }}/{{ request.taskCount }}</td>
+            <td>{{ request.assignedEmployeeName || '-' }}</td>
+            <td class="text-end">
+              <a [routerLink]="[detailBasePath, request.id]" class="btn btn-sm btn-outline-primary text-nowrap">
+                <i class="bi bi-eye me-1"></i>Details
+              </a>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+
+  @if (!loading && !requests.length) { <app-empty-state icon="bi-ticket" message="No requests found." /> }
+
+  @if (showForm) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fs-6 fw-semibold">New Service Request</h5>
+          <button type="button" class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-8">
+              <label class="form-label small text-secondary mb-1">Title *</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.title" maxlength="255" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary mb-1">Priority</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.priority">
+                @for (p of priorities; track p) { <option [value]="p">{{ p | titlecase }}</option> }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Service *</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.hubServiceId" (change)="onServiceChange()">
+                <option [ngValue]="null">— Select service —</option>
+                @for (s of services; track s.id) { <option [ngValue]="s.id">{{ s.name }}</option> }
+              </select>
+            </div>
+
+            @if (formFields.length) {
+            <div class="col-12">
+              <div class="border rounded-3 p-2 bg-light-subtle">
+                <div class="small fw-semibold text-secondary mb-2"><i class="bi bi-ui-checks me-1"></i>Service Details</div>
+                <div class="row g-2">
+                  @for (field of formFields; track field.id) {
+                  <div class="col-md-6">
+                    <label class="form-label small text-secondary mb-1">
+                      {{ field.label }} @if (field.required) { <span class="text-danger">*</span> }
+                    </label>
+                    @switch (field.fieldType) {
+                      @case ('TEXTAREA') {
+                        <textarea class="form-control form-control-sm" rows="2" [(ngModel)]="fieldAnswers[field.id]" [name]="'field-' + field.id"></textarea>
+                      }
+                      @case ('NUMBER') {
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="fieldAnswers[field.id]" [name]="'field-' + field.id" />
+                      }
+                      @case ('DATE') {
+                        <input type="date" class="form-control form-control-sm" [(ngModel)]="fieldAnswers[field.id]" [name]="'field-' + field.id" />
+                      }
+                      @case ('EMAIL') {
+                        <input type="email" class="form-control form-control-sm" [(ngModel)]="fieldAnswers[field.id]" [name]="'field-' + field.id" />
+                      }
+                      @case ('PHONE') {
+                        <input type="tel" class="form-control form-control-sm" [(ngModel)]="fieldAnswers[field.id]" [name]="'field-' + field.id" />
+                      }
+                      @case ('CHECKBOX') {
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" [id]="'field-' + field.id"
+                                 [checked]="fieldAnswers[field.id] === 'true'"
+                                 (change)="fieldAnswers[field.id] = $any($event.target).checked ? 'true' : 'false'" />
+                          <label class="form-check-label small" [for]="'field-' + field.id">Yes</label>
+                        </div>
+                      }
+                      @case ('DROPDOWN') {
+                        @if (fieldOptions(field).length) {
+                        <select class="form-select form-select-sm" [(ngModel)]="fieldAnswers[field.id]" [name]="'field-' + field.id">
+                          <option value="">— Select —</option>
+                          @for (opt of fieldOptions(field); track opt) { <option [value]="opt">{{ opt }}</option> }
+                        </select>
+                        } @else {
+                        <input class="form-control form-control-sm" [(ngModel)]="fieldAnswers[field.id]" [name]="'field-' + field.id" />
+                        }
+                      }
+                      @case ('RADIO') {
+                        @if (fieldOptions(field).length) {
+                        <div>
+                          @for (opt of fieldOptions(field); track opt) {
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" [name]="'field-' + field.id" [id]="'field-' + field.id + '-' + opt"
+                                   [value]="opt" [checked]="fieldAnswers[field.id] === opt"
+                                   (change)="fieldAnswers[field.id] = opt" />
+                            <label class="form-check-label small" [for]="'field-' + field.id + '-' + opt">{{ opt }}</label>
+                          </div>
+                          }
+                        </div>
+                        } @else {
+                        <input class="form-control form-control-sm" [(ngModel)]="fieldAnswers[field.id]" [name]="'field-' + field.id" />
+                        }
+                      }
+                      @case ('FILE_UPLOAD') {
+                        @if (fieldAnswers[field.id]) {
+                        <div class="small mb-1">
+                          <i class="bi bi-check-circle text-success me-1"></i>
+                          <a [href]="fieldAnswers[field.id]" target="_blank" rel="noopener">File attached</a>
+                        </div>
+                        }
+                        <app-file-upload label="Choose from device" accept="image/*,.pdf,.doc,.docx" [maxSizeMB]="10"
+                                          (uploaded)="onFieldFileUploaded(field.id, $event)" />
+                      }
+                      @case ('FORMULA') {
+                        <div class="form-text small text-muted mb-0">Calculated automatically.</div>
+                      }
+                      @default {
+                        <input class="form-control form-control-sm" [(ngModel)]="fieldAnswers[field.id]" [name]="'field-' + field.id" />
+                      }
+                    }
+                  </div>
+                  }
+                </div>
+              </div>
+            </div>
+            }
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Under Subscription <span class="text-muted">(optional)</span></label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.subscriptionId">
+                <option [ngValue]="null">— None (pay per request) —</option>
+                @for (s of subscriptions; track s.id) {
+                <option [ngValue]="s.id">{{ s.packageName }} ({{ s.remainingRequests }} requests left)</option>
+                }
+              </select>
+              <div class="form-text small">Requests under a subscription use its quota at no extra charge.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Payment *</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.paymentChoice">
+                @for (p of paymentChoices; track p) { <option [value]="p">{{ p.replaceAll('_', ' ') | titlecase }}</option> }
+              </select>
+            </div>
+            @if (form.paymentChoice === 'PAY_NOW') {
+            <div class="col-md-6">
+              <label class="form-label small text-secondary mb-1">Payment Method</label>
+              <select class="form-select form-select-sm" [(ngModel)]="form.paymentMethod">
+                <option value="">— Select method —</option>
+                @for (m of paymentMethods; track m) { <option [value]="m">{{ m.replaceAll('_', ' ') | titlecase }}</option> }
+              </select>
+            </div>
+            }
+            <div class="col-12">
+              <label class="form-label small text-secondary mb-1">Description</label>
+              <textarea class="form-control form-control-sm" rows="3" [(ngModel)]="form.description"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="saving" (click)="save()">
+            @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Submit Request
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

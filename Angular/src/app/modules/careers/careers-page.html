@@ -1,0 +1,127 @@
+<div class="careers-root">
+  @if (loading) {
+    <div class="careers-center"><div class="spinner-border" role="status"></div></div>
+  }
+
+  @if (notFound) {
+    <div class="careers-center text-center">
+      <i class="bi bi-signpost-split display-4 d-block mb-3"></i>
+      <h3>Career page not found</h3>
+      <p class="text-muted">The link may be wrong, or this company hasn't published its careers page.</p>
+    </div>
+  }
+
+  @if (page) {
+    <!-- Hero -->
+    <header class="careers-hero">
+      <div class="careers-container">
+        <div class="careers-brand">{{ page.companyName }}</div>
+        <h1>{{ page.headline || 'Join our team' }}</h1>
+        @if (page.about) { <p class="careers-about">{{ page.about }}</p> }
+        <div class="careers-count">
+          {{ page.jobs.length }} open position{{ page.jobs.length === 1 ? '' : 's' }}
+        </div>
+      </div>
+    </header>
+
+    <!-- Job list -->
+    <main class="careers-container careers-list">
+      @for (job of page.jobs; track job.id) {
+        <div class="careers-card">
+          <div class="careers-card-main">
+            <h3>{{ job.title }}</h3>
+            <div class="careers-meta">
+              @if (job.location) { <span><i class="bi bi-geo-alt"></i>{{ job.location }}</span> }
+              @if (job.remote) { <span class="careers-chip careers-chip-remote">Remote</span> }
+              @if (job.employmentType) { <span class="careers-chip">{{ typeLabel(job.employmentType) }}</span> }
+              @if (job.departmentName) { <span><i class="bi bi-diagram-3"></i>{{ job.departmentName }}</span> }
+              @if (job.deadline) { <span class="careers-deadline"><i class="bi bi-hourglass-split"></i>Apply by {{ job.deadline | date:'mediumDate' }}</span> }
+            </div>
+          </div>
+          <button class="careers-apply-btn" (click)="openJob(job)">Apply</button>
+        </div>
+      }
+      @if (!page.jobs.length) {
+        <div class="careers-empty">
+          <i class="bi bi-cup-hot display-6 d-block mb-2"></i>
+          No open positions right now — check back soon.
+        </div>
+      }
+    </main>
+
+    <footer class="careers-footer">
+      Powered by ZuhooCMS
+    </footer>
+  }
+
+  <!-- Job detail + application modal -->
+  @if (selectedJob) {
+  <div class="careers-modal-backdrop" (click)="closeJob()">
+    <div class="careers-modal" (click)="$event.stopPropagation()">
+      <button class="careers-modal-close" (click)="closeJob()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+
+      <h2>{{ selectedJob.title }}</h2>
+      <div class="careers-meta mb-3">
+        @if (selectedJob.location) { <span><i class="bi bi-geo-alt"></i>{{ selectedJob.location }}</span> }
+        @if (selectedJob.remote) { <span class="careers-chip careers-chip-remote">Remote</span> }
+        @if (selectedJob.employmentType) { <span class="careers-chip">{{ typeLabel(selectedJob.employmentType) }}</span> }
+        @if (selectedJob.vacancies && selectedJob.vacancies > 1) { <span>{{ selectedJob.vacancies }} openings</span> }
+      </div>
+
+      @if (loadingJob) { <div class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></div> }
+
+      @if (!loadingJob && !applied) {
+        @if (selectedJob.description) {
+          <section><h5>About the role</h5><p class="careers-prose">{{ selectedJob.description }}</p></section>
+        }
+        @if (selectedJob.responsibilities) {
+          <section><h5>Responsibilities</h5><p class="careers-prose">{{ selectedJob.responsibilities }}</p></section>
+        }
+        @if (selectedJob.requirements) {
+          <section><h5>Requirements</h5><p class="careers-prose">{{ selectedJob.requirements }}</p></section>
+        }
+
+        <section class="careers-apply-form">
+          <h5>Apply for this position</h5>
+          @if (applyError) { <div class="careers-error">{{ applyError }}</div> }
+          <div class="row g-2">
+            <div class="col-md-6"><input class="form-control" placeholder="Full name *" [(ngModel)]="form.applicantName" /></div>
+            <div class="col-md-6"><input class="form-control" type="email" placeholder="Email *" [(ngModel)]="form.applicantEmail" /></div>
+            <div class="col-md-6"><input class="form-control" placeholder="Phone" [(ngModel)]="form.applicantPhone" /></div>
+            <div class="col-md-6">
+              @if (!useResumeLink) {
+                <input class="form-control" type="file" accept=".pdf,.doc,.docx" [disabled]="uploadingResume" (change)="onResumeFileSelected($event)" />
+                @if (uploadingResume) { <div class="small text-muted mt-1"><span class="spinner-border spinner-border-sm me-1"></span>Uploading resume…</div> }
+                @if (resumeFileName && !uploadingResume) { <div class="small text-success mt-1"><i class="bi bi-check-circle me-1"></i>{{ resumeFileName }} uploaded</div> }
+                @if (resumeUploadError) { <div class="small careers-error mt-1">{{ resumeUploadError }}</div> }
+                <div class="small mt-1"><a href="javascript:void(0)" (click)="toggleResumeLink()">or paste a resume link instead</a></div>
+              } @else {
+                <input class="form-control" placeholder="Resume / CV link (Drive, Dropbox…)" [(ngModel)]="form.resumeUrl" />
+                <div class="small mt-1"><a href="javascript:void(0)" (click)="toggleResumeLink()">or upload a file instead</a></div>
+              }
+            </div>
+            <div class="col-md-6"><input class="form-control" placeholder="LinkedIn profile" [(ngModel)]="form.linkedInUrl" /></div>
+            <div class="col-md-6"><input class="form-control" placeholder="Portfolio / GitHub" [(ngModel)]="form.portfolioUrl" /></div>
+            <div class="col-12"><textarea class="form-control" rows="4" placeholder="Cover letter (optional)" [(ngModel)]="form.coverLetter"></textarea></div>
+            <!-- Honeypot: hidden from humans, bots fill it and get silently dropped. -->
+            <input class="careers-hp" type="text" tabindex="-1" autocomplete="off" [(ngModel)]="form.website" aria-hidden="true" />
+          </div>
+          <button class="careers-apply-btn careers-apply-submit" [disabled]="applying" (click)="apply()">
+            @if (applying) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            Submit Application
+          </button>
+        </section>
+      }
+
+      @if (applied) {
+        <div class="careers-success">
+          <i class="bi bi-check-circle display-5 d-block mb-2"></i>
+          <h4>Application received!</h4>
+          <p>Thanks for applying to {{ page?.companyName }}. The hiring team will review your application and get back to you.</p>
+          <button class="careers-apply-btn" (click)="closeJob()">Done</button>
+        </div>
+      }
+    </div>
+  </div>
+  }
+</div>

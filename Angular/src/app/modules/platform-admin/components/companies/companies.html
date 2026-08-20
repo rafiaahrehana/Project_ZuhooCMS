@@ -1,0 +1,282 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+    <div>
+      <h4 class="mb-1">Companies</h4>
+      <div class="text-muted small">Manage all tenant companies on the platform.</div>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="openRegister()"><i class="bi bi-plus"></i> Register Company</button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted small text-uppercase" style="letter-spacing:.04em">Total</span>
+            <i class="bi bi-buildings text-muted"></i>
+          </div>
+          <div class="fs-3 fw-medium">{{ kpi.total }}</div>
+          <div class="text-muted small">All tenants</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted small text-uppercase" style="letter-spacing:.04em">Active</span>
+            <i class="bi bi-check-circle text-success"></i>
+          </div>
+          <div class="fs-3 fw-medium text-success">{{ kpi.active }}</div>
+          <div class="text-muted small">Paying customers</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted small text-uppercase" style="letter-spacing:.04em">Trial</span>
+            <i class="bi bi-hourglass-split text-warning"></i>
+          </div>
+          <div class="fs-3 fw-medium">{{ kpi.trial }}</div>
+          <div class="text-muted small">In trial period</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted small text-uppercase" style="letter-spacing:.04em">Suspended</span>
+            <i class="bi bi-exclamation-circle text-danger"></i>
+          </div>
+          <div class="fs-3 fw-medium">{{ kpi.suspended }}</div>
+          <div class="text-muted small">Requires attention</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div class="d-flex gap-2 flex-wrap">
+      <input type="text" class="form-control form-control-sm" style="width:220px"
+             placeholder="Search name, email or subdomain..." [(ngModel)]="keyword" (keyup.enter)="page=0;load()" />
+      <select class="form-select form-select-sm" style="width:180px" [(ngModel)]="statusFilter" (change)="page=0;load()">
+        <option value="">All statuses</option>
+        @for (s of statuses; track s) { <option [value]="s">{{ s.replace('_', ' ') | titlecase }}</option> }
+      </select>
+      <select class="form-select form-select-sm" style="width:160px" [(ngModel)]="planFilter" (change)="page=0;load()">
+        <option value="">All plans</option>
+        @for (p of plans; track p.code) { <option [value]="p.code">{{ p.name }}</option> }
+      </select>
+    </div>
+    <div class="text-muted small">{{ totalCompanies }} companies</div>
+  </div>
+
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && companies.length) {
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Company</th><th>Subdomain</th><th>Plan</th><th>Status</th>
+            <th>Owner</th><th>Subscription End</th><th>Created</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of companies; track c.id) {
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                @if (c.logo) {
+                <img [src]="c.logo" alt="" class="rounded" style="width: 32px; height: 32px; object-fit: cover" />
+                } @else {
+                <div class="rounded bg-light border d-flex align-items-center justify-content-center text-muted" style="width: 32px; height: 32px">
+                  <i class="bi bi-building"></i>
+                </div>
+                }
+                <div>
+                  <div class="fw-medium">{{ c.companyName }}</div>
+                  @if (c.tagline) { <div class="text-muted small">{{ c.tagline }}</div> }
+                </div>
+              </div>
+            </td>
+            <td class="text-muted small font-monospace">{{ c.subdomain }}</td>
+            <td><span class="badge rounded-pill {{ planClass(c.subscriptionPlan) }}">{{ c.subscriptionPlan | titlecase }}</span></td>
+            <td>
+              <span class="badge rounded-pill {{ statusClass(c.status) }}">{{ c.status.replace('_', ' ') | titlecase }}</span>
+              @if (c.trialExpired) { <span class="badge text-bg-danger ms-1">Trial expired</span> }
+            </td>
+            <td>
+              @if (c.ownerName) {
+              <div>{{ c.ownerName }}</div>
+              <div class="text-muted small">{{ c.ownerEmail }}</div>
+              } @else { <span class="text-muted small">-</span> }
+            </td>
+            <td class="text-muted small">{{ c.subscriptionEnd ? (c.subscriptionEnd | date:'mediumDate') : '-' }}</td>
+            <td class="text-muted small">{{ c.createdAt | date:'mediumDate' }}</td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-outline-primary btn-sm me-1" (click)="openImpersonate(c)" title="Access company"><i class="bi bi-box-arrow-in-right"></i> Access</button>
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="openPlanChange(c)" title="Change plan"><i class="bi bi-arrow-repeat"></i> Plan</button>
+              <button class="btn btn-outline-secondary btn-sm me-1" (click)="openStatusChange(c)" title="Change status"><i class="bi bi-shield"></i> Status</button>
+              @if (c.status !== 'DEACTIVATED') {
+              <button class="btn btn-outline-danger btn-sm" (click)="deactivateTarget = c" title="Deactivate"><i class="bi bi-x-circle"></i> Deactivate</button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer bg-white d-flex justify-content-end">
+      <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+    </div>
+  </div>
+  }
+  @if (!loading && !companies.length) { <app-empty-state icon="bi-buildings" message="No companies found." /> }
+
+  @if (showRegister) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Register New Company</h5>
+          <button class="btn-close" (click)="showRegister = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small text-muted mb-1">Company name *</label>
+              <input class="form-control form-control-sm" placeholder="Acme Inc." [(ngModel)]="form.companyName" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted mb-1">Subdomain *</label>
+              <input class="form-control form-control-sm" placeholder="acme" [(ngModel)]="form.subdomain" />
+            </div>
+            <div class="col-12"><hr class="my-1" /><div class="text-muted small text-uppercase" style="letter-spacing:.04em">Owner details</div></div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted mb-1">Owner first name *</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.ownerFirstName" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted mb-1">Owner last name *</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.ownerLastName" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted mb-1">Owner email *</label>
+              <input class="form-control form-control-sm" type="email" [(ngModel)]="form.ownerEmail" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted mb-1">Owner password *</label>
+              <input class="form-control form-control-sm" type="password" [(ngModel)]="form.ownerPassword" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted mb-1">Company phone</label>
+              <input class="form-control form-control-sm" [(ngModel)]="form.companyPhone" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showRegister = false">Cancel</button>
+          <button class="btn btn-primary btn-sm"
+                  [disabled]="!form.companyName || !form.subdomain || !form.ownerFirstName || !form.ownerLastName || !form.ownerEmail || !form.ownerPassword"
+                  (click)="register()">Register</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (planTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Change Plan</h5>
+          <button class="btn-close" (click)="planTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-muted small mb-2">{{ planTarget.companyName }} · currently on <strong>{{ planTarget.subscriptionPlan | titlecase }}</strong></div>
+          <select class="form-select form-select-sm" [(ngModel)]="newPlan" (ngModelChange)="onPlanChange($event)">
+            @for (p of plans; track p.code) { <option [value]="p.code">{{ p.name }} ({{ p.billingCycle | titlecase }})</option> }
+          </select>
+          <div class="row g-2 mt-1">
+            <div class="col-6">
+              <label class="form-label small text-secondary mb-1">Amount Paid <span class="text-muted">(optional)</span></label>
+              <input type="number" min="0" step="0.01" class="form-control form-control-sm" [(ngModel)]="planAmountPaid" placeholder="0.00" />
+            </div>
+            <div class="col-6">
+              <label class="form-label small text-secondary mb-1">Transaction Ref <span class="text-muted">(optional)</span></label>
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="planTransactionRef" placeholder="TXN-..." />
+            </div>
+          </div>
+          <div class="form-text small">If a payment was made for this change, record it here — it feeds the platform revenue stats.</div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="planTarget = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="doChangePlan()">Update Plan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (statusTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Change Status</h5>
+          <button class="btn-close" (click)="statusTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-muted small mb-2">{{ statusTarget.companyName }} · currently <strong>{{ statusTarget.status.replace('_', ' ') | titlecase }}</strong></div>
+          <select class="form-select form-select-sm" [(ngModel)]="newStatus">
+            @for (s of statuses; track s) { <option [value]="s">{{ s.replace('_', ' ') | titlecase }}</option> }
+          </select>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="statusTarget = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" (click)="doChangeStatus()">Update Status</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <app-confirm-dialog [visible]="!!deactivateTarget" title="Deactivate Company" message="Deactivate this company? Their users will lose access." (confirmed)="doDeactivate()" (cancelled)="deactivateTarget = null" />
+
+  @if (impersonateTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold">Access Company</h5>
+          <button class="btn-close" (click)="impersonateTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-muted small mb-2">
+            You are about to view <strong>{{ impersonateTarget.companyName }}</strong> as its owner.
+            This is logged and visible to the company on request.
+          </div>
+          <label class="form-label small text-muted mb-1">Reason *</label>
+          <textarea class="form-control form-control-sm" rows="2" placeholder="e.g. Investigating billing ticket #482"
+                    [(ngModel)]="impersonateReason"></textarea>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="impersonateTarget = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!impersonateReason.trim() || impersonating" (click)="doImpersonate()">
+            @if (impersonating) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            Access Company
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

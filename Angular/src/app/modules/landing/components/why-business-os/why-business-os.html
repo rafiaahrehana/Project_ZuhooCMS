@@ -1,0 +1,27 @@
+<section id="features" class="accent-section-charcoal py-5 position-relative overflow-hidden why-bos">
+  <div class="container py-5 position-relative">
+    <div class="row mb-5">
+      <div class="col-lg-8 mx-auto text-center">
+        <span class="eyebrow-badge on-dark fade-in mb-3 d-inline-flex"><span class="eyebrow-dot"></span>Engineered for Scale</span>
+        <h2 class="display-5 fw-bold section-title mb-4 slide-up" style="animation-delay: 0.1s;">Engineered for the Modern Enterprise.</h2>
+        <p class="lead section-sub slide-up mx-auto" style="animation-delay: 0.1s;">
+          Stop juggling disconnected tools. Unify your entire organization under one scalable, secure, and intelligent platform.
+        </p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      @for (feature of features(); track feature.title; let i = $index) {
+        <div class="col-md-6 col-lg-4 slide-up" [style.animation-delay]="(i * 0.08) + 's'">
+          <div class="glass-card-dark feature-tile p-4 h-100">
+            <div class="feature-icon d-inline-flex align-items-center justify-content-center rounded-3 mb-3">
+              <i class="bi fs-4" [ngClass]="feature.icon"></i>
+            </div>
+            <h4 class="fw-bold mb-2 fs-5 text-white">{{ feature.title }}</h4>
+            <p class="mb-0 feature-desc">{{ feature.desc }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>

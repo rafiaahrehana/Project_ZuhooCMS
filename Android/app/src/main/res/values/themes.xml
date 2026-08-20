@@ -1,0 +1,40 @@
+<resources>
+
+    <!-- Chrome is near-black in both themes — see values/colors.xml's "Charcoal & Green" note.
+         Extracted so the ActionBar and status bar read as chrome, not as another green surface;
+         colorPrimary stays the brand green and keeps driving buttons/links/active states. -->
+    <style name="Zuhoo.ActionBar" parent="Widget.MaterialComponents.ActionBar.Solid">
+        <item name="background">@color/chrome_black</item>
+        <item name="titleTextColor">@color/white</item>
+    </style>
+
+    <!-- Base application theme. -->
+    <style name="Theme.Zuhoo" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorPrimaryVariant">@color/brand_deep</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/brand_accent</item>
+        <item name="colorSecondaryVariant">@color/brand_primary_hover</item>
+        <item name="colorOnSecondary">@color/brand_deep</item>
+        <item name="colorError">@color/status_danger</item>
+        <!-- Chrome: toolbar + status bar, both near-black rather than brand green. -->
+        <item name="actionBarStyle">@style/Zuhoo.ActionBar</item>
+        <item name="android:statusBarColor">@color/chrome_black</item>
+        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@color/bg_page</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+
+        <!-- Default component styles — the redesign's actual leverage point: every unstyled
+             MaterialButton/TextInputLayout in the app (the large majority of them) picks up
+             the new system automatically, with zero per-layout changes. Explicit style="..."
+             overrides in individual layouts still win where a screen names one directly. -->
+        <item name="materialButtonStyle">@style/Widget.Zuhoo.Button.Primary</item>
+        <item name="textInputStyle">@style/Widget.Zuhoo.TextInputLayout</item>
+        <!-- Edge-to-edge is enforced unconditionally from targetSdk 36 onward — there is no
+             theme-level opt-out at this target level. See ZuhooApplication for the actual fix
+             (global content-inset padding), which works regardless of target SDK. -->
+    </style>
+</resources>

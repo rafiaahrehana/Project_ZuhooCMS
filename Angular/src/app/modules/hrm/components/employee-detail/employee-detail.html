@@ -1,0 +1,319 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <a routerLink="/hrm/employees" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Employees</a>
+      @if (employee) {
+        <div class="d-flex align-items-center gap-2">
+          @if (employee.profileImageUrl || employee.image) {
+            <img [src]="employee.profileImageUrl || employee.image" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;" alt="Profile photo" />
+          } @else {
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width:40px;height:40px;font-size:0.9rem;flex-shrink:0;">
+              {{ employee.firstName?.charAt(0) }}{{ employee.lastName?.charAt(0) }}
+            </div>
+          }
+          <h4 class="mb-0">{{ employee.firstName + ' ' + employee.lastName }}</h4>
+        </div>
+      } @else {
+        <h4 class="mb-0">Employee</h4>
+      }
+    </div>
+    @if (employee && !editing) {
+    <button *appHasPermission="'EMPLOYEE_UPDATE'" class="btn btn-outline-primary btn-sm" (click)="startEdit()"><i class="bi bi-pencil me-1"></i>Edit</button>
+    }
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (employee && !editing) {
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card h-100" style="background-color: #f3e8ff;">
+        <div class="card-header py-2 fw-semibold small text-uppercase bg-transparent border-bottom border-light-subtle">Employment</div>
+        <div class="card-body py-2">
+          <dl class="row mb-0 small">
+            <dt class="col-5">Employee No</dt><dd class="col-7">{{ employee.employeeNumber || '-' }}</dd>
+            <dt class="col-5">Department</dt><dd class="col-7">{{ employee.departmentName || '-' }}</dd>
+            <dt class="col-5">Designation</dt><dd class="col-7">{{ employee.designationName || '-' }}</dd>
+            <dt class="col-5">Job Title</dt><dd class="col-7">{{ employee.jobTitle || '-' }}</dd>
+            <dt class="col-5">Type</dt><dd class="col-7">{{ employee.employmentType }}</dd>
+            <dt class="col-5">Status</dt><dd class="col-7"><span class="badge text-bg-light border">{{ employee.employmentStatus }}</span></dd>
+            <dt class="col-5">Reporting Manager</dt><dd class="col-7">{{ employee.reportingManagerName || '-' }}</dd>
+            <dt class="col-5">Shift</dt><dd class="col-7">{{ employee.shiftName || '-' }}</dd>
+            <dt class="col-5">Hire Date</dt><dd class="col-7">{{ employee.hireDate ? (employee.hireDate | date:'mediumDate') : '-' }}</dd>
+            <dt class="col-5">Office</dt><dd class="col-7">{{ employee.officeLocation || '-' }}</dd>
+            <dt class="col-5">Cost Center</dt><dd class="col-7">{{ employee.costCenter || '-' }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100" style="background-color: #f3e8ff;">
+        <div class="card-header py-2 fw-semibold small text-uppercase bg-transparent border-bottom border-light-subtle">Contact & Personal</div>
+        <div class="card-body py-2">
+          <dl class="row mb-0 small">
+            <dt class="col-5">Email</dt><dd class="col-7">{{ employee.email }}</dd>
+            <dt class="col-5">Official Email</dt><dd class="col-7">{{ employee.officialEmail || '-' }}</dd>
+            <dt class="col-5">Work Phone</dt><dd class="col-7">{{ employee.workPhone || '-' }}</dd>
+            <dt class="col-5">Gender</dt><dd class="col-7">{{ employee.gender || '-' }}</dd>
+            <dt class="col-5">Date of Birth</dt><dd class="col-7">{{ employee.dateOfBirth ? (employee.dateOfBirth | date:'mediumDate') : '-' }}</dd>
+            <dt class="col-5">National ID</dt><dd class="col-7">{{ employee.nationalId || '-' }}</dd>
+            <dt class="col-5">Tax ID</dt><dd class="col-7">{{ employee.taxId || '-' }}</dd>
+            <dt class="col-5">Location</dt>
+            <dd class="col-7">
+              @if (employee.location) {
+                {{ getFormattedAddress(employee.location) }}
+              } @else {
+                -
+              }
+            </dd>
+            <dt class="col-5">Emergency Contact</dt>
+            <dd class="col-7">
+              {{ employee.emergencyContactName || '-' }}
+              @if (employee.emergencyContactPhone) { <span class="text-muted">({{ employee.emergencyContactPhone }}, {{ employee.emergencyContactRelation || 'n/a' }})</span> }
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card" style="background-color: #f3e8ff;">
+        <div class="card-header py-2 fw-semibold small text-uppercase bg-transparent border-bottom border-light-subtle">Compensation</div>
+        <div class="card-body py-2">
+          <dl class="row mb-0 small">
+            <dt class="col-5">Basic Salary</dt><dd class="col-7">{{ employee.basicSalary ?? '-' }}</dd>
+            <dt class="col-5">House Rent</dt><dd class="col-7">{{ employee.houseRent ?? '-' }}</dd>
+            <dt class="col-5">Medical Allowance</dt><dd class="col-7">{{ employee.medicalAllowance ?? '-' }}</dd>
+            <dt class="col-5">Transport Allowance</dt><dd class="col-7">{{ employee.transportAllowance ?? '-' }}</dd>
+            <dt class="col-5">Billable Rate</dt><dd class="col-7">{{ employee.billableRate ? (employee.billableRate + '/hr') : '-' }}</dd>
+            <dt class="col-5">Bank</dt><dd class="col-7">{{ employee.bankName || '-' }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card" style="background-color: #f3e8ff;">
+        <div class="card-header py-2 fw-semibold small text-uppercase bg-transparent border-bottom border-light-subtle">Custom Role &amp; Permissions</div>
+        <div class="card-body py-2">
+          <p class="small text-muted mb-2">
+            Current role: <strong>{{ employee.customRoleName || 'None' }}</strong>.
+            Assign a role to control exactly what this employee can access.
+          </p>
+          <div class="input-group input-group-sm">
+            <select class="form-select" [(ngModel)]="selectedRoleId" name="selectedRoleId">
+              <option [ngValue]="null">— No role —</option>
+              @for (r of customRoles; track r.id) { <option [ngValue]="r.id">{{ r.name }}</option> }
+            </select>
+            <button class="btn btn-primary" [disabled]="savingRole || selectedRoleId === (employee.customRoleId ?? null)" (click)="changeRole()">
+              @if (savingRole) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Save
+            </button>
+          </div>
+          <a routerLink="/roles-permissions" class="small d-inline-block mt-2">Manage roles &amp; permissions <i class="bi bi-box-arrow-up-right"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="col-12">
+      <div class="card" style="background-color: #f3e8ff;">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center bg-transparent border-bottom border-light-subtle">
+          <span class="fw-semibold small text-uppercase">Education Qualifications</span>
+          @if (!addingQualification) {
+            <button class="btn btn-outline-primary btn-sm" (click)="startAddQualification()"><i class="bi bi-plus-lg me-1"></i>Add</button>
+          }
+        </div>
+        <div class="card-body py-2">
+          @if (qualifications.length) {
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead>
+                  <tr class="small text-muted">
+                    <th>Degree</th>
+                    <th>Institution</th>
+                    <th>Field of Study</th>
+                    <th>Passing Year</th>
+                    <th>Result</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (q of qualifications; track q.id) {
+                    <tr class="small">
+                      <td>{{ q.degree }}</td>
+                      <td>{{ q.institution }}</td>
+                      <td>{{ q.fieldOfStudy || '-' }}</td>
+                      <td>{{ q.passingYear || '-' }}</td>
+                      <td>{{ q.result || '-' }}</td>
+                      <td class="text-end">
+                        <button class="btn btn-link btn-sm text-danger p-0" (click)="deleteQualification(q)"><i class="bi bi-trash"></i></button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else if (!addingQualification) {
+            <p class="small text-muted mb-0">No education qualifications added yet.</p>
+          }
+
+          @if (addingQualification) {
+            <div class="border rounded p-3 mt-2 bg-light">
+              <div class="row g-2">
+                <div class="col-md-3">
+                  <label class="form-label small mb-1">Degree *</label>
+                  <input class="form-control form-control-sm" [(ngModel)]="qualificationForm.degree" name="qDegree" placeholder="e.g. Bachelor of Science" maxlength="100">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small mb-1">Institution *</label>
+                  <input class="form-control form-control-sm" [(ngModel)]="qualificationForm.institution" name="qInstitution" maxlength="200">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small mb-1">Field of Study</label>
+                  <input class="form-control form-control-sm" [(ngModel)]="qualificationForm.fieldOfStudy" name="qFieldOfStudy" maxlength="150">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small mb-1">Passing Year</label>
+                  <input type="number" class="form-control form-control-sm" [(ngModel)]="qualificationForm.passingYear" name="qPassingYear" min="1950" max="2100">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small mb-1">Result</label>
+                  <input class="form-control form-control-sm" [(ngModel)]="qualificationForm.result" name="qResult" placeholder="e.g. 3.85" maxlength="50">
+                </div>
+              </div>
+              <div class="d-flex justify-content-end gap-2 mt-2">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="cancelAddQualification()">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" [disabled]="savingQualification || !qualificationForm.degree || !qualificationForm.institution" (click)="saveQualification()">
+                  @if (savingQualification) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                  Save
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (employee && editing) {
+  <form #f="ngForm" (ngSubmit)="save()">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Job Title</label>
+            <input class="form-control form-control-sm" name="jobTitle" [(ngModel)]="form.jobTitle" maxlength="100">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Department</label>
+            <select class="form-select form-select-sm" name="departmentId" [(ngModel)]="form.departmentId">
+              <option [ngValue]="undefined">-</option>
+              @for (d of departments; track d.id) { <option [ngValue]="d.id">{{ d.name }}</option> }
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Designation</label>
+            <select class="form-select form-select-sm" name="designationId" [(ngModel)]="form.designationId">
+              <option [ngValue]="undefined">-</option>
+              @for (d of designations; track d.id) { <option [ngValue]="d.id">{{ d.name }}</option> }
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Employment Type</label>
+            <select class="form-select form-select-sm" name="employmentType" [(ngModel)]="form.employmentType">
+              @for (t of types; track t) { <option [value]="t">{{ t }}</option> }
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Employment Status</label>
+            <select class="form-select form-select-sm" name="employmentStatus" [(ngModel)]="form.employmentStatus">
+              @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Gender</label>
+            <select class="form-select form-select-sm" name="gender" [(ngModel)]="form.gender">
+              <option [ngValue]="undefined">-</option>
+              @for (g of genders; track g) { <option [value]="g">{{ g }}</option> }
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Hire Date</label>
+            <input type="date" class="form-control form-control-sm" name="hireDate" [(ngModel)]="form.hireDate">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" class="form-control form-control-sm" name="dateOfBirth" [(ngModel)]="form.dateOfBirth">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Official Email</label>
+            <input type="email" class="form-control form-control-sm" name="officialEmail" [(ngModel)]="form.officialEmail" email>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Work Phone</label>
+            <input class="form-control form-control-sm" name="workPhone" [(ngModel)]="form.workPhone" maxlength="30">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Office Location</label>
+            <input class="form-control form-control-sm" name="officeLocation" [(ngModel)]="form.officeLocation" maxlength="150">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Cost Center</label>
+            <input class="form-control form-control-sm" name="costCenter" [(ngModel)]="form.costCenter" maxlength="100">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Basic Salary</label>
+            <input type="number" class="form-control form-control-sm" name="basicSalary" [(ngModel)]="form.basicSalary" min="0">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">House Rent</label>
+            <input type="number" class="form-control form-control-sm" name="houseRent" [(ngModel)]="form.houseRent" min="0">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Medical Allowance</label>
+            <input type="number" class="form-control form-control-sm" name="medicalAllowance" [(ngModel)]="form.medicalAllowance" min="0">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Transport Allowance</label>
+            <input type="number" class="form-control form-control-sm" name="transportAllowance" [(ngModel)]="form.transportAllowance" min="0">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Billable Rate <span class="text-muted">(per hour)</span></label>
+            <input type="number" class="form-control form-control-sm" name="billableRate" [(ngModel)]="form.billableRate" min="0">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Bank Name</label>
+            <input class="form-control form-control-sm" name="bankName" [(ngModel)]="form.bankName" maxlength="100">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Emergency Contact Name</label>
+            <input class="form-control form-control-sm" name="emergencyContactName" [(ngModel)]="form.emergencyContactName" maxlength="100">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Emergency Phone</label>
+            <input class="form-control form-control-sm" name="emergencyContactPhone" [(ngModel)]="form.emergencyContactPhone" maxlength="30">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Relation</label>
+            <input class="form-control form-control-sm" name="emergencyContactRelation" [(ngModel)]="form.emergencyContactRelation" maxlength="50">
+          </div>
+          <div class="col-12 mt-4">
+            <label class="form-label fw-bold">Location Details</label>
+            <div class="border rounded p-3 bg-light">
+              <app-location [showActions]="false"></app-location>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="editing = false">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm" [disabled]="f.invalid || saving">
+          @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </form>
+  }
+</div>

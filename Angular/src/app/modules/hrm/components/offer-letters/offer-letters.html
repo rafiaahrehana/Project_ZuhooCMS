@@ -1,0 +1,149 @@
+<div class="container-fluid py-3">
+  <!-- Header Bar -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-file-earmark-text text-primary me-2"></i>Official & Offer Letters</h4>
+      <p class="text-muted small mb-0">Generate, issue, and manage employee recruitment offer letters and certificates</p>
+    </div>
+    <button *appHasPermission="'LETTER_CREATE'" class="btn btn-primary btn-sm px-3 rounded-2 fw-medium" (click)="openCreate()"><i class="bi bi-plus-lg me-1"></i> Generate Letter</button>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2 rounded-2 shadow-sm mb-3">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2 rounded-2 shadow-sm mb-3">{{ success }}</div> }
+
+  @if (loading) { <app-loader /> }
+
+  <!-- Create Form Card -->
+  @if (showForm) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title fs-6 fw-semibold"><i class="bi bi-plus-circle me-2"></i>Generate Letter</h5>
+          <button class="btn-close" (click)="showForm = false"></button>
+        </div>
+        <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          @if (isCandidateLetter) {
+            <label class="form-label small fw-semibold text-secondary mb-1">Candidate <span class="text-danger">*</span></label>
+            <select class="form-select form-select-sm border-light-subtle rounded-2" [(ngModel)]="form.jobApplicationId">
+              <option [ngValue]="undefined" disabled>Select Candidate</option>
+              @for (c of candidates; track c.id) {
+                <option [ngValue]="c.id">{{ c.candidateName }}{{ c.jobPostingTitle ? ' (' + c.jobPostingTitle + ')' : '' }}</option>
+              }
+            </select>
+            @if (!candidates.length) {
+              <div class="form-text text-warning">No recruitment candidates found. Add applicants under Recruitment first.</div>
+            }
+          } @else {
+            <label class="form-label small fw-semibold text-secondary mb-1">Employee <span class="text-danger">*</span></label>
+            <select class="form-select form-select-sm border-light-subtle rounded-2" [(ngModel)]="form.employeeId">
+              <option [ngValue]="undefined" disabled>Select Recipient</option>
+              @for (emp of employees; track emp.id) {
+                <option [ngValue]="emp.id">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.jobTitle || 'No Title' }})</option>
+              }
+            </select>
+          }
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold text-secondary mb-1">Letter Type</label>
+          <select class="form-select form-select-sm border-light-subtle rounded-2" [(ngModel)]="form.letterType" (ngModelChange)="onLetterTypeChange()">
+            @for (type of letterTypes; track type) { <option [value]="type">{{ type }}</option> }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold text-secondary mb-1">Issue Date <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="date" [(ngModel)]="form.issueDate" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small fw-semibold text-secondary mb-1">Reference Number</label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="text" [(ngModel)]="form.referenceNumber" placeholder="HR/2026/001" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small fw-semibold text-secondary mb-1">Signed By</label>
+          <input class="form-control form-control-sm border-light-subtle rounded-2" type="text" [(ngModel)]="form.signedBy" placeholder="HR Manager Name" />
+        </div>
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label small fw-semibold text-secondary mb-0">Letter Content <span class="text-danger">*</span></label>
+            <button type="button" class="btn btn-outline-primary btn-sm py-0" [disabled]="!recipientId || !form.letterType || drafting" (click)="draftWithAi()">
+              @if (drafting) { <span class="spinner-border spinner-border-sm me-1"></span> } @else { <i class="bi bi-stars me-1"></i> }
+              Draft with AI
+            </button>
+          </div>
+          @if (draftError) { <div class="text-danger small mb-1">{{ draftError }}</div> }
+          <textarea class="form-control form-control-sm border-light-subtle rounded-2" rows="5" [(ngModel)]="form.content" placeholder="Dear EmployeeName, ..."></textarea>
+        </div>
+      </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!recipientId || !form.issueDate || !form.content || saving" (click)="save()">
+            @if (saving) { Saving... } @else { Save }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- timeline log view layout for Offer Letters -->
+  @if (!loading && letters.length) {
+  <div class="timeline-container ps-3 border-start border-2 border-primary-subtle position-relative ms-4 mb-4">
+    @for (l of letters; track l.id) {
+    <div class="timeline-item mb-4 position-relative">
+      
+      <!-- Timeline Node Circle -->
+      <div class="position-absolute d-flex align-items-center justify-content-center bg-primary text-white rounded-circle shadow-sm"
+           style="width: 32px; height: 32px; left: -33px; top: 0px;">
+        <i class="bi bi-file-earmark-text small"></i>
+      </div>
+
+      <!-- Detail Card block -->
+      <div class="card border border-light-subtle rounded-3 bg-white shadow-sm p-4 ms-3 transition-hover">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div>
+            <span class="text-muted small fw-bold">Ref No: {{ l.referenceNumber || 'Unspecified' }}</span>
+            <h5 class="fw-bold text-dark mt-1 mb-0">{{ l.letterType }} - {{ l.recipientName || l.employeeName || '—' }}</h5>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill px-3 py-1.5" [class.text-bg-success]="l.issued" [class.text-bg-warning]="!l.issued">
+              {{ l.issued ? 'Issued' : 'Draft' }}
+            </span>
+            <span class="text-muted small">{{ l.issueDate | date:'mediumDate' }}</span>
+          </div>
+        </div>
+
+        <div class="p-3 bg-light rounded-2 small text-secondary mb-3 whitespace-pre-wrap" style="max-height: 120px; overflow-y: auto;">
+          {{ l.content }}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+          <div class="small text-muted">
+            Signed by: <span class="fw-semibold text-dark">{{ l.signedBy || '-' }}</span>
+          </div>
+          <div class="d-flex gap-1">
+            @if (!l.issued) {
+              <button *appHasPermission="'LETTER_UPDATE'" class="btn btn-outline-success btn-sm border-success-subtle px-3 rounded-2 fw-medium me-1" (click)="issue(l)">Mark Issued</button>
+            }
+            <button *appHasPermission="'LETTER_DELETE'" class="btn btn-outline-danger btn-sm border-danger-subtle px-2 rounded-2" style="background-color: #fff5f5;" (click)="deleteTarget = l"><i class="bi bi-trash"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    }
+  </div>
+
+  <div class="d-flex justify-content-end p-3 bg-white rounded-3 shadow-sm mb-4">
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+  }
+
+  @if (!loading && !letters.length && !showForm) {
+    <app-empty-state icon="bi-file-earmark-text" message="No letter records found." />
+  }
+
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Letter" message="Are you sure you want to delete this letter record?" (confirmed)="confirmDelete()" (cancelled)="deleteTarget = null" />
+</div>

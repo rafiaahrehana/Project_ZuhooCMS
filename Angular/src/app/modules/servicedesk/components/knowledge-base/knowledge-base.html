@@ -1,0 +1,128 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0">Knowledge Base</h4>
+    <div class="d-flex gap-2">
+      <input class="form-control form-control-sm" style="width: 200px" placeholder="Search articles..."
+             [(ngModel)]="keyword" (keyup.enter)="page = 0; load()" />
+      <select class="form-select form-select-sm" style="width: 140px" [(ngModel)]="statusFilter" (change)="page = 0; load()">
+        <option value="">All statuses</option>
+        <option value="DRAFT">Draft</option>
+        <option value="PUBLISHED">Published</option>
+        <option value="ARCHIVED">Archived</option>
+      </select>
+      <button *appHasPermission="'KNOWLEDGE_BASE_CREATE'" class="btn btn-primary btn-sm text-nowrap" (click)="startNew()"><i class="bi bi-plus"></i> New Article</button>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (loading) { <app-loader /> }
+
+  <div class="row g-3">
+    <div class="col-lg-5">
+      @for (article of articles; track article.id) {
+      <div class="card mb-2" role="button" (click)="open(article)"
+           [class.border-primary]="selected?.id === article.id">
+        <div class="card-body py-2 d-flex justify-content-between gap-2">
+          <div>
+            <strong class="small">{{ article.title }}</strong>
+            @if (article.summary) { <div class="text-muted small">{{ article.summary }}</div> }
+            <div class="text-muted small">
+              {{ article.categoryName || 'Uncategorised' }} ·
+              <i class="bi bi-eye"></i> {{ article.viewCount }} ·
+              <i class="bi bi-hand-thumbs-up"></i> {{ article.helpfulCount }}
+            </div>
+          </div>
+          <div class="text-end">
+            <span class="badge"
+                  [class.text-bg-success]="article.status === 'PUBLISHED'"
+                  [class.text-bg-secondary]="article.status === 'DRAFT'"
+                  [class.text-bg-light]="article.status === 'ARCHIVED'">{{ article.status }}</span>
+            <div class="mt-1">
+              @if (article.status === 'DRAFT') {
+              <button *appHasPermission="'KNOWLEDGE_BASE_UPDATE'" class="btn btn-outline-success btn-sm" (click)="publish(article); $event.stopPropagation()">Publish</button>
+              }
+              @if (article.status === 'PUBLISHED') {
+              <button *appHasPermission="'KNOWLEDGE_BASE_UPDATE'" class="btn btn-outline-secondary btn-sm" (click)="archive(article); $event.stopPropagation()">Archive</button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+      @if (!loading && !articles.length) { <app-empty-state icon="bi-journal-text" message="No articles found." /> }
+      <div class="d-flex justify-content-end">
+        <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      @if (selected && !showEditor) {
+      <div class="card">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">{{ selected.title }}</span>
+          <span class="badge" [class.text-bg-success]="selected.status === 'PUBLISHED'"
+                [class.text-bg-secondary]="selected.status !== 'PUBLISHED'">{{ selected.status }}</span>
+        </div>
+        <div class="card-body">
+          <div class="text-muted small mb-2">
+            By {{ selected.authorName || 'Unknown' }}
+            @if (selected.publishedAt) { · Published {{ selected.publishedAt | date:'mediumDate' }} }
+          </div>
+          @if (selected.summary) { <p class="fst-italic small">{{ selected.summary }}</p> }
+          <div class="small" style="white-space: pre-wrap">{{ selected.content }}</div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+          <button class="btn btn-outline-primary btn-sm" (click)="markHelpful()">
+            <i class="bi bi-hand-thumbs-up"></i> Helpful ({{ selected.helpfulCount }})
+          </button>
+          <button *appHasPermission="'KNOWLEDGE_BASE_UPDATE'" class="btn btn-outline-secondary btn-sm" (click)="startEdit(selected)">
+            <i class="bi bi-pencil"></i> Edit
+          </button>
+        </div>
+      </div>
+      }
+
+
+<!-- Article editor. modal-xl: the content field is a 12-row textarea and the
+     whole point of the form, so it gets the widest dialog. -->
+@if (showEditor) {
+<div class="modal d-block" style="background: rgba(0,0,0,.4)">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h5 class="modal-title fs-6 fw-semibold">{{ editingId ? 'Edit Article' : 'New Article' }}</h5>
+        <button class="btn-close" (click)="showEditor = false"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label small text-secondary mb-1">Title <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm" [(ngModel)]="draft.title" />
+        </div>
+        <div class="mb-2">
+          <label class="form-label small text-secondary mb-1">Summary</label>
+          <input class="form-control form-control-sm" [(ngModel)]="draft.summary" />
+        </div>
+        <div class="mb-2">
+          <label class="form-label small text-secondary mb-1">Keywords</label>
+          <input class="form-control form-control-sm" placeholder="Comma-separated" [(ngModel)]="draft.keywords" />
+        </div>
+        <div class="mb-2">
+          <label class="form-label small text-secondary mb-1">Content <span class="text-danger">*</span></label>
+          <textarea class="form-control form-control-sm" rows="12" [(ngModel)]="draft.content"></textarea>
+        </div>
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" id="clientVisible" [(ngModel)]="draft.clientVisible" />
+          <label class="form-check-label small" for="clientVisible">Visible to clients in the portal</label>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button class="btn btn-secondary btn-sm" (click)="showEditor = false">Cancel</button>
+        <button class="btn btn-primary btn-sm" (click)="saveDraft()">Save Draft</button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+    </div>
+  </div>
+</div>

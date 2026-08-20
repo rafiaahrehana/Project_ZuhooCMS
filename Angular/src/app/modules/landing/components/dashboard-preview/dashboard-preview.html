@@ -1,0 +1,69 @@
+<section id="product" class="product-showcase position-relative overflow-hidden">
+  <div class="container position-relative z-1 py-5">
+
+    <div class="text-center mx-auto mb-5" style="max-width: 640px;">
+      <span class="eyebrow-badge mb-3 d-inline-flex"><span class="eyebrow-dot"></span>The Product</span>
+      <h2 class="display-5 fw-bold ps-title mb-3">The Product - Live Dashboard View</h2>
+      <p class="ps-sub mb-0">
+        Not a mockup — these are the live numbers from our demo company.
+        Click through and you'll land on this exact dashboard.
+      </p>
+    </div>
+
+    <!-- Browser-framed miniature of the dashboard -->
+    <div class="ps-frame mx-auto">
+      <div class="ps-chrome d-flex align-items-center gap-2 px-3">
+        <span class="ps-dot"></span><span class="ps-dot"></span><span class="ps-dot"></span>
+        <span class="ps-url mx-auto"><i class="bi bi-lock-fill me-1"></i>app.zuhoo.example / dashboard</span>
+      </div>
+
+      <div class="ps-body p-3 p-md-4">
+        <!-- Stat row -->
+        <div class="row g-2 g-md-3 mb-3">
+          @for (s of stats; track s.label) {
+          <div class="col-6 col-md-3">
+            <div class="ps-stat h-100">
+              <i class="bi {{ s.icon }}"></i>
+              <div class="ps-stat-value">{{ s.value }}</div>
+              <div class="ps-stat-label">{{ s.label }}</div>
+            </div>
+          </div>
+          }
+        </div>
+
+        <!-- Pipeline slice -->
+        <div class="ps-panel">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <span class="ps-panel-title"><i class="bi bi-kanban me-2"></i>Open pipeline</span>
+            <span class="ps-panel-hint">weighted forecast ৳17.7L</span>
+          </div>
+          @for (d of deals; track d.name) {
+          <div class="ps-deal">
+            <div class="ps-deal-main">
+              <span class="ps-deal-name">{{ d.name }}</span>
+              <span class="ps-deal-client">{{ d.client }}</span>
+            </div>
+            <span class="ps-deal-amount">{{ d.amount }}</span>
+            <div class="ps-deal-stage">
+              <div class="ps-deal-bar"><div [style.width.%]="d.pct"></div></div>
+              <span>{{ d.stage }} · {{ d.pct }}%</span>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-5">
+      <button type="button" class="btn-accent-solid btn-lg d-inline-flex align-items-center gap-2"
+              [disabled]="startingDemo()" (click)="seeDemo()">
+        @if (startingDemo()) {
+          <span class="spinner-border spinner-border-sm"></span> Opening…
+        } @else {
+          Open this dashboard live <i class="bi bi-arrow-right"></i>
+        }
+      </button>
+      <div class="ps-sub small mt-3">Read-only demo · no signup · 45 minutes</div>
+    </div>
+  </div>
+</section>

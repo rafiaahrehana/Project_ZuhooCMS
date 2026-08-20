@@ -1,0 +1,128 @@
+.client-chat-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.inbox-card {
+  overflow: hidden;
+}
+
+.inbox-list {
+  max-height: 640px;
+  overflow-y: auto;
+}
+
+// Deliberately not Bootstrap's .list-group-item - that class is targeted by a
+// global `.list-group-item.active { background: var(--bos-brand) !important; }`
+// rule elsewhere in the app, which would force a saturated brand-green active
+// row here regardless of what's set locally. Self-contained instead.
+.inbox-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-top: 1px solid #eef2f5;
+  background: transparent;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+
+  &:first-child {
+    border-top: none;
+  }
+
+  &:hover {
+    background-color: #f7f7fb;
+  }
+
+  &.active {
+    background-color: #eef2ff;
+  }
+}
+
+.inbox-item__meta {
+  color: #6b7280;
+}
+
+.chat-card {
+  overflow: hidden;
+}
+
+.chat-card__header {
+  display: flex;
+  flex-direction: column;
+  padding: 1.1rem 1.25rem 0.9rem;
+  background: #0F172A;
+  color: #fff;
+}
+
+.chat-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.chat-card__ticket-no {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #E2E8F0;
+}
+
+.chat-card__title {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.chat-card__attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: #E2E8F0;
+  text-decoration: underline;
+  margin-bottom: 0.4rem;
+}
+
+.chat-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  font-size: 0.76rem;
+  color: #E2E8F0;
+
+  i {
+    margin-right: 0.25rem;
+    color: #E2E8F0;
+  }
+}
+
+.chat-card__body {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+app-chat-thread {
+  display: block;
+  height: 480px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .inbox-item {
+    border-top-color: rgba(255, 255, 255, 0.08);
+
+    &:hover {
+      background-color: #1c1a3d;
+    }
+
+    &.active {
+      background-color: #23204a;
+    }
+  }
+
+  .inbox-item__meta {
+    color: #a5a3c9;
+  }
+}

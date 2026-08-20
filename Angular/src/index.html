@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ZuhooCMS</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The bare mark, not the squircle chip: full-bleed like ChatGPT/Google
+       favicons, so it doesn't shrink inside the tab. -->
+  <link rel="icon" type="image/png" href="brand/mark-on-light.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Every face the app uses, in one request. Kept here rather than as @import
+       in global.scss: an @import is inlined into styles.css at build time, which
+       both bloats the initial bundle and blocks first paint on the CSS parse. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <!-- Theme, resolved before first paint. ThemeService repeats this once Angular
+       boots, but that is far too late: without it a dark-mode user sees a white
+       page for the length of the bootstrap. Kept inline and tiny for the same
+       reason - an external file would be another blocking request. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('bos-theme');
+        if (t !== 'dark' && t !== 'light') {
+          t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.setAttribute('data-bs-theme', t);
+      } catch (e) { /* private mode: fall through to light */ }
+    })();
+  </script>
+</head>
+<body class="bg-light">
+  <app-root></app-root>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0"><i class="bi bi-arrow-counterclockwise me-2"></i>Refunds</h4>
+    <div class="btn-group btn-group-sm">
+      @for (s of statuses; track s) {
+        <button class="btn" [class.btn-primary]="statusFilter===s" [class.btn-outline-primary]="statusFilter!==s" (click)="setStatusFilter(s)">{{ s | titlecase }}</button>
+      }
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && refunds.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>Invoice</th><th>Client</th><th>For</th><th>Amount</th><th>Requested</th><th>Reason</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (r of refunds; track r.id) {
+        <tr>
+          <td>{{ r.invoiceNumber }}</td>
+          <td>{{ r.clientName || '-' }}</td>
+          <td>
+            @if (r.serviceRequestId) {
+              <a [routerLink]="['/servicedesk/requests', r.serviceRequestId]">{{ r.serviceRequestTitle || 'Service request' }}</a>
+            } @else { - }
+          </td>
+          <td class="fw-semibold">{{ r.requestedAmount | bosCurrency }}</td>
+          <td class="small">{{ r.requestedAt | date:'medium' }}</td>
+          <td class="small text-muted">{{ r.reason || '-' }}</td>
+          <td>
+            <span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span>
+            @if (r.status === 'REJECTED' && r.rejectionReason) {
+              <div class="small text-muted mt-1">{{ r.rejectionReason }}</div>
+            }
+          </td>
+          <td class="text-end">
+            @if (r.status === 'REQUESTED') {
+              <button *appHasPermission="'INVOICE_REFUND'" class="btn btn-outline-success btn-sm me-1" (click)="processTarget = r">Process</button>
+              <button *appHasPermission="'INVOICE_REFUND'" class="btn btn-outline-danger btn-sm" (click)="rejectTarget = r; rejectReason = ''">Reject</button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-end"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+  </div>
+  }
+  @if (!loading && !refunds.length) { <app-empty-state icon="bi-arrow-counterclockwise" message="No refund requests." /> }
+
+  <app-confirm-dialog
+    [visible]="!!processTarget"
+    title="Process Refund"
+    [message]="'This reverses invoice ' + (processTarget?.invoiceNumber || '') + ' (' + (processTarget?.requestedAmount | bosCurrency) + ') out of your company accounts. This cannot be undone.'"
+    confirmLabel="Process Refund"
+    [danger]="false"
+    (confirmed)="confirmProcess()"
+    (cancelled)="processTarget = null" />
+
+  @if (rejectTarget) {
+  <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Reject Refund - {{ rejectTarget.invoiceNumber }}</h5>
+          <button type="button" class="btn-close" (click)="rejectTarget = null"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label small text-secondary">Reason (optional)</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="rejectReason"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="rejectTarget = null">Cancel</button>
+          <button type="button" class="btn btn-danger btn-sm" (click)="confirmReject()">Reject Refund</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

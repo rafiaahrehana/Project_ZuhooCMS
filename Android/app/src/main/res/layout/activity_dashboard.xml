@@ -1,0 +1,747 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Every view id below is referenced directly from DashboardActivity.java (findViewById via
+     ViewBinding) — do not rename or remove any of them without updating that class. The
+     visibility of staff-only vs client-only views (including the 5 new section headers) is
+     still driven entirely by DashboardActivity.bindSession(); this layout only changed how each
+     state is presented, not which state controls what. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/screen_padding_h"
+        android:paddingTop="@dimen/screen_padding_v"
+        android:paddingBottom="@dimen/space_32">
+
+        <!-- Header: greeting + role on the left, notifications + account as compact icon
+             actions on the right. btnAccount used to be a full-width button at the very bottom
+             of the screen — moved up here since Account is also reachable from the bottom nav
+             tab, so a second full-width entry point was pure redundancy. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/welcomeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Zuhoo.TitleLarge" />
+
+                <TextView
+                    android:id="@+id/roleBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_4"
+                    android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+
+            </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnNotifications"
+                    style="@style/Widget.Zuhoo.Button.Text"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@string/content_desc_notifications"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    android:minWidth="0dp"
+                    android:padding="0dp"
+                    android:text=""
+                    app:icon="@drawable/ic_notifications"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="@dimen/icon_size_medium" />
+
+                <TextView
+                    android:id="@+id/notificationBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_badge_count"
+                    android:includeFontPadding="false"
+                    android:minWidth="16dp"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="1dp"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="center"
+                    android:visibility="gone"
+                    tools:ignore="SmallSp" />
+
+            </FrameLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAccount"
+                style="@style/Widget.Zuhoo.Button.Text"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="@dimen/space_4"
+                android:contentDescription="@string/content_desc_account"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:minWidth="0dp"
+                android:padding="0dp"
+                android:text=""
+                app:icon="@drawable/ic_account"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconSize="@dimen/icon_size_medium" />
+
+        </LinearLayout>
+
+        <!-- Staff stat row (3 tiles) -->
+        <GridLayout
+            android:id="@+id/staffStatsGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:columnCount="3"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding_compact">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_small"
+                    android:layout_height="@dimen/icon_size_small"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_requests"
+                    app:tint="@color/text_muted" />
+
+                <TextView
+                    android:id="@+id/statAllOpenRequestsValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:text="@string/stat_placeholder"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stat_open_requests"
+                    android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding_compact">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_small"
+                    android:layout_height="@dimen/icon_size_small"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_briefcase"
+                    app:tint="@color/text_muted" />
+
+                <TextView
+                    android:id="@+id/statAssignedToMeValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:text="@string/stat_placeholder"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stat_assigned_to_me"
+                    android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding_compact">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_small"
+                    android:layout_height="@dimen/icon_size_small"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_ticket"
+                    app:tint="@color/text_muted" />
+
+                <TextView
+                    android:id="@+id/statOpenTicketsValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:text="@string/stat_placeholder"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stat_open_tickets"
+                    android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+            </LinearLayout>
+
+        </GridLayout>
+
+        <!-- Staff: Requests -->
+        <TextView
+            android:id="@+id/sectionRequestsHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:layout_marginBottom="@dimen/space_12"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleMedium"
+            android:text="@string/section_requests"
+            android:visibility="gone" />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStaffAllRequests"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_all_requests"
+                android:visibility="gone"
+                app:icon="@drawable/ic_requests"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStaffAssignedRequests"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_assigned_requests"
+                android:visibility="gone"
+                app:icon="@drawable/ic_briefcase"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStaffSupportTickets"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_support_tickets"
+                android:visibility="gone"
+                app:icon="@drawable/ic_ticket"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+        </GridLayout>
+
+        <!-- Staff: My Work -->
+        <TextView
+            android:id="@+id/sectionMyWorkHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:layout_marginBottom="@dimen/space_12"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleMedium"
+            android:text="@string/section_my_work"
+            android:visibility="gone" />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCheckIn"
+                style="@style/Widget.Zuhoo.Button.Primary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_check_in_out"
+                android:visibility="gone"
+                app:icon="@drawable/ic_clock"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLeaveRequests"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_leave_requests"
+                android:visibility="gone"
+                app:icon="@drawable/ic_calendar"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPayslips"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_payslips"
+                android:visibility="gone"
+                app:icon="@drawable/ic_document"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTimesheet"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_my_timesheet"
+                android:visibility="gone"
+                app:icon="@drawable/ic_clock"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+        </GridLayout>
+
+        <!-- Staff: Approvals -->
+        <TextView
+            android:id="@+id/sectionApprovalsHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:layout_marginBottom="@dimen/space_12"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleMedium"
+            android:text="@string/section_approvals"
+            android:visibility="gone" />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLeaveApprovals"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_leave_approvals"
+                android:visibility="gone"
+                app:icon="@drawable/ic_check_circle"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExpenseApprovals"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_expense_approvals"
+                android:visibility="gone"
+                app:icon="@drawable/ic_check_circle"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+        </GridLayout>
+
+        <!-- Staff: Manage -->
+        <TextView
+            android:id="@+id/sectionManageHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:layout_marginBottom="@dimen/space_12"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleMedium"
+            android:text="@string/section_manage"
+            android:visibility="gone" />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExpenses"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_expenses"
+                android:visibility="gone"
+                app:icon="@drawable/ic_receipt"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMyLeads"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_my_leads"
+                android:visibility="gone"
+                app:icon="@drawable/ic_briefcase"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNoticeBoard"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_notice_board"
+                android:visibility="gone"
+                app:icon="@drawable/ic_inbox"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSearch"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_search"
+                android:visibility="gone"
+                app:icon="@drawable/ic_search"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+        </GridLayout>
+
+        <!-- Client stat row (4 tiles) -->
+        <GridLayout
+            android:id="@+id/statsGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:columnCount="2"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_small"
+                    android:layout_height="@dimen/icon_size_small"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_requests"
+                    app:tint="@color/text_muted" />
+
+                <TextView
+                    android:id="@+id/statOpenRequestsValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:text="@string/stat_placeholder"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stat_awaiting_action"
+                    android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_small"
+                    android:layout_height="@dimen/icon_size_small"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_document"
+                    app:tint="@color/text_muted" />
+
+                <TextView
+                    android:id="@+id/statPendingQuotationsValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:text="@string/stat_placeholder"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stat_requests_in_progress"
+                    android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_small"
+                    android:layout_height="@dimen/icon_size_small"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_billing"
+                    app:tint="@color/text_muted" />
+
+                <TextView
+                    android:id="@+id/statUnpaidInvoicesValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:text="@string/stat_placeholder"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stat_unpaid_invoices"
+                    android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_small"
+                    android:layout_height="@dimen/icon_size_small"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_wallet"
+                    app:tint="@color/text_muted" />
+
+                <TextView
+                    android:id="@+id/statActiveSubscriptionsValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:text="@string/stat_placeholder"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stat_active_subscriptions"
+                    android:textAppearance="@style/TextAppearance.Zuhoo.BodySmall" />
+            </LinearLayout>
+
+        </GridLayout>
+
+        <!-- Client: Quick Actions -->
+        <TextView
+            android:id="@+id/sectionQuickActionsHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:layout_marginBottom="@dimen/space_12"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleMedium"
+            android:text="@string/section_quick_actions"
+            android:visibility="gone" />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewRequests"
+                style="@style/Widget.Zuhoo.Button.Primary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_view_requests"
+                android:visibility="gone"
+                app:icon="@drawable/ic_requests"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewInvoices"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_view_invoices"
+                android:visibility="gone"
+                app:icon="@drawable/ic_billing"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBrowseCatalog"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_browse_catalog"
+                android:visibility="gone"
+                app:icon="@drawable/ic_catalog"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewPackages"
+                style="@style/Widget.Zuhoo.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_margin="@dimen/space_4"
+                android:minHeight="76dp"
+                android:gravity="center"
+                android:maxLines="2"
+                android:text="@string/action_view_packages"
+                android:visibility="gone"
+                app:icon="@drawable/ic_document"
+                app:iconGravity="top"
+                app:iconPadding="@dimen/space_8"
+                app:iconSize="@dimen/icon_size_medium" />
+
+        </GridLayout>
+
+    </LinearLayout>
+
+</ScrollView>

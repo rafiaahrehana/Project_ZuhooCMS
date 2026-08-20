@@ -1,0 +1,478 @@
+// Salary sheet. One panel holding a header, a totals strip, a search bar and
+// the sheet itself.
+//
+// Colours come from tokens rather than literals throughout, so the page works
+// in both themes without a dark-mode branch - the previous version hardcoded
+// its group tints and had to be patched by the theme sweep.
+
+.ss-shell {
+  background: var(--bos-bg-card);
+  border: 1px solid var(--bos-border);
+  border-radius: 18px;
+  padding: 1.1rem 1.15rem 1.25rem;
+  box-shadow: var(--bos-shadow-sm);
+}
+
+// ── Header ──────────────────────────────────────────────────
+.ss-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.ss-head-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 13px;
+  font-size: 1.25rem;
+  color: var(--bos-brand);
+  background: var(--bos-brand-soft);
+}
+
+.ss-head-text {
+  flex: 1 1 260px;
+  min-width: 0;
+
+  h4 {
+    margin: 0;
+    font-weight: 800;
+    font-size: 1.35rem;
+    color: var(--bos-text);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--bos-muted);
+  }
+}
+
+.ss-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+// Select wrapped so the calendar glyph sits inside the control, matching the
+// reference. The native arrow is left alone - replacing it costs more than it
+// buys and breaks keyboard affordances on some platforms.
+.ss-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  > i {
+    position: absolute;
+    left: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--bos-muted);
+    pointer-events: none;
+  }
+
+  select {
+    padding: 0.4rem 0.6rem 0.4rem 1.9rem;
+    border-radius: 10px;
+    border: 1px solid var(--bos-border);
+    background: var(--bos-bg-card);
+    color: var(--bos-text);
+    font-size: 0.83rem;
+    font-weight: 600;
+
+    &:focus {
+      outline: none;
+      border-color: var(--bos-brand);
+      box-shadow: var(--bos-focus-ring);
+    }
+  }
+}
+
+.ss-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--bos-gradient-accent);
+  color: #fff;
+  font-size: 0.83rem;
+  font-weight: 700;
+  transition: filter var(--bos-transition), opacity var(--bos-transition);
+
+  &:hover:not(:disabled) { filter: brightness(1.08); }
+  &:disabled { opacity: 0.6; }
+}
+
+// ── Notes ───────────────────────────────────────────────────
+.ss-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  margin-bottom: 0.7rem;
+
+  i { flex: 0 0 auto; margin-top: 0.1rem; }
+}
+
+.ss-note-info {
+  background: var(--bos-warning-soft);
+  color: var(--bs-warning);
+  border: 1px solid rgb(var(--bs-warning-rgb) / 0.25);
+}
+
+.ss-note-warn {
+  background: var(--bos-danger-soft);
+  color: var(--bs-danger);
+  border: 1px solid rgb(var(--bs-danger-rgb) / 0.25);
+}
+
+// ── Summary strip ───────────────────────────────────────────
+.ss-summary {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--bos-border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 0.9rem;
+}
+
+.ss-summary-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1.1rem;
+  flex: 0 0 auto;
+  background: var(--bos-gradient-brand);
+  color: #fff;
+}
+
+.ss-summary-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 50%;
+  font-size: 1.05rem;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.ss-summary-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.ss-summary-sub {
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+// Wraps rather than scrolls: eight figures on one line is unreadable below
+// about 1100px, and these are the numbers people come to the page for.
+.ss-summary-figures {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  background: var(--bos-bg-subtle);
+}
+
+.ss-fig {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.75rem 1rem;
+  flex: 1 1 130px;
+  min-width: 120px;
+  border-left: 1px solid var(--bos-border);
+
+  &:first-child { border-left: none; }
+}
+
+.ss-fig-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--bos-muted);
+}
+
+.ss-fig-value {
+  font-size: 0.98rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+// ── Toolbar ─────────────────────────────────────────────────
+.ss-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.7rem;
+}
+
+.ss-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 340px;
+
+  > i {
+    position: absolute;
+    left: 0.7rem;
+    font-size: 0.85rem;
+    color: var(--bos-muted);
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.45rem 2rem 0.45rem 2.1rem;
+    border-radius: 999px;
+    border: 1px solid var(--bos-border);
+    background: var(--bos-bg-subtle);
+    color: var(--bos-text);
+    font-size: 0.83rem;
+
+    &::placeholder { color: var(--bos-muted); }
+
+    &:focus {
+      outline: none;
+      background: var(--bos-bg-card);
+      border-color: var(--bos-brand);
+      box-shadow: var(--bos-focus-ring);
+    }
+  }
+}
+
+.ss-search-clear {
+  position: absolute;
+  right: 0.45rem;
+  border: none;
+  background: none;
+  padding: 0.1rem 0.25rem;
+  font-size: 0.7rem;
+  color: var(--bos-muted);
+
+  &:hover { color: var(--bos-text); }
+}
+
+.ss-filter-count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--bos-muted);
+}
+
+// ── Sheet ───────────────────────────────────────────────────
+// Nine columns still outrun a narrow screen, so the table scrolls inside its
+// own box and the employee column stays pinned - you lose track of whose row
+// you are reading otherwise.
+.ss-table-wrap {
+  overflow: auto;
+  max-height: calc(100vh - 420px);
+  border: 1px solid var(--bos-border);
+  border-radius: 12px;
+}
+
+.ss-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+  white-space: nowrap;
+
+  th, td {
+    padding: 0.6rem 0.85rem;
+    text-align: right;
+    border-bottom: 1px solid var(--bos-border-light);
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bos-bg-subtle);
+    color: var(--bos-text-secondary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--bos-border);
+
+    i {
+      margin-right: 0.35rem;
+      color: var(--bos-brand);
+      font-size: 0.78rem;
+    }
+  }
+
+  // Two sticky header rows: the Earnings/Deductions band pins at 0 and the
+  // column row pins just below it, so both survive vertical scroll. The band
+  // row's height must match the column row's `top` or they drift apart.
+  // Selectors are qualified with `thead th` on purpose: Angular stamps an
+  // [_ngcontent] attribute onto every simple selector, which lifts the base
+  // `thead th` rule to (0,4,2) - a bare two-class rule at (0,4,0) loses to it.
+  thead .ss-group-row th {
+    height: 30px;
+    padding: 0.25rem 0.85rem;
+    border-bottom: none;
+  }
+
+  thead tr:nth-child(2) th { top: 30px; }
+
+  thead th.ss-group {
+    text-align: center;
+    font-size: 0.66rem;
+    letter-spacing: 0.09em;
+  }
+
+  thead th.ss-group-earn {
+    color: var(--bos-brand);
+    background: var(--bos-brand-soft);
+    border-left: 1px solid var(--bos-border);
+  }
+
+  thead th.ss-group-ded {
+    color: #BE123C;
+    background: rgb(225 29 72 / 0.08);
+    border-left: 1px solid var(--bos-border);
+    border-right: 1px solid var(--bos-border);
+  }
+
+  // Gross / Total Ded. / Net: the columns people actually compare.
+  thead th.ss-col-strong, td.ss-col-strong {
+    background: var(--bos-bg-subtle);
+    border-left: 1px solid var(--bos-border-light);
+  }
+
+  tbody tr:hover td.ss-col-strong { background: var(--bos-bg-hover); }
+
+  .ss-col-emp {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    text-align: left;
+    min-width: 230px;
+    background: var(--bos-bg-card);
+  }
+
+  thead .ss-col-emp,
+  tfoot .ss-col-emp { z-index: 3; background: var(--bos-bg-subtle); }
+
+  tbody tr:hover td { background: var(--bos-bg-hover); }
+  tbody tr:hover .ss-col-emp { background: var(--bos-bg-hover); }
+
+  tfoot td {
+    position: sticky;
+    bottom: 0;
+    background: var(--bos-bg-subtle);
+    border-top: 2px solid var(--bos-border);
+    border-bottom: none;
+    font-weight: 800;
+    z-index: 2;
+  }
+}
+
+.ss-row-unconfigured td { opacity: 0.72; }
+
+.ss-emp {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ss-emp-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ss-emp-text { min-width: 0; }
+
+.ss-emp-name {
+  font-weight: 700;
+  color: var(--bos-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ss-emp-meta {
+  font-size: 0.7rem;
+  color: var(--bos-muted);
+}
+
+.ss-emp-note {
+  font-size: 0.68rem;
+  color: var(--bs-warning);
+}
+
+// Secondary figure under a cell - the overtime hours behind an Others total,
+// the absent days behind a deduction.
+.ss-sub {
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--bos-muted);
+}
+
+.ss-total-scope {
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--bos-muted);
+}
+
+.ss-foot-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  font-size: 0.74rem;
+  color: var(--bos-muted);
+}
+
+// ── Figure colours ──────────────────────────────────────────
+// Each reads against both themes: the light-mode values are the darker end of
+// the hue, and dark mode lifts them.
+.c-blue   { color: #1D4ED8; }
+.c-indigo { color: #4338CA; }
+.c-teal   { color: #0F766E; }
+.c-amber  { color: #B45309; }
+.c-violet { color: #7E22CE; }
+.c-rose   { color: #BE123C; }
+.c-green  { color: #0A5C48; }
+
+:host-context(:root[data-theme='dark']) {
+  .ss-table thead th.ss-group-ded { color: #FCA5A5; background: rgb(225 29 72 / 0.16); }
+  .ss-table thead th.ss-group-earn { color: #6EE7B7; }
+  .c-blue   { color: #93C5FD; }
+  .c-indigo { color: #A5B4FC; }
+  .c-teal   { color: #5EEAD4; }
+  .c-amber  { color: #FCD34D; }
+  .c-violet { color: #C4B5FD; }
+  .c-rose   { color: #FCA5A5; }
+  .c-green  { color: #6EE7B7; }
+}
+
+@media (max-width: 640px) {
+  .ss-shell { padding: 0.85rem; }
+  .ss-summary { flex-direction: column; }
+  .ss-summary-badge { justify-content: flex-start; }
+}

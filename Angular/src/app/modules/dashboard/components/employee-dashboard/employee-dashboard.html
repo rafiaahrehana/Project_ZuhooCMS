@@ -1,0 +1,277 @@
+<div class="container-fluid py-4">
+  <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold text-dark-contrast mb-1">Welcome, {{ profile?.firstName }} {{ profile?.lastName }}</h3>
+      <div class="text-secondary-contrast">Here's what's happening with your work today.</div>
+    </div>
+    <div class="text-end">
+      <div class="fw-semibold text-dark-contrast">{{ today | date:'EEEE, d MMMM y' }}</div>
+      <div class="text-muted small">Role: <span class="badge text-bg-secondary">{{ roleLabel | uppercase }}</span></div>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2 mb-3">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2 mb-3">{{ success }}</div> }
+
+  <div class="row g-3">
+    <!-- ══ Profile card ══ -->
+    <div class="col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #f0fdfa;">
+        <div class="card-body p-4">
+          @if (loadingProfile) { <app-loader /> }
+          @if (profile) {
+          <div class="text-center mb-3">
+            @if (profile.profileImageUrl || profile.image) {
+              <img [src]="profile.profileImageUrl || profile.image" class="rounded-circle mb-2" style="width:96px;height:96px;object-fit:cover;" alt="Profile photo" />
+            } @else {
+              <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center mx-auto fw-bold fs-3 mb-2" style="width:96px;height:96px;">
+                {{ profile.firstName?.charAt(0) }}{{ profile.lastName?.charAt(0) }}
+              </div>
+            }
+            <div class="fw-bold fs-5 text-dark">{{ profile.firstName }} {{ profile.lastName }}</div>
+            <div class="text-primary small fw-semibold">{{ profile.jobTitle || roleLabel }}</div>
+          </div>
+          <table class="table table-sm mb-0">
+            <tbody>
+              <tr><td class="text-muted small">Employee ID</td><td class="small fw-semibold text-end">{{ profile.employeeNumber || '-' }}</td></tr>
+              <tr><td class="text-muted small">Department</td><td class="small text-end">{{ profile.departmentName || '-' }}</td></tr>
+              <tr><td class="text-muted small">Email</td><td class="small text-end text-truncate" style="max-width:150px;">{{ profile.email }}</td></tr>
+              <tr><td class="text-muted small">Phone</td><td class="small text-end">{{ profile.phone || '-' }}</td></tr>
+              <tr><td class="text-muted small">Joined</td><td class="small text-end">{{ profile.hireDate ? (profile.hireDate | date:'mediumDate') : '-' }}</td></tr>
+            </tbody>
+          </table>
+          <a routerLink="/my-profile" class="btn btn-outline-primary btn-sm w-100 mt-3 rounded-3">
+            View Full Profile <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-9">
+      <!-- ══ Stat cards ══ -->
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #f3e8ff; border-top: 3px solid #8b5cf6 !important;">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="fw-bold small text-uppercase" style="color:#6b21a8;">My Requests</span>
+                <div class="bg-white bg-opacity-75 rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                  <i class="bi bi-clipboard-check" style="color:#8b5cf6;"></i>
+                </div>
+              </div>
+              <div class="fs-3 fw-bold mt-2" style="color:#3b0764;">{{ openRequestCount }}</div>
+              <div class="small" style="color:#6b21a8;">Open &amp; assigned to me</div>
+              <a routerLink="/servicedesk/requests" class="small fw-semibold text-decoration-none" style="color:#7e22ce;">View all <i class="bi bi-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #ccfbf1; border-top: 3px solid #0d9488 !important;">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="fw-bold small text-uppercase" style="color:#0f766e;">Leave Balance</span>
+                <div class="bg-white bg-opacity-75 rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                  <i class="bi bi-calendar2-check" style="color:#0d9488;"></i>
+                </div>
+              </div>
+              <!-- A dash, not 0: null means no balances are configured. -->
+              <div class="fs-3 fw-bold mt-2" style="color:#115e59;">{{ leaveDaysAvailable ?? '-' }}</div>
+              <div class="small" style="color:#0f766e;">Days available</div>
+              <a routerLink="/hrm/leaves" class="small fw-semibold text-decoration-none" style="color:#0f766e;">Apply for leave <i class="bi bi-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #dbeafe; border-top: 3px solid #2563eb !important;">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="fw-bold small text-uppercase" style="color:#0369a1;">Attendance</span>
+                <div class="bg-white bg-opacity-75 rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                  <i class="bi bi-clock" style="color:#2563eb;"></i>
+                </div>
+              </div>
+              <div class="fs-3 fw-bold mt-2" style="color:#0c4a6e;">
+                {{ attendancePercent != null ? (attendancePercent | number:'1.0-1') + '%' : '-' }}
+              </div>
+              <div class="small" style="color:#0369a1;">This month</div>
+              <a routerLink="/attendance/records" class="small fw-semibold text-decoration-none" style="color:#0369a1;">View history <i class="bi bi-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #fef3c7; border-top: 3px solid #f59e0b !important;">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="fw-bold small text-uppercase" style="color:#b45309;">Performance</span>
+                <div class="bg-white bg-opacity-75 rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                  <i class="bi bi-graph-up-arrow" style="color:#f59e0b;"></i>
+                </div>
+              </div>
+              <!-- Scored out of 10 here, matching how reviews are actually stored. -->
+              <div class="fs-3 fw-bold mt-2" style="color:#78350f;">
+                {{ latestReviewScore != null ? (latestReviewScore | number:'1.1-1') + '/10' : '-' }}
+              </div>
+              <div class="small" style="color:#b45309;">{{ latestReviewScore != null ? 'Latest review' : 'No review yet' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <!-- ══ Today ══ -->
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #ecfdf5;">
+            <div class="card-header border-0 bg-transparent px-4 pt-3 pb-0 d-flex justify-content-between align-items-center">
+              <h6 class="fw-bold text-dark-contrast mb-0"><i class="bi bi-clock me-1"></i>Today</h6>
+              <span class="text-muted small">{{ today | date:'shortDate' }}</span>
+            </div>
+            <div class="card-body px-4 pb-3 pt-2">
+              <div class="d-flex align-items-center gap-3 flex-wrap mb-3">
+                <!-- Keyed on checkInTime, not on the record existing: the nightly
+                     absentee job creates a row with no times, and treating that
+                     as "already checked in" hid Check In and offered Check Out. -->
+                @if (!todayRecord?.checkInTime) {
+                  <button class="btn btn-success" [disabled]="checkingInOut" (click)="checkIn()">
+                    @if (checkingInOut) { <span class="spinner-border spinner-border-sm me-1"></span> } Check In
+                  </button>
+                  <span class="text-muted small">You have not checked in today.</span>
+                }
+                @if (todayRecord?.checkInTime && !todayRecord?.checkOutTime) {
+                  <button class="btn btn-warning" [disabled]="checkingInOut" (click)="checkOut()">
+                    @if (checkingInOut) { <span class="spinner-border spinner-border-sm me-1"></span> } Check Out
+                  </button>
+                  <span class="text-muted small">Checked in at {{ todayRecord?.checkInTime }}</span>
+                  @if (todayRecord?.isLate && todayRecord?.lateMinutes) {
+                    <span class="badge text-bg-warning">{{ lateLabel(todayRecord?.lateMinutes) }} late</span>
+                  }
+                  <span class="text-muted small fst-italic">Remember to check out — an unfinished day counts as absent.</span>
+                }
+                @if (todayRecord?.checkInTime && todayRecord?.checkOutTime) {
+                  <span class="badge text-bg-dark">Completed for today</span>
+                  <span class="text-muted small">{{ todayRecord?.checkInTime }} &ndash; {{ todayRecord?.checkOutTime }}</span>
+                }
+              </div>
+
+              <div class="small fw-semibold text-secondary mb-2">Assigned to me</div>
+              @if (!myRequests.length) {
+                <div class="text-muted small">Nothing assigned to you right now.</div>
+              }
+              @for (r of myRequests; track r.id) {
+                <a [routerLink]="['/servicedesk/requests', r.id]" class="d-flex align-items-center gap-2 py-2 text-decoration-none border-top">
+                  <i class="bi bi-dot fs-4" [class.text-success]="r.status === 'COMPLETED'" [class.text-primary]="r.status !== 'COMPLETED'"></i>
+                  <span class="small fw-semibold text-dark flex-grow-1 text-truncate">#SR-{{ r.id }} {{ r.title }}</span>
+                  <span class="badge bg-light text-secondary border" style="font-size:0.65rem;">{{ r.status }}</span>
+                </a>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ Quick actions ══ -->
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #faf5ff;">
+            <div class="card-header border-0 bg-transparent px-4 pt-3 pb-0">
+              <h6 class="fw-bold text-dark-contrast mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body px-4 pb-3 pt-3">
+              <div class="row g-2">
+                @for (a of quickActions; track a.link) {
+                  <div class="col-4">
+                    <a [routerLink]="a.link" class="d-block text-center text-decoration-none p-2 rounded-3 h-100 bg-white border">
+                      <i class="bi {{ a.icon }} fs-5 d-block mb-1" [style.color]="a.accent"></i>
+                      <span class="text-dark" style="font-size:0.68rem; line-height:1.15; display:block;">{{ a.label }}</span>
+                    </a>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Leave balance bars ══ -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #eff6ff;">
+        <div class="card-header border-0 bg-transparent px-4 pt-3 pb-0 d-flex justify-content-between align-items-center">
+          <h6 class="fw-bold text-dark-contrast mb-0">Leave Balance</h6>
+          <a routerLink="/hrm/leaves" class="small fw-semibold text-decoration-none">View All</a>
+        </div>
+        <div class="card-body px-4 pb-3 pt-3">
+          @if (!leaveBalances.length) {
+            <div class="text-muted small">No leave balances configured for you yet. Ask HR to set your entitlements.</div>
+          }
+          @for (b of leaveBalances; track b.id) {
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small mb-1">
+                <span class="fw-semibold text-dark text-capitalize">{{ b.leaveType | lowercase }}</span>
+                <span class="text-muted">{{ availableDays(b) }} of {{ b.entitledDays }} left</span>
+              </div>
+              <div class="progress" style="height:6px;">
+                <div class="progress-bar bg-primary" role="progressbar" [style.width.%]="usedPercent(b)"></div>
+              </div>
+            </div>
+          }
+          @if (leaveBalances.length) {
+            <div class="text-muted" style="font-size:0.7rem;">Bar shows used and pending days against entitlement.</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Announcements ══ -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #fff7ed;">
+        <div class="card-header border-0 bg-transparent px-4 pt-3 pb-0 d-flex justify-content-between align-items-center">
+          <h6 class="fw-bold text-dark-contrast mb-0"><i class="bi bi-megaphone me-1"></i>Announcements</h6>
+          <a routerLink="/hrm/announcements" class="small fw-semibold text-decoration-none">View All</a>
+        </div>
+        <div class="card-body px-4 pb-3 pt-3">
+          @if (!announcementItems.length) {
+            <div class="text-muted small">No announcements right now.</div>
+          }
+          @for (n of announcementItems; track n.title + n.date) {
+            <div class="d-flex gap-2 py-2 border-bottom">
+              <i class="bi bi-megaphone text-warning"></i>
+              <div class="flex-grow-1">
+                <div class="small fw-semibold text-dark">{{ n.title }}</div>
+                <div class="text-muted" style="font-size:0.7rem;">{{ n.date | date:'mediumDate' }}</div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Upcoming holidays ══ -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #f0fdf4;">
+        <div class="card-header border-0 bg-transparent px-4 pt-3 pb-0 d-flex justify-content-between align-items-center">
+          <h6 class="fw-bold text-dark-contrast mb-0"><i class="bi bi-calendar-event me-1"></i>Upcoming Holidays</h6>
+          <a routerLink="/hrm/holidays" class="small fw-semibold text-decoration-none">Calendar</a>
+        </div>
+        <div class="card-body px-4 pb-3 pt-3">
+          @if (!upcomingHolidays.length) {
+            <div class="text-muted small">No holidays left this year.</div>
+          }
+          @for (h of upcomingHolidays; track h.name + h.date) {
+            <div class="d-flex align-items-center gap-2 py-2 border-bottom">
+              <i class="bi bi-calendar2-event text-success"></i>
+              <div class="flex-grow-1">
+                <div class="small fw-semibold text-dark">{{ h.name }}</div>
+                <div class="text-muted" style="font-size:0.7rem;">{{ h.date | date:'mediumDate' }}</div>
+              </div>
+              <span class="badge bg-success-subtle text-success" style="font-size:0.65rem;">
+                {{ h.daysAway === 0 ? 'Today' : 'In ' + h.daysAway + ' day' + (h.daysAway === 1 ? '' : 's') }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

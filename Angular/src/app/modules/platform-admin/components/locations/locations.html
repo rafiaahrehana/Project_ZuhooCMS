@@ -1,0 +1,270 @@
+<div class="container-fluid py-4">
+  <!-- Page Header -->
+  <div class="glass-panel rounded-4 p-4 mb-4 shadow-sm">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h3 class="mb-1 text-dark fw-bold tracking-tight" style="font-family: 'Outfit', sans-serif;">Locations Master Data</h3>
+        <div class="text-secondary small">Manage countries and geographic subdivision hierarchies globally.</div>
+      </div>
+      <div>
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 rounded-pill shadow-sm" (click)="openAddModal('COUNTRY')">
+          <i class="bi bi-plus-circle"></i> Add Country
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 mb-4" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+      <button type="button" class="btn-close" (click)="error = ''" style="padding: 1.0rem;"></button>
+    </div>
+  }
+  @if (success) {
+    <div class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 mb-4" role="alert">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ success }}
+      <button type="button" class="btn-close" (click)="success = ''" style="padding: 1.0rem;"></button>
+    </div>
+  }
+
+  <!-- Loader -->
+  @if (loading) {
+    <app-loader />
+  }
+
+  <!-- Finder Multi-Column Layout -->
+  @if (!loading) {
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+      <div class="card-header bg-light border-bottom py-3 px-4">
+        <div class="row text-uppercase font-monospace text-muted small fw-bold">
+          <div class="col-md-2 border-end py-1">Countries</div>
+          <div class="col-md-2 border-end py-1">Level 1 (State/Province)</div>
+          <div class="col-md-2 border-end py-1">Level 2 (District/County)</div>
+          <div class="col-md-2 border-end py-1">Level 3 (City/Upazila)</div>
+          <div class="col-md-4 py-1">Level 4 (Area/Station)</div>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="row g-0">
+          
+          <!-- Column 1: Countries -->
+          <div class="col-md-2 finder-column p-2 bg-light bg-opacity-25">
+            <div class="list-group list-group-flush border-0">
+              @for (c of countries; track c.id) {
+                <button type="button" 
+                        class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2 px-3 border-0"
+                        [class.active]="selectedCountry?.id === c.id"
+                        (click)="selectCountry(c)">
+                  <div class="d-flex align-items-center gap-2 text-truncate">
+                    <span class="fw-medium text-dark">{{ c.name }}</span>
+                    @if (c.code) {
+                      <span class="badge text-bg-light border text-secondary font-monospace small px-1 py-0" style="font-size: 0.7rem;">{{ c.code }}</span>
+                    }
+                  </div>
+                  <div class="action-btn-group d-flex align-items-center gap-1">
+                    <button class="btn btn-sm btn-link p-0 text-secondary" (click)="openEditModal(c); $event.stopPropagation()">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-sm btn-link p-0 text-danger" (click)="openDeleteDialog(c); $event.stopPropagation()">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </button>
+              } @empty {
+                <div class="text-muted text-center py-4 small">No countries found.</div>
+              }
+            </div>
+          </div>
+
+          <!-- Column 2: Level 1 -->
+          <div class="col-md-2 finder-column p-2">
+            @if (selectedCountry) {
+              <div class="d-flex justify-content-between align-items-center px-2 py-1 mb-2 border-bottom">
+                <span class="text-secondary small fw-semibold">Level 1</span>
+                <button class="btn btn-xs btn-outline-primary py-0 px-2 small" (click)="openAddModal('LEVEL1', selectedCountry.id)">
+                  <i class="bi bi-plus-lg"></i> Add
+                </button>
+              </div>
+              <div class="list-group list-group-flush border-0">
+                @for (node of level1Nodes; track node.id) {
+                  <button type="button" 
+                          class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2 px-3 border-0"
+                          [class.active]="selectedL1?.id === node.id"
+                          (click)="selectL1(node)">
+                    <span class="text-truncate fw-medium text-dark">{{ node.name }}</span>
+                    <div class="action-btn-group d-flex align-items-center gap-1">
+                      <button class="btn btn-sm btn-link p-0 text-secondary" (click)="openEditModal(node); $event.stopPropagation()">
+                        <i class="bi bi-pencil-square"></i>
+                      </button>
+                      <button class="btn btn-sm btn-link p-0 text-danger" (click)="openDeleteDialog(node); $event.stopPropagation()">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </button>
+                } @empty {
+                  <div class="text-muted text-center py-4 small">No subdivisions.</div>
+                }
+              </div>
+            } @else {
+              <div class="text-muted text-center py-5 small text-opacity-50">Select a country first.</div>
+            }
+          </div>
+
+          <!-- Column 3: Level 2 -->
+          <div class="col-md-2 finder-column p-2 bg-light bg-opacity-25">
+            @if (selectedL1) {
+              <div class="d-flex justify-content-between align-items-center px-2 py-1 mb-2 border-bottom">
+                <span class="text-secondary small fw-semibold">Level 2</span>
+                <button class="btn btn-xs btn-outline-primary py-0 px-2 small" (click)="openAddModal('LEVEL2', selectedL1.id)">
+                  <i class="bi bi-plus-lg"></i> Add
+                </button>
+              </div>
+              <div class="list-group list-group-flush border-0">
+                @for (node of level2Nodes; track node.id) {
+                  <button type="button" 
+                          class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2 px-3 border-0"
+                          [class.active]="selectedL2?.id === node.id"
+                          (click)="selectL2(node)">
+                    <span class="text-truncate fw-medium text-dark">{{ node.name }}</span>
+                    <div class="action-btn-group d-flex align-items-center gap-1">
+                      <button class="btn btn-sm btn-link p-0 text-secondary" (click)="openEditModal(node); $event.stopPropagation()">
+                        <i class="bi bi-pencil-square"></i>
+                      </button>
+                      <button class="btn btn-sm btn-link p-0 text-danger" (click)="openDeleteDialog(node); $event.stopPropagation()">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </button>
+                } @empty {
+                  <div class="text-muted text-center py-4 small">No subdivisions.</div>
+                }
+              </div>
+            } @else {
+              <div class="text-muted text-center py-5 small text-opacity-50">Select Level 1 node first.</div>
+            }
+          </div>
+
+          <!-- Column 4: Level 3 -->
+          <div class="col-md-2 finder-column p-2">
+            @if (selectedL2) {
+              <div class="d-flex justify-content-between align-items-center px-2 py-1 mb-2 border-bottom">
+                <span class="text-secondary small fw-semibold">Level 3</span>
+                <button class="btn btn-xs btn-outline-primary py-0 px-2 small" (click)="openAddModal('LEVEL3', selectedL2.id)">
+                  <i class="bi bi-plus-lg"></i> Add
+                </button>
+              </div>
+              <div class="list-group list-group-flush border-0">
+                @for (node of level3Nodes; track node.id) {
+                  <button type="button" 
+                          class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2 px-3 border-0"
+                          [class.active]="selectedL3?.id === node.id"
+                          (click)="selectL3(node)">
+                    <span class="text-truncate fw-medium text-dark">{{ node.name }}</span>
+                    <div class="action-btn-group d-flex align-items-center gap-1">
+                      <button class="btn btn-sm btn-link p-0 text-secondary" (click)="openEditModal(node); $event.stopPropagation()">
+                        <i class="bi bi-pencil-square"></i>
+                      </button>
+                      <button class="btn btn-sm btn-link p-0 text-danger" (click)="openDeleteDialog(node); $event.stopPropagation()">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </button>
+                } @empty {
+                  <div class="text-muted text-center py-4 small">No subdivisions.</div>
+                }
+              </div>
+            } @else {
+              <div class="text-muted text-center py-5 small text-opacity-50">Select Level 2 node first.</div>
+            }
+          </div>
+
+          <!-- Column 5: Level 4 -->
+          <div class="col-md-4 finder-column p-2 bg-light bg-opacity-25">
+            @if (selectedL3) {
+              <div class="d-flex justify-content-between align-items-center px-2 py-1 mb-2 border-bottom">
+                <span class="text-secondary small fw-semibold">Level 4</span>
+                <button class="btn btn-xs btn-outline-primary py-0 px-2 small" (click)="openAddModal('LEVEL4', selectedL3.id)">
+                  <i class="bi bi-plus-lg"></i> Add
+                </button>
+              </div>
+              <div class="list-group list-group-flush border-0">
+                @for (node of level4Nodes; track node.id) {
+                  <div class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-2 px-3 border-0"
+                       [class.active]="selectedL4?.id === node.id"
+                       (click)="selectL4(node)">
+                    <span class="text-truncate fw-medium text-dark">{{ node.name }}</span>
+                    <div class="action-btn-group d-flex align-items-center gap-1">
+                      <button class="btn btn-sm btn-link p-0 text-secondary" (click)="openEditModal(node); $event.stopPropagation()">
+                        <i class="bi bi-pencil-square"></i>
+                      </button>
+                      <button class="btn btn-sm btn-link p-0 text-danger" (click)="openDeleteDialog(node); $event.stopPropagation()">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="text-muted text-center py-4 small">No subdivisions.</div>
+                }
+              </div>
+            } @else {
+              <div class="text-muted text-center py-5 small text-opacity-50">Select Level 3 node first.</div>
+            }
+          </div>
+
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add/Edit Modal Dialog -->
+  @if (showFormModal) {
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1050;">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header border-bottom py-3 px-4">
+            <h5 class="modal-title fw-bold text-dark">{{ isEditMode ? 'Edit Location Node' : 'Add Location Node' }}</h5>
+            <button type="button" class="btn-close" (click)="closeFormModal()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-3">
+              <label class="form-label fw-semibold text-secondary small">Node Type</label>
+              <input type="text" class="form-control bg-light text-secondary font-monospace fw-semibold" [value]="formNode.type" readonly />
+            </div>
+            
+            <div class="mb-3">
+              <label for="node-name" class="form-label fw-semibold text-secondary small">Name <span class="text-danger">*</span></label>
+              <input type="text" id="node-name" class="form-control" [(ngModel)]="formNode.name" placeholder="Enter node name" required />
+            </div>
+
+            @if (formNode.type === 'COUNTRY') {
+              <div class="mb-3">
+                <label for="node-code" class="form-label fw-semibold text-secondary small">Country Code (2 Letters)</label>
+                <input type="text" id="node-code" class="form-control font-monospace text-uppercase" [(ngModel)]="formNode.code" placeholder="e.g. BD, US" maxlength="2" />
+              </div>
+            }
+          </div>
+          <div class="modal-footer border-top py-3 px-4 d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-light border px-4 rounded-pill" (click)="closeFormModal()">Cancel</button>
+            <button type="button" class="btn btn-primary px-4 rounded-pill d-flex align-items-center gap-2" [disabled]="saving" (click)="saveNode()">
+              @if (saving) {
+                <span class="spinner-border spinner-border-sm"></span>
+              }
+              Save Node
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Dialog -->
+  <app-confirm-dialog
+    [visible]="showDeleteDialog"
+    title="Delete Location Node"
+    [message]="'Are you sure you want to delete \'' + deleteTarget?.name + '\'? This action is permanent and WILL delete all child subdivisions recursively.'"
+    confirmLabel="Delete Node"
+    [danger]="true"
+    (confirmed)="confirmDelete()"
+    (cancelled)="closeDeleteDialog()" />
+
+</div>

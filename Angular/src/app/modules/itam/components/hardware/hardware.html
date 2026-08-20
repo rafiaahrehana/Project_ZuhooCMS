@@ -1,0 +1,121 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h4 class="mb-0">Hardware Assets</h4>
+    <button *appHasPermission="'HARDWARE_CREATE'" class="btn btn-primary btn-sm" (click)="openCreate()"><i class="bi bi-plus"></i> Add Asset</button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+  @if (loading) { <app-loader /> }
+
+  @if (showForm) {
+  <div class="card mb-3"><div class="card-header py-2 fw-semibold">{{ editId ? 'Edit' : 'New' }} Asset</div>
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Asset Name *" [(ngModel)]="form.name" /></div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="form.category">
+            <option value="">Category</option>
+            @for (c of categories; track c) { <option [value]="c">{{ c }}</option> }
+          </select>
+        </div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Serial Number" [(ngModel)]="form.serialNumber" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="number" placeholder="Purchase Cost" [(ngModel)]="form.purchaseCost" /></div>
+        <div class="col-md-2"><input class="form-control form-control-sm" type="date" [(ngModel)]="form.purchaseDate" /></div>
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Description" [(ngModel)]="form.description" /></div>
+        <div class="col-md-4"><input class="form-control form-control-sm" placeholder="Notes" [(ngModel)]="form.notes" /></div>
+
+        <div class="col-12"><hr class="my-1" /><div class="small text-muted fw-semibold mb-1">IT Hardware Details (optional)</div></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Asset Tag" [(ngModel)]="form.assetTag" /></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Brand" [(ngModel)]="form.brand" /></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Model" [(ngModel)]="form.model" /></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" type="date" placeholder="Warranty Expiry" [(ngModel)]="form.warrantyExpiry" /></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="IP Address" [(ngModel)]="form.ipAddress" /></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="MAC Address" [(ngModel)]="form.macAddress" /></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Processor" [(ngModel)]="form.processorModel" /></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Operating System" [(ngModel)]="form.operatingSystem" /></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="RAM (e.g. 16GB)" [(ngModel)]="form.ramSize" /></div>
+        <div class="col-md-3"><input class="form-control form-control-sm" placeholder="Storage (e.g. 512GB SSD)" [(ngModel)]="form.storageSize" /></div>
+
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary btn-sm" [disabled]="!form.name?.trim()" (click)="save()">Save</button>
+          <button class="btn btn-secondary btn-sm" (click)="showForm = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (!loading && assets.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light"><tr><th>Name</th><th>Category</th><th>Asset Tag</th><th>Specs</th><th>Status</th><th>Assigned To</th><th></th></tr></thead>
+      <tbody>
+        @for (a of assets; track a.id) {
+        <tr [class.table-warning]="a.warrantyExpiry && (a.warrantyExpiry < today)">
+          <td>{{ a.name }}</td>
+          <td><span class="badge text-bg-light border">{{ a.category || '-' }}</span></td>
+          <td class="small text-muted">{{ a.assetTag || a.serialNumber || '-' }}</td>
+          <td class="small text-muted">
+            @if (a.brand || a.model) { {{ a.brand }} {{ a.model }}<br /> }
+            @if (a.processorModel || a.ramSize) { {{ a.processorModel }} {{ a.ramSize ? '/ ' + a.ramSize : '' }} }
+          </td>
+          <td><span class="badge {{ statusClass(a.status) }}">{{ a.status }}</span></td>
+          <td>{{ a.assignedToName || '-' }}</td>
+          <td class="text-end text-nowrap">
+            <button *appHasPermission="'HARDWARE_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="openEdit(a)"><i class="bi bi-pencil"></i></button>
+            @if (a.status === 'AVAILABLE') { <button *appHasPermission="'HARDWARE_UPDATE'" class="btn btn-outline-primary btn-sm me-1" (click)="assignTarget = a; assignEmployeeId = undefined">Assign</button> }
+            @if (a.status === 'ASSIGNED') { <button *appHasPermission="'HARDWARE_UPDATE'" class="btn btn-outline-warning btn-sm me-1" (click)="unassign(a)">Return</button> }
+            @if (a.status === 'AVAILABLE') { <button *appHasPermission="'HARDWARE_UPDATE'" class="btn btn-outline-secondary btn-sm me-1" (click)="toggleMaintenance(a)">Start Maintenance</button> }
+            @if (a.status === 'UNDER_MAINTENANCE') { <button *appHasPermission="'HARDWARE_UPDATE'" class="btn btn-outline-success btn-sm me-1" (click)="toggleMaintenance(a)">End Maintenance</button> }
+            @if (a.status === 'AVAILABLE' || a.status === 'UNDER_MAINTENANCE') { <button *appHasPermission="'HARDWARE_UPDATE'" class="btn btn-outline-dark btn-sm me-1" (click)="disposeTarget = a; disposeReason = ''">Dispose</button> }
+            <button *appHasPermission="'HARDWARE_DELETE'" class="btn btn-outline-danger btn-sm" (click)="deleteTarget = a"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer d-flex justify-content-end"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+  </div>
+  }
+  @if (!loading && !assets.length && !showForm) { <app-empty-state icon="bi-pc-display" message="No hardware assets." /> }
+
+  @if (assignTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Assign {{ assignTarget.name }}</h5><button class="btn-close" (click)="assignTarget = null"></button></div>
+        <div class="modal-body">
+          <select class="form-select" [(ngModel)]="assignEmployeeId">
+            <option [ngValue]="undefined" disabled>Select an employee</option>
+            @for (e of employees; track e.id) { <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }} ({{ e.employeeNumber }})</option> }
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="assignTarget = null">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="!assignEmployeeId" (click)="doAssign()">Assign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  @if (disposeTarget) {
+  <div class="modal d-block" style="background: rgba(0,0,0,.4)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Dispose {{ disposeTarget.name }}</h5><button class="btn-close" (click)="disposeTarget = null"></button></div>
+        <div class="modal-body">
+          <p class="text-muted small mb-2">This permanently retires the asset. It cannot be reassigned afterward.</p>
+          <label class="form-label small fw-semibold">Reason (optional)</label>
+          <textarea class="form-control" rows="2" [(ngModel)]="disposeReason" placeholder="e.g. End of life, damaged beyond repair..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" (click)="disposeTarget = null">Cancel</button>
+          <button class="btn btn-dark btn-sm" (click)="doDispose()">Dispose</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  <app-confirm-dialog [visible]="!!deleteTarget" title="Delete Asset" message="Delete this asset?" (confirmed)="doDelete()" (cancelled)="deleteTarget = null" />
+</div>

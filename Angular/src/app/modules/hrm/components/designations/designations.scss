@@ -1,0 +1,127 @@
+.designation-modal-dialog {
+  max-width: 720px;
+}
+
+.designation-modal-content {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(16, 24, 40, 0.08);
+}
+
+// The header surface is painted by the global .modal-header rule (navy gradient
+// + lavender top accent). These three only need to be legible on top of it -
+// the previous #111827 / #6b7280 were chosen for a white header and left the
+// subtitle effectively invisible once the header went dark.
+.designation-modal-header {
+  padding: 1.25rem 1.5rem;
+}
+
+.designation-modal-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+
+.designation-modal-subtitle {
+  font-size: 0.825rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin-top: 0.15rem;
+}
+
+.designation-modal-body {
+  padding: 1.5rem;
+}
+
+.designation-modal-footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 1rem 1.5rem;
+}
+
+.designation-field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+.designation-input,
+.designation-select {
+  height: 48px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0 0.9rem;
+  font-size: 0.9rem;
+
+  &:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  }
+}
+
+.designation-textarea {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.9rem;
+
+  &:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  }
+}
+
+.designation-field-error {
+  font-size: 0.75rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}
+
+.designation-char-counter {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.designation-combobox {
+  position: relative;
+}
+
+.designation-combobox-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.12);
+}
+
+.designation-combobox-option {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+.designation-btn-primary {
+  border-radius: 10px;
+  height: 44px;
+  padding: 0 1.25rem;
+  font-weight: 600;
+}
+
+.designation-btn-outline {
+  border-radius: 10px;
+  height: 44px;
+  padding: 0 1.25rem;
+  font-weight: 600;
+}

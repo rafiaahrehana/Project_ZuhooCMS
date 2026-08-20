@@ -1,0 +1,82 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <h4 class="mb-0"><i class="bi bi-wallet2 me-2"></i>Wallet</h4>
+    <button class="btn btn-primary btn-sm" (click)="openTopUp()"><i class="bi bi-plus-circle"></i> Top Up</button>
+  </div>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  @if (loadingWallet) { <app-loader /> }
+  @if (!loadingWallet && wallet) {
+  <div class="row g-3 mb-3">
+    <div class="col-sm-4">
+      <div class="card"><div class="card-body py-3">
+        <div class="text-muted small">Balance</div>
+        <div class="fw-bold fs-5">{{ wallet.balance | bosCurrency:wallet.currency }}</div>
+      </div></div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card"><div class="card-body py-3">
+        <div class="text-muted small">Credit Balance</div>
+        <div class="fw-bold fs-5">{{ wallet.creditBalance | bosCurrency:wallet.currency }}</div>
+      </div></div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card border-primary"><div class="card-body py-3">
+        <div class="text-muted small">Total Available</div>
+        <div class="fw-bold fs-5 text-primary">{{ wallet.totalAvailable | bosCurrency:wallet.currency }}</div>
+      </div></div>
+    </div>
+  </div>
+  }
+
+  @if (showTopUp) {
+  <div class="card mb-3"><div class="card-body">
+    <h6 class="fw-semibold mb-3">Top Up Wallet</h6>
+    <div class="row g-2">
+      <div class="col-md-4">
+        <label class="form-label small text-muted mb-1">Amount *</label>
+        <input type="number" class="form-control form-control-sm" [(ngModel)]="topUpForm.amount" />
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-success" [disabled]="!topUpForm.amount || topUpForm.amount <= 0" (click)="topUpOnline()">
+          <i class="bi bi-credit-card me-1"></i>Pay Online
+        </button>
+        <button class="btn btn-secondary btn-sm" (click)="showTopUp = false">Cancel</button>
+      </div>
+    </div>
+  </div></div>
+  }
+
+  <div class="card">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Transaction History</span>
+      <select class="form-select form-select-sm" style="width:180px" [(ngModel)]="typeFilter" (change)="page=0;loadTransactions()">
+        <option value="">All types</option>
+        @for (t of types; track t) { <option [value]="t">{{ typeLabel(t) }}</option> }
+      </select>
+    </div>
+    @if (loading) { <app-loader /> }
+    @if (!loading && transactions.length) {
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Date</th><th>Type</th><th class="text-end">Amount</th><th class="text-end">Balance After</th><th>Reference</th><th>Notes</th></tr></thead>
+        <tbody>
+          @for (t of transactions; track t.id) {
+          <tr>
+            <td class="small text-muted">{{ t.transactedAt | date:'medium' }}</td>
+            <td><span class="badge {{ typeClass(t.type) }}">{{ typeLabel(t.type) }}</span></td>
+            <td class="text-end">{{ t.amount | bosCurrency:wallet?.currency }}</td>
+            <td class="text-end">{{ t.balanceAfter | bosCurrency:wallet?.currency }}</td>
+            <td class="small">{{ t.reference || '-' }}</td>
+            <td class="small">{{ t.notes || '-' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-end"><app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" /></div>
+    }
+    @if (!loading && !transactions.length) { <app-empty-state icon="bi-wallet2" message="No transactions yet." /> }
+  </div>
+</div>

@@ -1,0 +1,455 @@
+// Fonts are loaded once in index.html. Importing them here inlined a second
+// copy of the Inter CSS into this component (and into register.scss, which
+// imports this file), blowing the anyComponentStyle budget twice over.
+
+
+
+// "$purple" is the auth accent - now the landing's emerald. Renaming the
+// variable would touch every rule below for no behavioural gain.
+$purple:        #10B981;
+$purple-hover:  #059669;
+$purple-dark:   #1E1B4B;
+$lavender:      #A78BFA;
+$lavender-lt:   #EDE9FE;
+$text-main:     #1E1B4B;
+$text-sub:      #6366F1;
+$text-muted:    #8B8FA8;
+$border:        #E5E7EB;
+
+
+.auth-page {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background: #F0EEFF;
+  position: relative;
+  overflow: hidden;
+
+  // subtle background gradient exactly like the image
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(167,139,250,0.28) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 80%, rgba(107,70,255,0.12) 0%, transparent 60%),
+      linear-gradient(155deg, #F3F0FF 0%, #EEF2FF 50%, #F0EEFF 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+
+.left-panel {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 50%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem 3rem 2rem;
+  
+  @media (max-width: 991px) { display: none; }
+}
+
+
+.logo-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 3rem;
+
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(16,185,129,.15);
+  }
+
+  .logo-text {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: $text-main;
+    letter-spacing: -0.3px;
+  }
+}
+
+.hero-content {
+  max-width: 420px;
+  margin-bottom: 2rem;
+}
+
+.hero-title {
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: $text-main;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.2rem;
+
+  .hero-highlight {
+    color: $purple;
+    display: block;
+  }
+}
+
+.hero-sub {
+  font-size: 0.97rem;
+  line-height: 1.65;
+  color: #4338CA;
+  opacity: 0.85;
+  max-width: 380px;
+  margin-bottom: 2rem;
+}
+
+.feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.8rem 1rem;
+  background: rgba(255,255,255,0.45);
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+
+  .feature-icon {
+    flex: 0 0 36px;
+    width: 36px; height: 36px;
+    background: rgba(16,185,129,.12);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: $purple;
+    font-size: 1rem;
+  }
+
+  .feature-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: $text-main;
+    line-height: 1.3;
+  }
+
+  .feature-desc {
+    font-size: 0.78rem;
+    color: #6366F1;
+    opacity: 0.8;
+    margin-top: 1px;
+  }
+}
+
+// ── RIGHT PANEL ─────────────────────────────────────────
+.right-panel {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  box-sizing: border-box;
+  
+  @media (max-width: 991px) {
+    flex: 0 0 100%;
+    width: 100%;
+    padding: 1rem 0;
+    margin: 0 auto;
+  }
+}
+
+// Auth card (white card)
+.auth-card {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 20px 48px rgba(30,27,75,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  padding: 2.8rem 2.8rem;
+  width: 100%;
+  max-width: 520px;
+  box-sizing: border-box;
+}
+
+.mobile-logo-bar {
+  margin-bottom: 1.25rem;
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(16,185,129,.25);
+  }
+
+  .logo-text {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $text-main;
+    letter-spacing: -0.3px;
+  }
+}
+
+.auth-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: $text-main;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.4rem;
+}
+
+.auth-sub {
+  font-size: 0.9rem;
+  color: $text-muted;
+  margin-bottom: 1.8rem;
+}
+
+.auth-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 10px;
+  color: #991B1B;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+
+  i { color: #DC2626; font-size: 0.95rem; }
+}
+
+// Field groups
+.field-group {
+  margin-bottom: 1.2rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $text-main;
+  margin-bottom: 0.45rem;
+}
+
+.field-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .field-icon {
+    position: absolute;
+    left: 14px;
+    color: $text-muted;
+    font-size: 0.95rem;
+    pointer-events: none;
+  }
+
+  .eye-btn {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: $text-muted;
+    padding: 0;
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    
+    &:hover { color: $purple; }
+  }
+}
+
+.field-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 44px;
+  border: 1.5px solid $border;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: $text-main;
+  background: #FAFAFA;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: 'Inter', sans-serif;
+
+  &::placeholder { color: #B0B7C3; }
+
+  &:focus {
+    border-color: $purple;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(16,185,129,.12);
+  }
+
+  &.invalid {
+    border-color: #EF4444;
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+  }
+}
+
+.field-error {
+  display: block;
+  font-size: 0.78rem;
+  color: #DC2626;
+  margin-top: 4px;
+  padding-left: 2px;
+}
+
+// Remember + Forgot row
+.remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+
+  .remember-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.85rem;
+    color: $text-main;
+    cursor: pointer;
+    user-select: none;
+
+    .remember-cb {
+      width: 15px;
+      height: 15px;
+      border-radius: 4px;
+      accent-color: $purple;
+      cursor: pointer;
+    }
+  }
+
+  .forgot-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $purple;
+    text-decoration: none;
+    
+    &:hover { color: $purple-hover; text-decoration: underline; }
+  }
+}
+
+// Sign In button
+.btn-signin {
+  width: 100%;
+  height: 50px;
+  background: $purple;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition:  0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 8px 20px rgba(16,185,129,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+
+  &:hover:not(:disabled) {
+    background: $purple-hover;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(16,185,129,.35);
+  }
+
+  &:active:not(:disabled) { transform: translateY(0); }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.or-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: $border;
+  }
+
+  span {
+    font-size: 0.78rem;
+    color: $text-muted;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+}
+
+// Social buttons row
+.social-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.social-btn {
+  flex: 1;
+  height: 42px;
+  background: #fff;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $text-main;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: 'Inter', sans-serif;
+
+  &:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+}
+
+// Sign up link
+.signup-link {
+  text-align: center;
+  font-size: 0.86rem;
+  color: $text-muted;
+  margin: 0;
+
+  a {
+    color: $purple;
+    font-weight: 700;
+    text-decoration: none;
+    
+    &:hover { text-decoration: underline; }
+  }
+}
+
+
+// Charcoal page skin (matches the landing). The accent itself is recoloured
+// via $purple above; these rules only darken the page and left panel.
+.auth-page {
+  background: #0F1715;
+  &::before {
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(16,185,129,.14) 0%, transparent 70%),
+      linear-gradient(155deg, #0F1715 0%, #101720 50%, #0C1211 100%);
+  }
+}
+.logo-bar .logo-text, .mobile-logo-bar .logo-text, .hero-title { color: #fff; }
+.hero-sub { color: #94A8A0; opacity: 1; }
+.feature-item {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.1);
+  .feature-title { color: #E7ECEF; }
+  .feature-desc { color: #94A8A0; opacity: 1; }
+}

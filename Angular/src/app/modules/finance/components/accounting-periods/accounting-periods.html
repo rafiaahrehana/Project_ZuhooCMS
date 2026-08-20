@@ -1,0 +1,118 @@
+<div class="container-fluid py-3">
+  <div class="page-header mb-4 p-3 rounded-3 shadow-sm page-header-bar">
+    <div>
+      <h4 class="page-title mb-0">Accounting Periods</h4>
+      <div class="page-subtitle mt-1">Open or close posting periods and protect finalized financial reports</div>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <a class="btn btn-light bg-white border shadow-sm btn-sm" routerLink="/finance/fiscal-years">
+        <i class="bi bi-calendar3 me-1"></i>Fiscal Years
+      </a>
+      <button class="btn btn-light bg-white border shadow-sm btn-sm" (click)="changeYear(-1)"><i class="bi bi-chevron-left"></i></button>
+      <span class="fw-bold px-2">Fiscal Year {{ fiscalYear }}</span>
+      <button class="btn btn-light bg-white border shadow-sm btn-sm" (click)="changeYear(1)"><i class="bi bi-chevron-right"></i></button>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success py-2">{{ success }}</div> }
+
+  <!-- Stat row -->
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-3">
+      <app-stat-card label="Total Periods" [value]="periods.length" icon="bi-calendar3" variant="primary" />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <app-stat-card label="Open" [value]="openCount" icon="bi-unlock" variant="info" />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <app-stat-card label="Closed" [value]="closedCount" icon="bi-lock" variant="success" />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <app-stat-card label="Current" [value]="currentLabel" icon="bi-calendar-event" variant="purple" />
+    </div>
+  </div>
+
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && periods.length) {
+  <!-- Period card grid -->
+  <div class="row g-3 mb-3">
+    @for (period of periods; track period.id) {
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <div class="text-uppercase text-muted small fw-semibold">Period {{ period.periodNumber }}</div>
+          @if (period.status === 'CLOSED') {
+            <span class="badge text-bg-success">CLOSED</span>
+          } @else if (isCurrent(period)) {
+            <span class="badge text-bg-primary">CURRENT</span>
+          } @else {
+            <span class="badge text-bg-warning">OPEN</span>
+          }
+        </div>
+        <div class="fw-bold fs-5 mb-1">{{ period.label }}</div>
+        <div class="small text-muted mb-1">
+          <i class="bi bi-calendar3 me-1"></i>{{ period.startDate | date:'MMM d, y' }} — {{ period.endDate | date:'MMM d, y' }}
+        </div>
+        <div class="small text-muted"><i class="bi bi-folder2 me-1"></i>FY {{ period.fiscalYear }}</div>
+        <div class="d-flex justify-content-between align-items-center gap-2 mt-auto pt-2 border-top">
+          <div class="small text-muted">
+            @if (period.status === 'CLOSED' && period.closedAt) {
+              Closed {{ period.closedAt | date:'mediumDate' }}@if (period.closedBy) { by {{ period.closedBy }} }
+            }
+            @if (period.reopenedAt) {
+              <div>Reopened {{ period.reopenedAt | date:'mediumDate' }}@if (period.reopenedBy) { by {{ period.reopenedBy }} }</div>
+            }
+          </div>
+          @if (period.status === 'OPEN') {
+            <button *appHasPermission="'ACCOUNTING_PERIOD_CLOSE'" class="btn btn-outline-primary btn-sm"
+                    [disabled]="!canClose(period) || closingId === period.id"
+                    [title]="!canClose(period) ? 'Close earlier periods first' : ''"
+                    (click)="closePeriod(period)">
+              @if (closingId === period.id) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Close
+            </button>
+          } @else {
+            <button *appHasPermission="'ACCOUNTING_PERIOD_CLOSE'" class="btn btn-outline-secondary btn-sm"
+                    [disabled]="!canReopen(period) || closingId === period.id"
+                    [title]="!canReopen(period) ? 'Reopen later periods first' : ''"
+                    (click)="reopenPeriod(period)">
+              @if (closingId === period.id) { <span class="spinner-border spinner-border-sm me-1"></span> }
+              Reopen
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 p-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <div class="fw-semibold">Close Fiscal Year {{ fiscalYear }}</div>
+        <div class="text-muted small">
+          @if (allClosed) {
+            All 12 periods are closed - ready to post the year-end closing entry (net income into Retained Earnings).
+          } @else {
+            All 12 periods must be closed first.
+          }
+        </div>
+      </div>
+      <button *appHasPermission="'ACCOUNTING_PERIOD_CLOSE'" class="btn btn-primary-bos fw-semibold" [disabled]="!allClosed" (click)="closeYearConfirm = true">
+        <i class="bi bi-lock me-1"></i>Close Fiscal Year
+      </button>
+    </div>
+  </div>
+  }
+</div>
+
+<app-confirm-dialog
+  [visible]="closeYearConfirm"
+  title="Close Fiscal Year"
+  [message]="'Close fiscal year ' + fiscalYear + '? This posts the year-end closing entry (net income into Retained Earnings) and cannot be undone from here.'"
+  confirmLabel="Close Fiscal Year"
+  (confirmed)="confirmCloseYear()"
+  (cancelled)="closeYearConfirm = false"
+/>

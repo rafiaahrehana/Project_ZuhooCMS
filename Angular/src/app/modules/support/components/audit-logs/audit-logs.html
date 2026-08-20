@@ -1,0 +1,60 @@
+<div class="container-fluid py-3">
+  <h4 class="mb-3">Support Audit Logs</h4>
+  @if (error) { <div class="alert alert-danger py-2">{{ error }}</div> }
+
+  <div class="card mb-3"><div class="card-body py-2">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label small mb-0">Action Type</label>
+        <input class="form-control form-control-sm" placeholder="e.g. TICKET_ASSIGNED" [(ngModel)]="actionTypeFilter" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-0">User ID</label>
+        <input type="number" class="form-control form-control-sm" [(ngModel)]="userIdFilter" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-0">Start Date</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="startDate" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-0">End Date</label>
+        <input type="date" class="form-control form-control-sm" [(ngModel)]="endDate" />
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button class="btn btn-primary btn-sm" (click)="applyFilters()">Filter</button>
+        <button class="btn btn-outline-secondary btn-sm" (click)="clearFilters()">Clear</button>
+      </div>
+    </div>
+  </div></div>
+
+  @if (loading) { <app-loader /> }
+
+  @if (!loading && logs.length) {
+  <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>Date</th><th>User</th><th>Action</th><th>Resource</th><th>Description</th><th>Context Switch</th></tr>
+      </thead>
+      <tbody>
+        @for (log of logs; track log.id) {
+        <tr>
+          <td class="small text-muted">{{ log.createdAt | date:'medium' }}</td>
+          <td>{{ log.actionByUserName || ('#' + log.actionByUserId) }}</td>
+          <td><span class="badge text-bg-secondary">{{ log.actionType }}</span></td>
+          <td class="small">{{ log.resourceType }} #{{ log.resourceId }}</td>
+          <td class="small">{{ log.description || '-' }}</td>
+          <td class="small">
+            @if (log.contextSwitchToCompanyName) { <span class="text-muted">{{ log.contextSwitchToCompanyName }}</span> }
+            @if (!log.contextSwitchToCompanyName) { <span>-</span> }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div></div>
+  <div class="d-flex justify-content-center mt-3">
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="goToPage($event)" />
+  </div>
+  }
+  @if (!loading && !logs.length) { <app-empty-state icon="bi-shield-check" message="No audit log entries found." /> }
+</div>

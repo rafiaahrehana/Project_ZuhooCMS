@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/screen_padding_h"
+        android:paddingTop="@dimen/screen_padding_v"
+        android:paddingBottom="@dimen/space_32">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/section_spacing"
+            android:text="@string/title_notification_preferences"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleLarge" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_8"
+            android:text="@string/section_email_notifications"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleMedium" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchEmailServiceRequest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/pref_email_service_request"
+            android:textAppearance="@style/TextAppearance.Zuhoo.Label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchEmailStatusChange"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/field_spacing"
+            android:text="@string/pref_email_status_change"
+            android:textAppearance="@style/TextAppearance.Zuhoo.Label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchEmailInvoice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/field_spacing"
+            android:text="@string/pref_email_invoice"
+            android:textAppearance="@style/TextAppearance.Zuhoo.Label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchEmailPayment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/field_spacing"
+            android:text="@string/pref_email_payment"
+            android:textAppearance="@style/TextAppearance.Zuhoo.Label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchEmailTaskAssigned"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/field_spacing"
+            android:text="@string/pref_email_task_assigned"
+            android:textAppearance="@style/TextAppearance.Zuhoo.Label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchEmailLeaveUpdate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/field_spacing"
+            android:text="@string/pref_email_leave_update"
+            android:textAppearance="@style/TextAppearance.Zuhoo.Label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchEmailMarketing"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/field_spacing"
+            android:text="@string/pref_email_marketing"
+            android:textAppearance="@style/TextAppearance.Zuhoo.Label" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:background="@color/border" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_16"
+            android:layout_marginBottom="@dimen/space_8"
+            android:text="@string/section_in_app_notifications"
+            android:textAppearance="@style/TextAppearance.Zuhoo.TitleMedium" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchInAppServiceRequest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/pref_in_app_service_request"
+            android:textAppearance="@style/TextAppearance.Zuhoo.Label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchInAppStatusChange"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/field_spacing"
+            android:text="@string/pref_in_app_status_change"
+            android:textAppearance="@style/TextAppearance.Zuhoo.Label" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_spacing"
+            android:text="@string/action_save" />
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/space_16"
+            android:indeterminate="true"
+            app:indicatorColor="@color/brand_primary"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</ScrollView>
