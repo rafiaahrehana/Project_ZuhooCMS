@@ -97,6 +97,10 @@ public class NotificationCenter {
             subscription = null;
         }
 
-        unreadCount.setValue(0L);
+        // postValue, not setValue: SessionExpiry calls this from TokenAuthenticator's OkHttp
+        // thread, and setValue throws "Cannot invoke setValue on a background thread" there -
+        // which crashed the app on every expired session. postValue is correct from the logout
+        // path too, where this already runs on the main thread.
+        unreadCount.postValue(0L);
     }
 }
